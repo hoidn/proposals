@@ -1,0 +1,222 @@
+\documentclass{article}
+
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{xcolor}
+
+% Code listing settings
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    showstringspaces=false
+}
+\title{Physics-Informed Machine Learning and AI-Assisted Automation for Light Source Applications}
+\author{Oliver Hoidn} % Replace with actual author name
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Introduction}
+Modern light source facilities face increasingly complex operational challenges as experimental capabilities advance. At LCLS and SSRL, the combination of high data rates, sophisticated experimental controls, and growing user demand creates dual technical imperatives: the need for real-time analysis methods that maintain physical accuracy while meeting processing speed requirements, and the development of intelligent automation systems that can support both expert and non-expert users in conducting complex experiments efficiently.
+
+This proposal addresses these complementary challenges through two innovations. First, by developing physics-informed machine learning approaches that enable real-time analysis while preserving physical constraints, exemplified by the successful deployment of PtychoPINN for coherent imaging at LCLS. Second, by proposing an architecture for AI-assisted automation that would build on SLAC's existing beamline control systems to help users navigate complex experimental workflows, interpret results, and make informed decisions during beamtime.
+
+These developments align with SLAC's mission to advance scientific capabilities while improving facility accessibility and productivity. The proposed work builds on successful collaborations with LCLS scientists and the facility's computing group, while offering potential benefits across multiple experimental stations. By addressing both the computational and operational challenges of modern light source experiments, this research program aims to enhance SLAC's ability to serve its growing user community.
+
+The two components of this program represent different stages of technical maturity with complementary risk profiles. The physics-informed ML work builds on demonstrated successes, including adoption of my methods at other national laboratories and straightforward improvements over existing approaches. In contrast, the AI-assisted automation framework represents a more exploratory direction that, while higher risk, offers more potentially transformative benefits. Early prototypes with LCLS beamline scientists have demonstrated the value of automated analysis pipelines, suggesting significant opportunities for AI-assisted systems to further reduce experimental overhead and improve beamtime efficiency. This portfolio thus combines near-term technical advances with longer-term innovation.
+
+\section{Physics-Informed ML for Light Source Applications}
+\subsection{Introduction and Challenge}
+While machine learning has revolutionized many domains, the computing demands for photon science at light source facilities face unique challenges that conventional ML approaches cannot adequately address. Fast reconstruction is critical at these facilities, where experiments generate massive data streams requiring near-instantaneous analysis and feedback. Although convolutional neural networks (CNNs) excel at computer vision tasks and can offer orders-of-magnitude speedups over traditional iterative methods, their inductive biases are not aligned with physical principles. This mismatch is particularly visible in diffraction analysis, where standard neural network approaches frequently produce results that violate known physical constraints.
+
+\subsection{Technical Innovation - Physics-Informed ML for Imaging}
+To address these physical constraints while preserving ML's computational advantages, I developed PtychoPINN, demonstrating how physics-informed neural networks can overcome traditional limitations in light source imaging. Rather than treating reconstruction as a pure data-driven machine learning task, PtychoPINN embeds both diffraction physics and overlap constraints in a simple differentiable simulator. The framework inverts the conventional PINN approach - instead of using physical residuals for regularization, it trains entirely on a physics-informed reconstruction loss:
+
+\begin{equation}
+\text{Loss}(x, \lambda(\hat{x})) = \sum_{i,j,k} \log f_{\text{Poiss}}(x_{ijk}^2; \lambda_{ijk})
+\end{equation}
+
+% [Insert diagram here]
+% \includegraphics[width=\textwidth]{figures/ptychopinn_diagram.pdf}
+
+The results of this physics-first approach are compelling: PtychoPINN achieves a 4x improvement in reconstruction resolution over purely data-driven reconstruction, while being 500x faster than traditional (i.e. iterative and physics-driven) methods. Beyond the immediate performance gains, this work demonstrated several principles for scientific ML in this setting: (1) physical constraints can replace the need for massive training datasets, (2) probabilistic modeling of measurement statistics significantly improves reconstruction quality, and (3) physics-informed architectures lead to better generalization across different experimental conditions.
+
+\subsection{Future Directions - Advanced Architectures for Scientific ML}
+Building on PtychoPINN's foundation, I propose two technical directions that will advance our ability to handle experimental uncertainties and improve reconstruction quality:
+
+\subsubsection{Variational Methods for Diffractive Imaging}
+Using variational autoencoders (VAEs), we can learn compact, physically meaningful representations of the complex-valued illumination in coherent imaging experiments. Specifically, I propose to develop a model that jointly learns Zernike coefficients characterizing the beam illumination function jointly with phase retrieval. The VAE would provide an invertible map from the latent space to a function space of beam illumination profiles, providing a physically interpretable way to correct for shot-to-shot variation in the probe.
+
+\subsubsection{New backbone architectures for diffractive imaging}
+Current neural architectures like standard CNNs lack important symmetries and properties needed for optimal performance in light source applications. I suggest new network architectures that incorporate:
+
+Permutation Invariance: Processing unordered sets of diffraction patterns necessitates models that are invariant to input ordering. By replacing standard channel-wise operations with symmetric functions that respect permutation invariance, we can design more compact and efficient architectures. This may involve creating custom convolutional kernels or employing shared-weight schemes within existing layers.
+
+Global Receptive Fields through Attention Mechanisms: Fourier inversion problems involve long-range dependencies that are not adequately captured by local convolutional operations. Incorporating attention mechanisms into the network architecture can provide global receptive fields, enabling the model to capture all information necessary for solving the diffractive imaging inverse problem.
+
+\subsection{Extension to Other Light Source Applications}
+The above work has catalyzed productive collaborations beyond SLAC. At the Advanced Photon Source, Nicolas Schwarz's group is developing a PyTorch backend for PtychoPINN, while the APS Software group is incorporating it into Ptychodus, their real-time analysis framework.
+
+An encouraging development has been the growing interest from other national laboratories in sharing experimental data for further development. David Shapiro's group at the Advanced Light Source (ALS) has shared ptychography data, while the scientific software development group at APS has indicated they have extensive datasets that could potentially support this work. The willingness to engage reflects both interest in this research and development approach and the potential for compiling diverse experimental datasets, which will be important for generalization across different experimental configurations at various beamlines.
+
+Such exchanges have given me a perspective on adapting prototypes to facility-specific requirements. This is a natural segue to my primary focus in this part of the research program: expanding these methods across SLAC's experimental facilities. Working with SLAC's ML Initiative and beamline scientists, I plan to identify key computational challenges where physics-informed ML can have immediate impact. The modeling principles and practical experience developed through PtychoPINN provide starting points for tackling inverse problems more generally -- especially in computed imaging, where there is a shared underlying structure between superficially different modalities like, for example, cryo-EM and x-ray CDI.
+
+\section{Motivation and Background}
+Scientific facilities like SLAC face a key challenge: as experimental capabilities grow more sophisticated, the complexity of data analysis and decision-making increases dramatically. Modern AI systems, particularly Large Language Models (LLMs), offer promising capabilities for automation and assistance but face fundamental limitations when applied to complex scientific workflows.
+
+\subsection{Current State and Limitations}
+Current approaches to ML-based agents in scientific settings typically focus on narrow, specialized tasks or attempt to use general-purpose LLMs as conversational assistants. While valuable, the latter tools hit fundamental barriers when faced with:
+\begin{itemize}
+    \item Reasoning requiring coherence over a series of many steps
+    \item Large inputs that exceed model context limits
+    \item Workflows needing reproducible, verifiable results
+\end{itemize}
+
+Traditional agent frameworks and tool-use architectures provide partial solutions but lack structured approaches to task decomposition and context management. They often rely on ad-hoc combinations of prompting techniques and external tools, leading to brittle solutions that scale poorly.
+
+\subsection{Example: AI-Assisted Analysis at XPP}
+In the last year, I developed an automated analysis pipeline for LCLS's X-ray Pump-Probe (XPP) instrument, working with my PI (Apurva Mehta) and the LCLS analytics group. The pipeline finds CDW signals through a contrast-enhancing transformation of the raw data and uses statistical criteria to maximize signal to noise with respect to the analysis parameters.
+
+This automation approach reduces the user's responsibility to a single numerical input: a region of interest (ROI) on the detector. While this usage is simple, interpreting diagnostic outputs when things go wrong still requires domain expertise. To address this limitation, I experimented with a language model agent to guide users through the diagnostics. In one test, I initialized the analysis with incorrect ROI coordinates. The agent reviewed logged diagnostics and successfully identified the issue:
+
+\begin{quote}
+Based on the p-value uniformity check results, the designated background ROI [80, 95, 5, 45] appears to contain signal when it should not. This is evidenced by:
+\begin{enumerate}
+    \item Mean p-value of 0.394 (should be 0.5)
+    \item Highly significant KS test (p=6.496e-17)
+    \item Large z-score deviation (9.0)
+\end{enumerate}
+
+This contaminated background ROI would affect the null distribution calculation, which in turn would distort the pump-probe curve.
+\end{quote}
+
+While effective for modest diagnostic tasks, the system revealed fundamental limitations in more difficult situations. Attempting to use it for analyzing large log files or guiding multi-step decision processes exposed a well-known underlying limitation of LLMs: difficulty maintaining analytical context across multiple interaction turns, especially when handling large datasets. This limitation is exacerbated by how LLMs perform reasoning itself - since techniques like reflection and chain of thought demonstrate that LLM reasoning operates through token generation, each step of analysis consumes valuable context window space.
+
+\subsection{The Opportunity}
+These limitations point to a deeper challenge: we lack systematic architectures for deploying AI systems in scientific environments. Examples of successful automation systems in SLAC's accelerator and beamline controls demonstrate the value of well-designed software architectures for light source-based workflows. Similarly, we need principled architectures for integrating agentic capabilities into scientific workflows.
+
+This research program proposes a novel approach inspired by classical ideas from programming language implementation, particularly the metacircular evaluator concept from Lisp and the staged compilation techniques from modern compilers. By treating natural language interactions as a form of program evaluation, we can develop systematic ways to:
+
+\begin{itemize}
+    \item Decompose complex tasks while maintaining coherent context
+    \item Manage computational resources across multiple AI instances
+    \item Integrate domain-specific tools and knowledge bases
+    \item Generate verifiable, reproducible solutions
+\end{itemize}
+
+The resulting system would provide a foundation for building more capable AI-enhanced scientific workflows, enabling more aggressive automation efforts across SLAC's experimental facilities. The underlying theoretical innovations might also generate compounding returns by encouraging collaboration with the broader AI / ML research community.
+
+\section{Technical Innovation: A Language-Model Architecture for Scientific Computing}
+Scientific computing workflows demand analytical capabilities coupled with standards for reproducibility and verification. Current language model architectures, while powerful and versatile, face fundamental limitations when applied to scientific tasks. Fixed context windows put a practical cap on the amount of analysis possible within a single LLM session, as does the gradual degradation in model performance as the context window fills with output tokens.
+
+The last two years have seen rapid growth in LLM-based agent frameworks like AutoGPT and BabyAGI. While useful, these systems rely on ad-hoc combinations of prompts and tools, making them brittle, inconsistent and hard to extend. Rather than systematically addressing the key limitations of LLMs, these agentic approaches reproduce or even compound them. A case in point is reliance on techniques such as retrieval-augmented generation (RAG) that aim to compensate for limited context window capacities but introduce serious tradeoffs in recall and accuracy.
+
+We propose a novel approach that draws on two fundamental concepts from programming language implementation: the metacircular evaluator pattern first developed for Lisp, and staged computation techniques used in modern compilers.
+
+The key insight is treating natural language interaction with an LLM as a form of code execution. First, we will embrace the premise by asking the LLM to translate natural language instructions into programs written in a DSL (domain specific language). The structure of each DSL program will represent the decomposition of a complex prompt into multiple tasks. The interpretation of the DSL program involves the distribution of each task to an LLM instance and the linking together of instances through a calling convention and shared memory system.
+
+We propose:
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+Natural Language Query\;
+$\downarrow$ [LLM Translation]\;
+XML Task Structure (equivalent to S-expression)\;
+$\downarrow$ [Parser]\;
+Abstract Syntax Tree\;
+$\downarrow$ [tree traversal]\;
+LLM execution\;
+\caption{System Overview}
+\end{algorithm}
+
+The gist of the approach is the decomposition of natural language queries into composite expressions made up of smaller units (atomic tasks), with the purpose to make the execution tractable while preserving semantics of the original query. A cute feature of the setup is that it will be self-hosting in the sense that the LLM evaluates DSL procedures generated by the LLM.
+
+The architecture consists of three main components:
+
+\subsection{Execution Model}
+The system implements an eval-apply cycle inspired by Lisp interpreters. The core machinery consists of two mutually recursive procedures:
+
+\begin{lstlisting}[language=Python, caption=Core Evaluation Functions]
+def EVAL(task, env):
+    if primitive?(task):
+        try:
+            return APPLY(task, env)
+        except ResourceLimit:
+            new_proc = decompose(task)
+            return EVAL(new_proc, env)
+    else:
+        # Compound task
+        proc = task.procedure
+        args = task.arguments
+        return APPLY(proc, [EVAL(arg, env) for arg in args])
+
+def APPLY(proc, args):
+    if primitive?(proc):
+        try:
+            return execute_llm(proc, args)  # Direct LLM execution
+        except ResourceLimit:
+            # Generate new compound procedure
+            new_proc = decompose(proc, args)
+            return EVAL(new_proc, generate_context(proc, args))
+    else:
+        # Compound procedure application
+        new_context = generate_context(proc.requirements, args)
+        return EVAL(proc.body, new_context)
+\end{lstlisting}
+
+When task execution ends with an error (e.g. context window overrun, output validation failure), the executor can retry by generating and evaluating an alternate procedure -- for example, a decomposition of the task into multiple subtasks.
+
+The creation of the execution data context 'env' is mediated by the memory subsystem.
+
+\subsection{Associative memory system}
+The memory system explicitly separates storage and working contexts through a hierarchical design:
+\begin{itemize}
+    \item Long-term memory for data and procedures
+    \item Working memory for active computations
+    \item Context frames that capture execution environments (including working memory)
+\end{itemize}
+
+Working memory is instantiated from long-term storage using an associative retrieval mechanism that is itself an (atomic) LLM procedure whose purpose is to match an atomic task to a contextually relevant subset of the data in long-term memory.
+
+\subsection{Task Expression Framework}
+The expression system supports both simple nested procedures and complex patterns:
+
+\begin{lstlisting}[caption=Task Expression Types]
+AtomicTask     -> Direct LLM execution
+NestedTask     -> Compositional evaluation  
+MapExpression  -> Parallel processing
+ReduceExpression -> Result combination
+\end{lstlisting}
+
+These expressions, which can be extended, provide formal semantics for the DSL.
+
+\section{Implementation Plan}
+The implementation strategy builds on recent work and collaborations at SLAC. Working with LCLS beamline scientist Lingjia Liu and Frederic Poitevin from the LCLS analytics group, I developed the previously mentioned analysis approach for charge density wave dynamics in pump-probe experiments. The project aligns with broader LCLS initiatives, led by Jana Thayer and others, to develop real-time analysis capabilities for experimental beamlines.
+
+Building on these experiences and collaborations, the implementation will proceed in two phases:
+
+First, we will develop the core architectural components: the memory system for managing analysis contexts, the execution model for task decomposition, and initial task libraries. These libraries will include specialized agents for software architecture, code generation, analysis refinement, and experimental log interpretation. We'll work with the LCLS analytics group to ensure the framework complements their efforts, and with beamline scientists to get feedback from the end-user point of view.
+
+Second, we will focus on development across scientific workflows based on reusable task patterns that combine automated processing with human-in-the-loop guidance. The framework will support diverse needs, from real-time experiment optimization to offline analysis and documentation. The goals will include accelerated analysis turnaround and reduced downtime during beamtimes.
+
+\section{Conclusion}
+This research program advances two complementary directions in light source science. The first develops physics-informed machine learning for real-time analysis at light sources, demonstrated through new imaging methods that combine neural networks with physical constraints. The second proposes systematic architectures for AI-assisted tasks ranging from experimental automation to software development, drawing on principles from programming language design to overcome current limitations in large language models.
+
+I developed a physics-informed neural network approach for coherent imaging that improves reconstruction resolution by 4x over existing machine learning methods while running 1000x faster than traditional phase retrieval. Based on this work, collaborators at the Advanced Photon Source (APS) and LBL are now adopting these methods. During this process, I informally mentored an APS postdoc in extending the framework, which was satisfying experience in collaborative development that will transfer to future work at SLAC. Initial experiments of agent assistance for analysis at LCLS's (XPP) endstation have both shown potential and highlighted key technical challenges that the proposed architectural approach aims to solve.
+
+With experimental complexity and data rates continuing to grow, this research program aims to ensure SLAC can meet future demands through practical advances in computing and automation. Success will mean not just faster analysis, but more reliable results, better-guided experiments, and ultimately more efficient use of facility resources. I look forward to contributing to SLAC's educational mission by guiding adoption of computational methods across beamlines and mentoring students and postdocs.
+
+My background positions me to see through this research program. Through developing practical scientific machine learning methods and collaborating with LCLS scientists, I've gained direct experience with the technical and operational challenges of light source experiments. My work on probabilistic modeling, from physics-informed neural networks to variational inference and hierarchical Bayesian modeling, demonstrates the mathematical preparation needed to advance these methods. This research program will help ensure SLAC can meet evolving user needs while maintaining standards for scientific rigor.
+
+\end{document}
