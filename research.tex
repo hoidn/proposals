@@ -217,33 +217,6 @@ The architecture consists of three main components:
 \subsection{Execution Model}
 Two mutually recursive procedures, eval and apply, work with each other to evaluate DSL expressions:
 
-%\begin{lstlisting}[language=Python, caption=Core Evaluation Functions]
-%def EVAL(task, env):
-%    if primitive?(task):
-%        try:
-%            return APPLY(task, env)
-%        except ResourceLimit:
-%            new_proc = decompose(task)
-%            return EVAL(new_proc, env)
-%    else:
-%        # Compound task
-%        proc = task.procedure
-%        args = task.arguments
-%        return APPLY(proc, [EVAL(arg, env) for arg in args])
-%
-%def APPLY(proc, args):
-%    if primitive?(proc):
-%        try:
-%            return execute_llm(proc, args)  # Direct LLM execution
-%        except ResourceLimit:
-%            # Generate new compound procedure
-%            new_proc = decompose(proc, args)
-%            return EVAL(new_proc, generate_context(proc, args))
-%    else:
-%        # Compound procedure application
-%        new_context = generate_context(proc.requirements, args)
-%        return EVAL(proc.body, new_context)
-%\end{lstlisting}
 
 \begin{lstlisting}[language=Scheme, caption = Scheme sketch of the evaluation procedure]
 ; Evaluates a task in the given environment; returns direct result or decomposed tasks
@@ -313,10 +286,7 @@ First, we will develop the core architectural components: the memory system for 
 Second, we will focus on development across scientific workflows based on reusable task patterns that combine automated processing with human-in-the-loop guidance. The framework will support diverse needs, from real-time experiment optimization to offline analysis and documentation. The goals will include accelerated analysis turnaround and reduced downtime during beamtimes.
 
 \section{PL concepts and concrete examples}
-% TODO  we want to define 'metacircular evaluator' in the context of this project for people not familiar with theoretical computer science or programing language implementation.  The main point is explaining why we're approaching it this way instead of as a conventional compiler / interpreter. My perspective is that it's important to treat the environment / environment frame as a first class data structure that is directly accessible and modifiable by evaluator / host language. Consider that we \emph{need} to represent the environment as a structured object when we pass it to the associative memory system. It's ok to make this discussion longish, up to a page. You can include sicp style code snippets to explain concepts, if you want.
-% TODO we also want to define 'environment' and note that it's equivalent to lexical scope from the implemented language's perspective
-% TODO we also want to define staged compilation and connect it to what we're doing here
-\subsection{Staged Compilation}
+\subsection{Compilation}
 
 Staged compilation traditionally refers to breaking down compilation into distinct phases, where each stage transforms the program into a new representation closer to the target execution form:
 
@@ -327,56 +297,17 @@ Source code → Parse tree → AST → Intermediate code → Machine code
 %Our system adapts this concept for LLM task execution. Instead of fixed transformations between predefined languages, we use the LLM itself to generate intermediate representations. 
 
 
-%;; Stage 2: Parse XML into uniform AST
-%(define (parse-task xml)
-%  (match xml
-%    [(node operator args ...)
-%     (make-ast-node 
-%       (parse-operator operator)
-%       (map parse-task args))]
-%    [leaf leaf]))
 
-%\begin{lstlisting}[language=Scheme]
-%;; Stage 1: LLM generates XML task structure
-%(define xml
-%  (llm-translate query))
-%
-%;; Stage 2: Parse XML into uniform AST
-%(define (parse-task xml)
-%  (match xml
-%    ;; Pattern: match a node that has an operator and any number of args
-%    ;; (node operator args ...) matches XML structure like:
-%    ;; <node>
-%    ;;   <operator>...</operator>
-%    ;;   <arg>...</arg>
-%    ;;   <arg>...</arg>
-%    ;;   ...
-%    ;; </node>
-%    [(node operator args ...)
-%     (make-ast-node (parse-operator operator)
-%                    (map parse-task args))]
-%    
-%    ;; Pattern: match a leaf node (no children)
-%    ;; Just return the leaf value directly
-%    [leaf leaf]))
-%
-%;; Stage 3: Tree traversal and execution
-%(define (execute ast env)
-%  (let ((operator (node-operator ast))
-%        (args (node-args ast)))
-%    (apply operator 
-%           (map (lambda (arg) (execute arg env))
-%                args)
-%           env)))
-%\end{lstlisting}
 
 Our system uses the LLM to parse natural language into structured expressions:
 
+% TODO this is incomplete. There should be a cycle connecting 'Task executable' back to 
+% 'AST', to represent dynamic / incremental reparsing. See also: the other TODOSs, <dynamic reparsing>
 \begin{verbatim}
-Source code (English) → Parse tree (XML) → AST (Python)
+Source code (English) → Parse tree (XML) → AST (Python) → Task data + executable (XML) 
 \end{verbatim}
 
-In Python this is orchestrated by the class Compiler:
+In Python the first three steps (\verb|Source code (English) → Parse tree (XML) → AST (Python)|) are orchestrated by the class Compiler. The remaining portion is generated by the interaction between Compile and the evaluation loop (see Evaluator, next section):
 
 \begin{lstlisting}[language=Python]
 from dataclasses import dataclass
@@ -401,9 +332,18 @@ class Compiler:
         Pipeline:
         1. query (natural language)
         2. -> xml (structured tasks)
-        3. -> ast (executable form)
+        3. -> ast (evaluatable form)
         """
+        # <TODO> this is not yet fully developed. Calling ll_translate on the original natural language 
+        # query will be an initial 'bootstrap' step, but we will have to also support <dynamic reparsing>
+        # in which the evaluator asks the Compiler to rewrite an AST node into a new subtree by calling the LLM via something like
+        # llm_execute(special task that takes operator.task (i.e. the task to rewrite) as one of its inputs), 
+        #   env).
         # Stage 1: Structure the task
+        # see also: the scheme (amb) patterns
+        # retrieving the 'special task' above will be a responsibility of the Task system. We can start defining that through ONLY 
+        # the parts of the interface that we need right now) 
+        # </TODO>
         xml = self.llm_translate(query)
         
         # Stage 2: Build executable form
@@ -443,31 +383,39 @@ class Compiler:
 
 Example task structure in XML:
 \begin{lstlisting}[language=XML]
-<node>
-  <!-- Map operation over multiple inputs -->
-  <operator>
-    {"type": "map",
-     "operation": "analyze_peaks"}
-  </operator>
-  
-  <arg>
-    <node>
-      <operator>
-        {"type": "atomic",
-         "task": "load_detector_1"}
-      </operator>
-    </node>
-  </arg>
-  
-  <arg>
-    <node>
-      <operator>
-        {"type": "atomic",
-         "task": "load_detector_2"}
-      </operator>
-    </node>
-  </arg>
-</node>
+<task>
+  <description>analyze peak patterns across detectors</description>
+  <inputs>
+    <input name="detector1_data">
+      <task>
+        <description>load and preprocess detector 1 data</description>
+        <expected_output>
+          Preprocessed detector 1 data in standard format:
+          - Intensity values
+          - Peak positions
+          - Background levels
+        </expected_output>
+      </task>
+    </input>
+    <input name="detector2_data">
+      <task>
+        <description>load and preprocess detector 2 data</description>
+        <expected_output>
+          Preprocessed detector 2 data in standard format:
+          - Intensity values
+          - Peak positions
+          - Background levels
+        </expected_output>
+      </task>
+    </input>
+  </inputs>
+  <expected_output>
+    Comparative peak analysis:
+    - Peak correlations between detectors
+    - Intensity pattern matching
+    - Anomaly detection
+  </expected_output>
+</task>
 \end{lstlisting}
 
 In summary:
@@ -482,78 +430,11 @@ In summary:
 \end{enumerate}
 
 
-%Let's examine how the system handles a user request that benefits from natural language understanding:
-%
-%"Look through the experiment logs and tell me when we saw unexpected beam behavior."
-%
-%The LLM first translates this natural language query into a structured task:
-%
-%\begin{lstlisting}[language=XML]
-%<node>
-%  <operator>
-%    {"type": "compound", "task": "analyze_logs"}
-%  </operator>
-%  <arg>
-%    <node>
-%      <operator>
-%        {"type": "atomic", 
-%         "task": "extract_patterns",
-%         "params": {"focus": "beam instability"}}
-%      </operator>
-%    </node>
-%  </arg>
-%</node>
-%\end{lstlisting}
-%
-%The compiler builds an AST:
-%
-%\begin{lstlisting}[language=Python]
-%# Simple AST showing task structure
-%node = ASTNode(
-%    operator=Operator(
-%        type="atomic",
-%        task="extract_patterns",
-%        params={"focus": "beam instability"}
-%    ),
-%    args=[]
-%)
-%\end{lstlisting}
-%
-%Finally, the evaluator executes this with environment handling:
-%
-%\begin{lstlisting}[language=Python]
-%# Environment contains the actual log contents
-%env = Environment(context={
-%    "logs": [
-%        "10:15 - Beam current: 3.2mA, within normal range",
-%        "10:23 - Warning: Unexpected beam loss detected",
-%        "10:24 - Beam current dropped to 1.1mA",
-%        # ... more log entries
-%    ]
-%})
-%
-%# LLM execution 
-%result, env = evaluator.execute_llm(node.operator, env)
-%# LLM analyzes logs through natural language understanding
-%# Returns findings about beam behavior
-%\end{lstlisting}
-%
-%This example shows how the LLM serves both roles:
-%1. As compiler: Interpreting natural language intent into structured tasks
-%2. As executor: Reading and analyzing log content in context
 
 \subsection{Environment}
 
 An environment represents the complete context needed to evaluate expressions. In traditional programming languages, this mostly means lexical scope---the set of variables accessible from inside a given stack frame. %Our system extends this concept to include working memory for LLM tasks.
 
-%(Lexical scope refers to the standard nesting behavior of variable bindings -- for example:
-%\begin{lstlisting}[language=Scheme]
-%(let ((x 1))          ; x=1 in this scope
-%  (let ((y 2))        ; y=2 in this nested scope
-%    (+ x y)))         ; both x and y are accessible here
-%\end{lstlisting}
-%)
-%
 
 Our environments support traditional variable scoping while also managing the short-term memory component of the LLM execution context. The basic aspects are:
 
@@ -614,9 +495,21 @@ class Operator:
     task: str           # Task description/prompt
     params: Dict = None # Optional parameters
 
+%<errors>
+%type ExecutionError = 
+%  | { type: 'resourceExhaustion'; resource: 'turns' | 'context' | 'output' }
+%  | { type: 'taskFailure'; reason: string }
+%  | { type: 'incompleteTask' };
+%</errors>
+
 class Evaluator:
     def eval(self, node: Node, env: 'Environment') -> Any:
         """Evaluate a node in the given environment"""
+        # TODO <dynamic reparsing> if LLM execution fails (typically bc of resource exhaustion or verification failure)
+        # we need to recover by reparsing the AST node into one or more rewritten subtrees 
+        # (i.e. either a new atomic expression or a decomposed, compound expression). See the 
+        # Scheme description to get the general idea. also see <errors>
+        # </dynamic reparsing>
         if self.is_atomic(node.operator):
             return self.execute_llm(node.operator, env)
             
@@ -638,7 +531,7 @@ class Evaluator:
         return self.eval(operator.body, new_env)
 \end{lstlisting}
 
-Note that for simplicity this description leaves out the dynamic reparsing included in the previous Scheme spec: 
+Note that the dynamic reparsing is spread out as an interaction between Evaluator and Compiler, but it is conceptually equivalent to this simple expression from the Scheme version: 
 
 \begin{lstlisting}[language=Scheme, caption = nondeterministic evaluation using the amb (ambiguous) operator]
 ...
@@ -660,23 +553,34 @@ Let's examine how the system handles a user request that benefits from natural l
 The LLM first translates this into nested tasks:
 
 \begin{lstlisting}[language=XML]
-<node>
-  <operator>
-    {"type": "atomic", "task": "analyze_region_quality"}
-  </operator>
-  <arg>
-    <!-- First argument will be output of log parsing -->
-    <node>
-      <operator>
-        {"type": "atomic", 
-         "task": "extract_stats",
-         "params": {
-           "instruction": "Find background region parameters and p-values"
-         }}
-      </operator>
-    </node>
-  </arg>
-</node>
+<task>
+  <description>analyze background region quality</description>
+  <inputs>
+    <input name="region_stats">
+      <task>
+        <description>extract statistics from experiment logs</description>
+        <parameters>
+          Extract and analyze:
+          - Background region coordinates
+          - Statistical test p-values 
+          - Distribution uniformity metrics
+        </parameters>
+        <expected_output>
+          Structured statistics including:
+          - ROI coordinates
+          - P-value series
+          - Distribution metrics
+        </expected_output>
+      </task>
+    </input>
+  </inputs>
+  <expected_output>
+    Quality assessment including:
+    - Statistical validity evaluation
+    - Potential signal contamination check
+    - Recommendations for improvement if needed
+  </expected_output>
+</task>
 \end{lstlisting}
 
 The compiler builds an AST:
