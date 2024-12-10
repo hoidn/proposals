@@ -58,11 +58,41 @@ class Compiler:
         self.task_system = task_system
         self.parser = XMLTaskParser()
 
-    def compile(self, query: str) -> ASTNode:
+    def parse(self, xml) -> ASTNode:
+        """Convert XML task structure to AST
+        
+        Two cases:
+        - Atomic: direct LLM execution (no args)
+        - Compound: task with subtasks
+        """
+        operator = self.parse_operator(xml.operator)
+        
+        # Case 1: Atomic task
+        if self.is_atomic(xml):
+            return ASTNode(operator=operator, args=[])
+            
+        # Case 2: Compound task
+        return ASTNode(
+            operator=operator,
+            args=[self.parse(arg) for arg in xml.args]
+        )
+
+    # TODO the xml needs to be validated to have the right op_data 
+    # and also the right xml structure, given the operator type
+    def parse_operator(self, xml_operator) -> Operator:
+        """Convert XML operator element to Operator object"""
+        # XML operator contains JSON text with type and task
+        op_data = json.loads(xml_operator.text)
+        return Operator(
+            type=op_data["type"],
+            task=op_data["task"],
+            params=op_data.get("params")
+        )
+
+    def bootstrap(self, query: str) -> ASTNode:
         """Compiles natural language to AST"""
         xml = self.llm_translate(query)
-        task_structure = self.parser.parse_task(xml)
-        return self.parser.task_to_ast(task_structure)
+        return self.parse(xml)
 
     def reparse(self, 
                 failed_task: str,

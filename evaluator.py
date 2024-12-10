@@ -5,6 +5,11 @@ from enum import Enum
 from .error_types import ExecutionError
 from .environment import Environment
 
+# TODO might rename .task to .xml, because Task is another concept. 
+# i.e. task should essentially be an (xml, execution state) pair plus
+# methods to generate atomic tasks using the task library (or the 
+# 'rewrite' task, in that special case
+
 # TODO <dynamic reparsing> if LLM execution fails (typically bc of resource exhaustion or verification failure)
 # we need to recover by reparsing the AST node into one or more rewritten subtrees 
 # (i.e. either a new atomic expression or a decomposed, compound expression). See the 
