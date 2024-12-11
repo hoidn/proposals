@@ -16,6 +16,12 @@ from .environment import Environment
 # Scheme description to get the general idea. also see <errors>
 # </dynamic reparsing>
 
+@dataclass
+class ASTNode:
+    """Represents a node in the Abstract Syntax Tree"""
+    operator: Any
+    args: List['ASTNode']
+
 class Evaluator:
     def __init__(self, compiler):
         self.compiler = compiler
@@ -35,11 +41,13 @@ class Evaluator:
         Raises:
             ExecutionError: If evaluation fails after max attempts
         """
+        if node.operator.type == 'reparse':
+            reparse_depth += 1
         try:
             if self.is_atomic(node.operator):
+                if node.operator.subtype == 'reparse':
+                    return self.handle_reparse(node, env, reparse_depth)
                 return self.execute_llm(node.operator, env)
-            elif node.operator.type == "reparse":
-                return self.handle_reparse(node, env, reparse_depth)
             else:
                 # Handle compound expressions
                 evaluated_args = [self.eval(arg, env) for arg in node.args]
@@ -100,9 +108,16 @@ class Evaluator:
         return operator.type == "atomic"
     
     def execute_llm(self, operator: Any, env: Environment) -> Any:
-        """Execute task with LLM"""
-        return self.llm_execute(operator.task, env)
-    
+        """Execute task with LLM
+
+        This method dispatches the prompt to the task system
+            
+        Returns:
+            (ctxwindow, short term memory)
+            ctxwindow: str, final state of the session context window 
+            short term memory : shortTermMemory: post execution memory state
+        """
+
     def apply(self, operator: Any, args: List[Any], env: Environment) -> Any:
         """Apply compound operator to evaluated arguments"""
         new_env = env.extend(operator.params, args)

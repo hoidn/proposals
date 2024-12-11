@@ -97,98 +97,6 @@
 \maketitle
 
 
-Scientific facilities like SLAC face a key challenge: as experimental capabilities grow more sophisticated, the complexity of data analysis and decision-making increases dramatically. Modern AI systems, particularly Large Language Models (LLMs), offer promising capabilities for automation and assistance but face fundamental limitations when applied to demanding scientific workflows.
-
-This section of the research program proposes a novel approach inspired by classical ideas from programming language implementation, particularly the metacircular evaluator concept from Lisp and the staged compilation techniques from modern compilers. I will argue that the LLM should be treated as a basic component of a larger system that can, if built in a certain way, be much more capable than the underlying LLM. 
-
-If successful, the system would provide a foundation for better AI-assisted scientific workflows, enabling more aggressive automation efforts across SLAC's experimental facilities. The resulting research innovations might also give compounding returns by encouraging collaboration with the broader AI / ML research.
-
-%\subsection{Current State and Limitations}
-%Current approaches to ML-based agents in scientific settings typically focus on narrow, specialized tasks or attempt to use general-purpose LLMs as conversational assistants. While valuable, the latter tools hit fundamental barriers when faced with:
-%\begin{itemize}
-%    \item Reasoning requiring coherence over a series of many steps
-%    \item Large inputs that exceed model context limits
-%    \item Workflows needing reproducible, verifiable results
-%\end{itemize}
-%
-%Traditional agent frameworks and tool-use architectures provide partial solutions but lack structured approaches to task decomposition and context management. They often rely on ad-hoc combinations of prompting techniques and external tools, leading to brittle solutions that scale poorly.
-
-\subsection{Example: LLM-Assisted Analysis at XPP}
-In the last year, I developed an automated analysis pipeline for LCLS's X-ray Pump-Probe (XPP) instrument, working with my PI (Apurva Mehta) and the LCLS analytics group. The pipeline (figure \ref{pipeline}) finds CDW signals through a contrast-enhancing transformation of the raw data and uses statistical criteria to maximize signal to noise with respect to the analysis parameters.
-
-
-\begin{figure}[htbp]
-    \centering
-    % First row
-    \begin{subfigure}{0.45\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{raw.png}
-        \caption{}
-        \label{fig:raw}
-    \end{subfigure}
-    \hfill  % Add horizontal space between subfigures
-    \begin{subfigure}{0.45\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{highcontrast.png}
-        \caption{}
-        \label{fig:highcontrast}
-    \end{subfigure}
-    
-    \vspace{0.5cm}  % Vertical spacing between rows
-    
-    % Second row
-    \begin{subfigure}{0.45\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{mask.png}
-        \caption{}
-        \label{fig:mask}
-    \end{subfigure}
-    \hfill  % Add horizontal space between subfigures
-    \begin{subfigure}{0.45\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{delaycurves.png}
-        \caption{}
-        \label{fig:delaycurves}
-    \end{subfigure}
-    
-    \caption{In low signal-to-background settings background estimation is nontrivial, as is identifying and integrating diffraction peaks (a). Our automated workflow enhances contrast using spectral distribution statistics (b), identifies a bounding mask for the signal ((c), interior red region), estimates background levels, and finally generates a pump-probe delay curve (d). Automatic optimization of the workflow parameters yields better signal to noise than the traditional (manual) analysis.}\label{pipeline}
-    \label{fig:analysis}
-\end{figure}
-This automation approach reduces the user's responsibility to a single numerical input: a region of interest (ROI) on the detector. While this usage is simple, interpreting diagnostic outputs when things go wrong still requires domain expertise. To address this limitation, I experimented with a language model agent to guide users through the diagnostics. In one test, I initialized the analysis with incorrect ROI coordinates. The agent reviewed logged diagnostics and successfully identified the issue:
-
-    \vspace{0.3cm}
-    \begin{Verbatim}[fontsize=\small,frame=single]
-User: The pump-probe curve for the current run looks weird. What might
-be wrong?
-
-Agent: Based on the p-value uniformity check results, the designated 
-background ROI [80, 95, 5, 45] appears to contain signal when it should 
-not.                                                                    
-This is evidenced by:
-
- 1 Mean p-value of 0.394 (should be 0.5)
- 2 Highly significant KS test (p=6.496e-17)
- 3 Large z-score deviation (9.0)
-
-This contaminated background ROI would affect the null distribution     
-calculation, which in turn would distort the pump-probe curve. The      
-solution would be to select a different background ROI location that    
-shows proper uniformity in its p-values.
-    \end{Verbatim}
-
-
-While effective for modest diagnostic tasks, the system revealed fundamental limitations in more difficult situations. Attempting to use it for analyzing large collections of log files or guiding multi-step decision processes exposed a well-known underlying limitation of LLMs: difficulty maintaining analytical context across multiple interaction turns, especially when handling large datasets. This limitation is exacerbated by how LLMs perform reasoning itself - since techniques like reflection and chain of thought demonstrate that LLM `thought' operates through token generation, each step of analysis consumes valuable context window capacity.
-
-
-\section{Technical Innovation: A Language-Model Architecture for Scientific Computing}
-Such limitations point to a deeper challenge: we lack supporting tools for constructing agent systems in scientific environments because the underlying kernel of a natural language agent -- the LLM itself -- is on its own insufficient. Conventional automation at light sources depends on robust software design --  similarly, we will need principled architectures for composing natural language agents into scientific workflows with sufficient scale, capability and robustness.
-
-%Scientific computing workflows demand analytical capabilities coupled with standards for reproducibility and verification. Current language model architectures, while powerful and versatile, face fundamental limitations when applied to scientific tasks. Fixed context windows put a practical cap on the amount of analysis possible within a single LLM session, as does the gradual degradation in model performance as the context window fills with output tokens.
-
-The last two years have seen rapid growth in LLM-based agent frameworks like AutoGPT and BabyAGI. While useful, these systems rely on ad-hoc combinations of prompts and tools, making them brittle, inconsistent and hard to extend. Rather than systematically addressing the key limitations of LLMs, these agentic approaches reproduce or even compound them. A case in point is reliance on techniques such as retrieval-augmented generation (RAG) that aim to compensate for limited context window capacities but introduce serious tradeoffs in recall and accuracy.
-
-I suggest an alternative that takes inspiration from two fundamental concepts in programming language implementation: the metacircular evaluator pattern first developed for Lisp, and staged compilation techniques used in modern compilers.
-
 The main insight is treating natural language interaction with an LLM as a form of code execution. Suppose that we first ask the LLM to translate natural language instructions into programs written in a DSL (domain specific language). The structure of such a DSL program will represent the decomposition of a complex prompt into multiple tasks. The interpretation of the same program involves distribution of each component task to an LLM instance and the linking together of instances through a calling convention and shared memory system.
 
 More concretely:
@@ -276,14 +184,6 @@ ReduceExpression -> Result combination
 
 These expressions, which can be extended, provide formal semantics for the DSL.
 
-\section{Implementation Plan}
-The implementation strategy builds on recent work and collaborations at SLAC. Working with LCLS beamline scientist Lingjia Liu and Frederic Poitevin from the LCLS analytics group, I developed the previously mentioned analysis approach for charge density wave dynamics in pump-probe experiments. The project aligns with broader LCLS initiatives, led by Jana Thayer and others, to develop real-time analysis capabilities for experimental beamlines.
-
-Building on these experiences and collaborations, the implementation will proceed in two phases:
-
-First, we will develop the core architectural components: the memory system for managing analysis contexts, the execution model for task decomposition, and initial task libraries. These libraries will include specialized agents for software architecture, code generation, analysis refinement, and experimental log interpretation. We'll work with the LCLS analytics group to ensure the framework complements their efforts, and with beamline scientists to get feedback from the end-user point of view.
-
-Second, we will focus on development across scientific workflows based on reusable task patterns that combine automated processing with human-in-the-loop guidance. The framework will support diverse needs, from real-time experiment optimization to offline analysis and documentation. The goals will include accelerated analysis turnaround and reduced downtime during beamtimes.
 
 \section{PL concepts and concrete examples}
 \subsection{Compilation}

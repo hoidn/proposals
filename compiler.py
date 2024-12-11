@@ -8,7 +8,6 @@ from .task_system import TaskSystem
 class OperatorType(Enum):
     """Types of operations that can be performed"""
     ATOMIC = "atomic"
-    REPARSE = "reparse"
     MAP = "map"
     REDUCE = "reduce"
     SEQUENCE = "sequence"
@@ -18,6 +17,7 @@ class Operator:
     """Represents an operation to be performed"""
     type: str  # Maps to OperatorType values
     task: str  # Task description
+    subtype: Optional str = ''
     params: Optional[Dict] = None  # Additional parameters if needed
 
 def create_reparse_operator(
@@ -42,8 +42,9 @@ def create_reparse_operator(
 
     # Create operator with error details in params
     return Operator(
-        type=OperatorType.REPARSE.value,
+        type=OperatorType.ATOMIC.value,
         task=prompt,
+        subtype = 'reparse',
         params={
             "original_task": failed_task,
             "error_type": error.type.value,
