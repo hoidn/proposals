@@ -393,7 +393,26 @@ if (!result.outputs.some(output => output.parsedFromXML)) {
 
 // Validate manual XML template
 const template: TaskTemplate = {
-  taskPrompt: "Process data using specific format",
+  taskPrompt: `<task>
+    <task_instructions>Process data using specific format</description>
+    <inputs>
+      <input name="raw_data">
+        <task_instructions>Load and validate input data</description>
+        <expected_output>
+          Validated data in standard format:
+          - Field validations complete
+          - Type conversions applied
+          - Missing values handled
+        </expected_output>
+      </input>
+    </inputs>
+    <expected_output>
+      Processed data meeting format requirements:
+      - Correct structure
+      - Valid field types
+      - Complete required fields
+    </expected_output>
+  </task>`,
   systemPrompt: "Follow strict XML format",
   isManualXML: true,
   disableReparsing: true
