@@ -173,16 +173,15 @@ interface TaskResult {
     parsedFromXML: boolean;
   }>;
   notes: {
-    dataUsage: string; // Free-form data usage info from LLM
-    xmlParsingWarnings?: Array<Warning>;
+    dataUsage: string; // Free-form data usage info from LLM 
+    xmlParsingWarnings?: string[]; // Only present for output parsing failures
     [key: string]: any;
   };
 }
 
 // Handler Events
 type HandlerEvent = 
-  | { type: 'ERROR'; error: TaskError }
-  | { type: 'WARNING'; warning: Warning }
+  | { type: 'ERROR'; error: TaskError };
 
 // Task Templates
 interface TaskTemplate {
@@ -319,13 +318,7 @@ interface TaskSystem {
 ### With Compiler
 ```typescript
 interface CompilerIntegration {
-  validateTaskStructure(
-    xml: string,
-    allowManualXML?: boolean
-  ): {
-    valid: boolean;
-    warnings: Warning[];
-  };
+  validateTaskStructure(xml: string): boolean; // throws ValidationError
 }
 ```
 
