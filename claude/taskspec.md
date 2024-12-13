@@ -6,7 +6,7 @@
 ### Task Library Manager
 1. Template Storage
 ```typescript
-interface TemplateStorage {
+interface TaskLibrary {
   standardTemplates: Map<string, TaskTemplate>;  // Regular task templates
   reparseTemplates: Map<string, TaskTemplate>;   // Decomposition/alternative templates
   memoryTemplates: Map<string, TaskTemplate>;    // Memory operation templates
@@ -145,16 +145,17 @@ interface TaskExecutor {
 2. Validation Tests
 ```typescript
 describe("Template Validation", () => {
-  test("required fields present", () => {
-    // task_prompt and system_prompt required
+  test("valid template succeeds", () => {
+    expect(() => taskSystem.validateTemplate(template)).not.toThrow();
   });
   
-  test("optional fields handling", () => {
-    // inputs can be empty/missing
+  test("invalid template throws", () => {
+    expect(() => taskSystem.validateTemplate(invalidTemplate))
+      .toThrow(TemplateValidationError);
   });
   
   test("specialized template identification", () => {
-    // reparse and memory templates properly categorized
+    expect(() => taskSystem.validateTemplate(specialTemplate)).not.toThrow();
   });
 });
 ```
