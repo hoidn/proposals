@@ -165,9 +165,14 @@ The creation of the execution data context 'env' is mediated by the memory subsy
 \subsection{Associative memory system}
 The memory system explicitly separates storage and working contexts through a hierarchical design:
 \begin{itemize}
+    \item Environment frames contain:
+        \begin{itemize}
+            \item Variable bindings for evaluation context
+            \item Memory system instance for data access
+        \end{itemize}
     \item Long-term memory for data and procedures
     \item Working memory for active computations
-    \item Context frames that capture execution environments (including working memory)
+    \item TaskSystem receives only memory system instances, not full environments
 \end{itemize}
 
 Working memory is instantiated from long-term storage using an associative retrieval mechanism that is itself an (atomic) LLM procedure whose purpose is to match an atomic task to a contextually relevant subset of the data in long-term memory.
