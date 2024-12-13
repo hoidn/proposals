@@ -339,7 +339,7 @@ The system uses the MemorySystem interface directly without additional wrapping,
 
 1. Task Execution Flow:
    ```
-   Input -> Task Matching -> Handler Creation -> Execution -> Result
+   Input -> Task Matching -> Handler Creation -> Memory System Extraction -> Execution -> Result
                                             \-> Errors   -> Error Callback
                                             \-> Warnings -> Warning Callback
    ```
