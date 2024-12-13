@@ -248,14 +248,19 @@ interface MemorySystem {
 // Task Types
 type TaskType = 'standard' | 'reparse' | 'associative_memory';
 
-// Error Types
+// Error Handling Section
 interface TaskError {
-  type: 'RESOURCE_EXHAUSTION' | 'INVALID_OUTPUT' | 'NO_PROGRESS';
-  details: {
-    resource?: 'turns' | 'context' | 'output';
-    message: string;
-    context?: any;
-  };
+  type: string;
+  message: string;
+  details?: any;
+}
+
+class ValidationError extends TaskError {
+  type = 'VALIDATION_ERROR';
+}
+
+class TemplateValidationError extends TaskError {
+  type = 'TEMPLATE_VALIDATION_ERROR'; 
 }
 
 // AST Node Type
@@ -283,13 +288,7 @@ interface TaskSystem {
   ): TaskResult;
 
   // Template Management
-  validateTemplate(
-    template: TaskTemplate,
-    allowManualXML?: boolean
-  ): {
-    valid: boolean;
-    warnings: Warning[];
-  };
+  validateTemplate(template: TaskTemplate): boolean; // throws TemplateValidationError
   
   // Task Matching
   findMatchingTasks(
@@ -312,7 +311,6 @@ interface TaskSystem {
 
   // Event Handling
   onError(callback: (error: TaskError) => void): void;
-  onWarning(callback: WarningCallback): void;
 }
 ```
 
