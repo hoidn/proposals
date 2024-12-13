@@ -35,6 +35,16 @@ Define the core error taxonomy and handling strategy for the intelligent task ex
   - Trigger alternative task approach
   - May require different context selection
 
+### 4. XML Validation Errors
+- **Purpose**: Signal XML structural or template validation failures
+- **Characteristics**:
+  - Immediate failure on invalid structure
+  - No warning collection
+  - Clear error messages
+- **Recovery Strategy**:
+  - Evaluator handles recovery
+  - No internal retry attempts
+
 ## Error Handling Principles
 
 ### 1. Separation of Concerns
@@ -48,6 +58,7 @@ Define the core error taxonomy and handling strategy for the intelligent task ex
   - Resource Exhaustion → Task Decomposition
   - Invalid Output → Alternative Formulation
   - No Progress → Alternative Approach
+  - XML Validation → Evaluator Recovery
 - Recovery limit enforced by evaluator
 
 ### 3. Context Independence  
