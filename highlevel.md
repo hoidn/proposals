@@ -72,6 +72,7 @@ The task system handles high-level task management:
   * Execution coordination
   * Resource allocation
   * State management
+  * Memory system provision
 - Cross-Component Requirements
   * Consistent state management
   * Atomic operations
