@@ -124,9 +124,11 @@ Process a list of named inputs through repeated application of inner task and re
 - Maintains strict ordering of input processing
 - Context changes managed by memory system
 - Execution fails if:
-  - Any inner_task execution fails
+  - Any inner_task execution fails 
   - Any reduction_task execution fails
   - Invalid task structure
+- Invalid structure causes validation error
+- No partial validation support
 
 ## Integration Points
 
