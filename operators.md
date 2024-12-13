@@ -4,10 +4,16 @@
 Define the structure and semantics of Sequential and Reduce operators for task composition and execution, specifying XML schemas and execution behaviors.
 
 ## Memory Structure
-```typescript
-shortTermMemory: {
+```typescript  
+// Complete MemorySystem interface used by components
+interface MemorySystem {
+  shortTermMemory: {
     files: Map<string, WorkingFile>;
     dataContext: string;
+  };
+  longTermStorage: {
+    files: Map<string, StorageFile>;
+  }
 }
 ```
 
