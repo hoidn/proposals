@@ -276,7 +276,7 @@ interface TaskSystem {
   ): TaskResult;
 
   // Template Management
-  validateTemplate(template: TaskTemplate): boolean; // throws TemplateValidationError
+  validateTemplate(template: TaskTemplate): boolean; // throws ValidationError
   
   // Task Matching
   findMatchingTasks(
@@ -297,7 +297,7 @@ interface TaskSystem {
     taskType: TaskType;
   }>;
 
-  // Event Handling
+  // Event Handling  
   onError(callback: (error: TaskError) => void): void;
 }
 ```
