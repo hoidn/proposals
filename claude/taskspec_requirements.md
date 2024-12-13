@@ -168,28 +168,25 @@ System design should accommodate:
 // Task Results
 interface TaskResult {
   outputs: Array<{
-    name?: string;
     content: string;
-    parsedFromXML: boolean;
+    wasXMLParsed: boolean;
   }>;
   notes: {
-    dataUsage: string; // Free-form data usage info from LLM 
-    xmlParsingWarnings?: string[]; // Only present for output parsing failures
-    [key: string]: any;
+    dataUsage: string;
   };
 }
 
-// Handler Events
-type HandlerEvent = 
-  | { type: 'ERROR'; error: TaskError };
+// Error Types
+type TaskError =
+  | { type: 'RESOURCE_EXHAUSTION'; resource: 'turns' | 'context' | 'output' }
+  | { type: 'INVALID_OUTPUT' }
+  | { type: 'VALIDATION_ERROR' };
 
 // Task Templates
 interface TaskTemplate {
   readonly taskPrompt: string;
   readonly systemPrompt: string;
-  readonly isManualXML?: boolean;
-  readonly disableReparsing?: boolean;
-  inputs?: Record<string, string>;
+  readonly inputs?: Record<string, string>;
 }
 
 // Configuration
@@ -198,14 +195,6 @@ interface TaskConfig {
   readonly maxContextWindowFraction: number;
   readonly systemPrompt?: string;
 }
-
-// Warning System
-interface Warning {
-  type: 'XML_VALIDATION';
-  message: string;
-}
-
-type WarningCallback = (warning: Warning) => void;
 
 // Memory System
 interface StorageFile {
