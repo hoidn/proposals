@@ -30,7 +30,6 @@ interface TaskLibrary {
 ```typescript
 interface HandlerManager {
   createHandler(config: HandlerConfig): Handler;
-  configureHandler(handler: Handler, template: TaskTemplate): void;
   executePrompt(handler: Handler, inputs: Record<string, string>): TaskResult;
 }
 ```
