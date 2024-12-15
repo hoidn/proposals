@@ -45,19 +45,14 @@ The evaluator manages execution and resource tracking:
   * Handle context updates
 
 #### Task System
-The task system handles high-level task management:
-- Task Understanding
-  * Parse natural language instructions
-  * Validate input sufficiency
-  * Determine decomposition strategy
+- Task Execution Coordination
+  * Delegate task execution to Handlers
+  * Coordinate with Memory System through Handlers
+  * Surface results and errors to Evaluator
 - Task Library
   * Match tasks to execution patterns
   * Provide reusable task templates
   * Support context-aware task selection
-- Execution Management
-  * Coordinate task execution
-  * Handle resource allocation
-  * Manage error recovery
 
 ### 2.2 Component Integration Requirements
 - Compiler ↔ Task System
@@ -104,21 +99,17 @@ The task system handles high-level task management:
 
 ### 3.2 Dynamic Execution
 - Execution Management
-  * Process individual subtasks
-  * Track resource utilization
-  * Maintain execution state
+  * Handler-managed task execution
+  * Per-task context management via Memory System
+  * Result collection and validation
 - Failure Detection
-  * Resource limit monitoring
+  * Handler-monitored resource limits
   * Output validation
-  * Progress tracking
+  * Error propagation to Evaluator
 - Recovery Mechanisms
-  * Alternative approach generation
-  * Decomposition strategies
-  * Progress preservation
-- State Management
-  * Context preservation
-  * Progress tracking
-  * Resource accounting
+  * Evaluator-driven recovery strategies
+  * Context preservation through Memory System
+  * Clean task termination
 
 ### 3.3 Context Management
 - Working Memory
@@ -142,17 +133,14 @@ The task system handles high-level task management:
 
 ### 4.1 Turn Counter
 - Definition: Number of LLM interactions (prompt + response)
-- Limits
-  * Per Task: MAX_TURNS_PER_TASK
-  * Per Session: MAX_TURNS_PER_SESSION
-- Tracking Requirements
-  * Increment on each interaction
-  * Reset conditions
-  * Session accumulation
-- Validation
+- Handler Responsibilities
+  * Per-task turn counting
   * Limit enforcement
-  * Usage optimization
-  * Overflow prevention
+  * Resource exhaustion signaling
+- Evaluator Responsibilities
+  * Recovery strategy selection
+  * Task decomposition decisions
+  * Retry management
 
 ### 4.2 Context Window
 - Definition: Token count for LLM input/output
