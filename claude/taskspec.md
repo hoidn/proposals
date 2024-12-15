@@ -60,20 +60,30 @@ interface TaskMatcher {
 - Return top candidates (≤5)
 
 ### Task Executor
-1. Execution Flow
+1. Core Responsibilities
+- Template preparation and validation
+- Handler coordination
+- Results collection and standardization  
+- Error propagation to Evaluator
+
+2. Interface Definition
 ```typescript
 interface TaskExecutor {
-  executeTask(template: TaskTemplate, inputs: Record<string, string>): TaskResult;
-  executeReparseTask(node: ASTNode, error: ErrorType): TaskResult;
-  executeMemoryTask(query: string, context: Environment): TaskResult;
+  // Primary execution path
+  executeTask(
+    template: TaskTemplate, 
+    inputs: Record<string, string>,
+    handler: Handler
+  ): TaskResult;
+
+  // Memory operation support
+  executeMemoryTask(
+    query: string,
+    context: Environment, 
+    handler: Handler
+  ): TaskResult;
 }
 ```
-
-2. Task Processing
-- Template preparation
-- Handler creation and configuration
-- Output collection
-- Error handling
 
 ### 4.2 Design Decisions
 
