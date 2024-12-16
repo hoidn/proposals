@@ -166,27 +166,50 @@ System design should accommodate:
 
 ```typescript
 // Task Results
-interface TaskResult {
-  outputs: Array<{
-    content: string;
-    wasXMLParsed: boolean;
-  }>;
+interface TaskResult { 
+  content: string;
   notes: {
     dataUsage: string;
   };
 }
 
 // Error Types
-type TaskError =
-  | { type: 'RESOURCE_EXHAUSTION'; resource: 'turns' | 'context' | 'output' }
-  | { type: 'INVALID_OUTPUT' }
-  | { type: 'VALIDATION_ERROR' };
+type TaskError = 
+  | { 
+      type: 'RESOURCE_EXHAUSTION';
+      resource: 'turns' | 'context' | 'output';
+      message: string;
+      metrics?: { used: number; limit: number; };
+    }
+  | { 
+      type: 'INVALID_OUTPUT';
+      message: string;
+      violations?: string[];
+    }
+  | { 
+      type: 'VALIDATION_ERROR';
+      message: string;
+      path?: string;
+    }
+  | { 
+      type: 'XML_PARSE_ERROR';
+      message: string;
+      location?: string;
+    };
+    
+// Task Types
+type TaskType = "atomic" | "sequential" | "map" | "reduce";
+
+type AtomicTaskSubtype = "standard" | "subtask";
 
 // Task Templates
 interface TaskTemplate {
   readonly taskPrompt: string;
   readonly systemPrompt: string;
   readonly inputs?: Record<string, string>;
+  readonly isManualXML?: boolean;
+  readonly disableReparsing?: boolean;
+  readonly atomicSubtype?: AtomicTaskSubtype;  // Only for atomic tasks
 }
 
 // Configuration
