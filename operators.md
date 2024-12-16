@@ -61,13 +61,17 @@ Execute a series of tasks with explicit dependencies. Maintains execution order 
 ```
 
 ### Execution Semantics
-- Tasks execute in specified order
+- Tasks execute in specified order through the Handler
 - For tasks with multiple inputs:
-  - All input tasks execute in parallel
-  - Parent task executes after all inputs complete
-- Execution fails if:
-  - Any task fails
-  - Invalid task structure
+  - Input tasks are processed sequentially through the Handler
+  - While logically parallel, execution is synchronous
+  - Parent task executes only after all inputs complete
+  - Order of input processing is not guaranteed
+- Execution may raise the following errors:
+  - RESOURCE_EXHAUSTION: If any task exceeds turn or context limits
+  - INVALID_OUTPUT: If a task's output doesn't match required format
+  - VALIDATION_ERROR: If task structure violates constraints
+  - XML_PARSE_ERROR: If task output contains malformed XML
 
 ## Reduce Operator
 
