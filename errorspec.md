@@ -8,70 +8,87 @@ Define the core error taxonomy and handling strategy for the intelligent task ex
 ### 1. Resource Exhaustion
 - **Purpose**: Signal when system resource limits are exceeded
 - **Characteristics**:
-  - Parameterized resource type and limits
-  - Clear thresholds for triggering
-  - No partial results/state needed
+  - Parameterized resource type (turns, context, or output)
+  - Structured metrics tracking usage and limits
+  - Clear error messages for debugging
+  - No execution state preservation
 - **Recovery Strategy**: 
   - Trigger task decomposition into smaller units
-  - Resource limits inform decomposition strategy
+  - Resource metrics inform decomposition strategy
 
 ### 2. Invalid Output Structure
 - **Purpose**: Signal task output validation failures
 - **Characteristics**:
   - Independent of operator type
+  - Captures specific validation violations
   - Focused on structural correctness
   - No semantic validation required
 - **Recovery Strategy**:
   - Trigger alternative task formulation
-  - Requires different prompting strategy
+  - Use violation details to guide reformulation
 
-### 3. Failure to Make Progress
-- **Purpose**: Signal when task execution stalls
+### 3. XML Parse Errors
+- **Purpose**: Signal fundamental XML syntax failures
 - **Characteristics**:
-  - Based on task-specific progress indicators
-  - Identified through task output
-  - No internal progress tracking
+  - Immediate failure on malformed XML
+  - Includes error location information
+  - Basic syntax-level issues only
 - **Recovery Strategy**:
-  - Trigger alternative task approach
-  - May require different context selection
+  - Evaluator handles recovery
+  - No internal retry attempts
+
+### 4. Validation Errors
+- **Purpose**: Signal higher-level structural or template validation failures
+- **Characteristics**:
+  - Schema conformance issues
+  - Missing required fields
+  - Invalid field values
+  - Includes path to validation failure
+- **Recovery Strategy**:
+  - Evaluator handles recovery
+  - May trigger template adjustments
 
 ## Error Handling Principles
 
 ### 1. Separation of Concerns
-- Errors focus purely on signaling failure conditions
+- Errors focus on specific failure conditions with relevant structured data
 - Progress tracking belongs to task system
 - Retry counting belongs to evaluator
 - Context management handled by memory system
 
 ### 2. Control Flow
 - Each error type maps to specific recovery path:
-  - Resource Exhaustion → Task Decomposition
-  - Invalid Output → Alternative Formulation
-  - No Progress → Alternative Approach
+  - Resource Exhaustion → Task Decomposition (guided by metrics)
+  - Invalid Output → Alternative Formulation (guided by violations)
+  - XML Parse Error → Immediate failure handling
+  - Validation Error → Template/structure adjustment
 - Recovery limit enforced by evaluator
 
-### 3. Context Independence  
-- Errors do not carry execution state
-- No retry history in error objects
-- No partial results in errors
-- Task outputs handled by task system
+### 3. Structured Error Data
+- Errors include type-specific structured data:
+  - Resource metrics for exhaustion
+  - Violation details for invalid output
+  - Location data for parse errors
+  - Path information for validation errors
+- No execution state or retry history
+- Data focused on guiding recovery strategy
 
 ## Integration Points
 
 ### Task System
 - Raises appropriate error types
 - Includes outputs in standard format
-- Handles task-specific validation
+- Handles structured error generation
 
 ### Evaluator
 - Tracks retry attempts
 - Maps errors to recovery strategies
-- Manages execution flow
+- Uses error data to guide recovery
 
 ### Memory System
 - Maintains execution context
 - Handles context retrieval/updates
-- Supports context selection during recovery
+- Provides context for error details when needed
 
 ## Design Decisions & Rationale
 
