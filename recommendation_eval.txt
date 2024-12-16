@@ -1,0 +1,10 @@
+Given the identified inconsistencies below, critically evaluate and revise the recommendations.
+
+Your task:
+1. Review each identified inconsistency and its proposed resolution
+2. Make definitive choices where subjective decisions were left open
+3. Note any cases where you disagree with the original assessment or recommendation
+4. Provide clear, actionable revisions for each item
+
+Previous analysis:
+{{input}}

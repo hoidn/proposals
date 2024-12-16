@@ -1,0 +1,13 @@
+<task>
+    Analyze the provided documentation context carefully.
+    
+    Which are the potential conflicts or inconsistencies between taskspec.md and the other provided documents?
+    
+    Organize your response into two clearly marked sections:
+    1. Inconsistencies with clear resolutions - explain the specific fixes needed
+    2. Inconsistencies requiring subjective choices - present the options and recommend one
+    
+    Present your response in a structured format focused on specific technical details and document references.
+</task>
+
+{{input}}
