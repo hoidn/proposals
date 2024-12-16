@@ -131,12 +131,15 @@ Process a list of named inputs through repeated application of inner task and re
      - Current accumulator value
      - Original input
   3. Result becomes new accumulator value
-- Maintains strict ordering of input processing
+- Maintains strict ordering through sequential Handler execution
 - Context changes managed by memory system
-- Execution fails if:
-  - Any inner_task execution fails
-  - Any reduction_task execution fails
-  - Invalid task structure
+- Execution may raise:
+  - RESOURCE_EXHAUSTION: If inner_task or reduction_task exceeds resource limits
+  - INVALID_OUTPUT: If task outputs don't match required format
+  - VALIDATION_ERROR: If reduction structure is invalid
+  - XML_PARSE_ERROR: If generated XML is malformed
+- Strict ordering of reduction steps maintained
+- No support for partial results on failure
 
 ## Integration Points
 
