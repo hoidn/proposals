@@ -49,20 +49,31 @@ The evaluator manages execution and resource tracking:
   * Maintain working memory consistency
   * Handle context updates
 
+#### Task Templates
+- Immutable template definitions loaded at startup
+- Core Fields (all readonly):
+  * taskPrompt: Task-specific instructions
+  * systemPrompt: Base system context
+  * inputs: Optional input specifications
+- Optional Controls (readonly):
+  * isManualXML: Flag for manual XML task structures
+  * disableReparsing: Control for reparse behavior
+  * atomicSubtype: Subtype for atomic tasks
+- Storage:
+  * Disk-based XML format
+  * Loaded once at system initialization
+  * Immutable during runtime
+- Validation:
+  * Basic XML structure
+  * Required field presence
+  * Template type constraints
+
 #### Task System
-The task system handles high-level task management:
-- Task Understanding
-  * Parse natural language instructions
-  * Validate input sufficiency
-  * Determine decomposition strategy
-- Task Library
-  * Match tasks to execution patterns
-  * Provide reusable task templates
+- Task Execution Coordination
+  * Delegate task execution to Handlers
+  * Return task results (content and data usage notes)
+  * Surface errors to Evaluator
   * Support context-aware task selection
-- Execution Management
-  * Coordinate task execution
-  * Handle resource allocation
-  * Manage error recovery
 
 ### 2.2 Component Integration Requirements
 - Compiler ↔ Task System
@@ -292,7 +303,7 @@ The task system handles high-level task management:
   * Context window management
   * Strict XML validation
   * Initial XML pipeline
-  * AST construction (Sequential ops)
+  * AST construction (Sequential operations)
   * Basic evaluator functionality
 - Success Criteria
   * Accurate turn counting
