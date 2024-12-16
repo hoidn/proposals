@@ -3,6 +3,40 @@
 
 ### 4.1 Key Components
 
+### Core Types
+
+// Error types
+type TaskError = 
+  | { 
+      type: 'RESOURCE_EXHAUSTION';
+      resource: 'turns' | 'context' | 'output';
+      message: string;
+      metrics?: { used: number; limit: number; };
+    }
+  | { 
+      type: 'INVALID_OUTPUT';
+      message: string;
+      violations?: string[];
+    }
+  | { 
+      type: 'VALIDATION_ERROR';
+      message: string;
+      path?: string;
+    }
+  | { 
+      type: 'XML_PARSE_ERROR';
+      message: string;
+      location?: string;
+    };
+
+interface TaskTemplate {
+  readonly taskPrompt: string;
+  readonly systemPrompt: string;
+  readonly inputs?: Record<string, string>;
+  readonly isManualXML?: boolean;
+  readonly disableReparsing?: boolean;
+}
+
 ### Task Library Manager
 1. Template Storage
 ```typescript
@@ -74,7 +108,7 @@ interface TaskExecutor {
     template: TaskTemplate, 
     inputs: Record<string, string>,
     handler: Handler
-  ): TaskResult;
+  ): TaskResult; // throws TaskError union type
 
   // Memory operation support
   executeMemoryTask(
@@ -160,7 +194,7 @@ describe("Template Validation", () => {
   
   test("invalid template throws", () => {
     expect(() => taskSystem.validateTemplate(invalidTemplate))
-      .toThrow(TemplateValidationError);
+      .toThrow({ type: 'VALIDATION_ERROR' });
   });
   
   test("specialized template identification", () => {
@@ -262,13 +296,19 @@ describe("Memory System Integration", () => {
 ```typescript
 describe("Error Handling", () => {
   test("resource exhaustion", () => {
-    // proper error type
-    // handler cleanup
+    expect(error).toMatchObject({
+      type: 'RESOURCE_EXHAUSTION',
+      resource: expect.stringMatching(/turns|context|output/),
+      message: expect.any(String)
+    });
   });
   
   test("invalid output", () => {
-    // error details
-    // partial results
+    expect(error).toMatchObject({
+      type: 'INVALID_OUTPUT',
+      message: expect.any(String),
+      violations: expect.arrayContaining([expect.any(String)])
+    });
   });
 });
 ```
