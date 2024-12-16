@@ -1,3 +1,8 @@
+### Terminology Standards
+- "Sequential" operator represents basic task chaining and input substitution patterns
+- Distinct from Reduce operator (which has specialized accumulation semantics)
+- Distinct from atomic operations (which execute as single units)
+
 # Project Overview: Intelligent Task Execution System
 
 ## 1. Problem Statement
@@ -17,7 +22,7 @@ This project aims to automate this process through a system that can understand,
 The compiler handles translation and transformation of tasks into executable formats:
 - Initial Translation Pipeline
   * Convert natural language instructions to structured XML
-  * Transform XML into Abstract Syntax Tree (AST)
+  * Transform XML into Abstract Syntax Tree (AST) with strict validation
   * Validate task structure against operation schemas
 - Dynamic Reparsing
   * Generate new task structures for failed operations
@@ -105,9 +110,11 @@ The task system handles high-level task management:
 
 ### 3.2 Dynamic Execution
 - Execution Management
-  * Process individual subtasks
-  * Track resource utilization
-  * Maintain execution state
+  * Synchronous task execution through Handler abstraction
+  * Direct LLM interaction with blocking operations
+  * No asynchronous operations or Promise structures
+  * Per-task context management via Memory System
+  * Clean task termination
 - Failure Detection
   * Resource limit monitoring
   * Output validation
@@ -193,42 +200,47 @@ The task system handles high-level task management:
   * Turn limit exceeded
   * Context window full
   * Resource depletion
+  * Output size exceeded
 - Required Data
-  * Resource type
-  * Usage metrics
-  * Limit details
-- Recovery Expectations
-  * Decomposition requirements
-  * Resource optimization
-  * Alternative strategies
+  * Resource type (turns/context/output)
+  * Usage metrics (used vs limit)
+  * Detailed limit information
+- Recovery Strategy: 
+  * Trigger task decomposition into smaller units
+  * Resource limits inform decomposition strategy
 
 #### Invalid Output Structure
 - Detection Criteria
-  * Schema violations
-  * Format errors
-  * Validation failures
+  * Output format violations
+  * Content validation failures
 - Required Data
-  * Error type
-  * Invalid elements
-  * Context state
-- Recovery Expectations
-  * Regeneration requirements
-  * Validation rules
-  * Format correction
+  * Specific violations list
+  * Invalid content details
+- Recovery Strategy:
+  * Trigger alternative task formulation
+  * Requires different prompting strategy
 
-#### Failure to Make Progress
+#### XML Parse Errors
 - Detection Criteria
-  * Progress indicators
-  * Stall conditions
-  * Timeout limits
+  * Basic XML syntax errors
+  * Malformed structure
 - Required Data
-  * Progress metrics
-  * State information
-  * Time constraints
-- Recovery Expectations
-  * Alternative approaches
-  * Progress preservation
-  * Success criteria
+  * Error location in input
+  * Specific parsing failure
+- Recovery Strategy:
+  * Surface to evaluator for recovery
+  * No internal retry attempts
+
+#### Validation Errors
+- Detection Criteria
+  * Schema validation failures
+  * Required field violations
+- Required Data
+  * Validation path information
+  * Specific constraint violations
+- Recovery Strategy:
+  * Evaluator handles recovery
+  * No internal retry attempts
 
 ### 5.2 Recovery Process Requirements
 
@@ -278,7 +290,7 @@ The task system handles high-level task management:
 - Deliverables
   * Turn counter implementation
   * Context window management
-  * Basic task validation
+  * Strict XML validation
   * Initial XML pipeline
   * AST construction (Sequential ops)
   * Basic evaluator functionality
