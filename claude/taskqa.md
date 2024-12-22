@@ -177,3 +177,44 @@ Any validation beyond basic XML structure?
 
 A: a. there's no constraints on either. b. no
 
+TaskResult Format
+Q: Should TaskResult include XML parsing status flags?
+A: No, keep TaskResult simple with just content and notes. XML parsing failures should be handled through the error system.
+
+**Important Note**: 
+While TaskResult is simplified to just content and notes, reparse tasks have special output format requirements:
+- For non-atomic tasks, output must match XML structure of operator types
+- These XML structures (like those shown in operators.md) are format requirements for reparse task output, not TaskResult structure
+- This maintains separation between task output format and result delivery structure
+
+Error Handling Format
+Q: Should TaskError use union types or class hierarchy?
+A: Use union types with specific structured data per error type for better type safety and clarity.
+
+Score Output Format
+Q: What format should task matching scores use?
+A: JSON for simplicity and better fit for numeric data, despite system's general use of XML.
+
+Atomic Task Subtypes
+Q: How should subtasks be represented in the type system?
+A: Use AtomicTaskSubtype ("standard" | "subtask") rather than adding a new TaskType. Subtasks must be atomic.
+
+Operator Naming
+Q: Should we use "sequence" or "sequential" for operator naming?
+A: Use "sequential" as it's more explicit and descriptive.
+
+## Task Types & Operators
+
+Q: What is the purpose of the Sequential operator type?  
+A: The Sequential operator represents basic task chaining and input substitution patterns. It's distinct from Reduce (which has specialized accumulation semantics) and from atomic operations (which execute as single units). The "sequential" name refers to its conceptual structure, not execution order, since all operations are synchronous.
+
+Q: Why is the system synchronous by design?  
+A: LLM operations are inherently blocking through the Handler abstraction. Adding Promise/async complexity would complicate error handling and control flow without providing benefits, since there's no true asynchronous operation happening. This also simplifies resource tracking and state management.
+
+## Error Types
+
+Q: What's the distinction between XML_PARSE_ERROR and VALIDATION_ERROR?  
+A: XML_PARSE_ERROR indicates fundamental XML syntax/parsing failures (malformed XML structure). VALIDATION_ERROR covers higher-level validation issues like missing required fields, invalid field values, and schema conformance. This separation allows different recovery strategies - parsing errors are fatal while validation errors might be recoverable.
+
+Q: How do these error types influence task handling?  
+A: Parsing errors trigger immediate failure as they indicate structural problems. Validation errors may allow recovery through reparsing or alternative approaches. The Handler and evaluator use this distinction to determine appropriate recovery strategies.
