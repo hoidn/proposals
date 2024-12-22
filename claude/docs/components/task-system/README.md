@@ -1,37 +1,57 @@
 # Task System Component
 
 ## Purpose
+The Task System manages LLM task execution through structured templates and handlers, providing:
+- Task template matching and management
+- LLM session management via encapsulated Handlers
+- XML task generation and validation with graceful degradation
+- Management of specialized tasks (reparsing and associative memory)
 
-The Task System manages LLM task execution through structured templates and handlers.
-
-### Core Responsibilities
-- Task template matching and validation
-- LLM session management via Handlers
-- Error handling and propagation 
-- Resource constraint enforcement
-
-### Key Constraints
-- Synchronous operation
-- No persistent state
-- XML-based task definitions
-
-## Components
+## Core Components
 
 ### Handler
-
 Manages individual LLM sessions:
-- Turn counting and limits
+- Turn counting and resource limits enforcement
 - Context window management
 - Direct LLM interaction
-- Resource tracking
 - Interactive session support
+- Resource usage tracking
 
 ### Template Manager
-
 Handles task definitions:
 - Template validation
 - Task matching
 - XML processing
+
+## Key Constraints
+
+### Architectural
+- Synchronous operation only
+- No persistent state maintenance
+- XML-based task definitions
+- Read-only memory system access
+
+### Operational
+- One Handler per task execution
+- Immutable Handler configuration
+- Template immutability during execution
+- No direct resource usage tracking (delegated to Handlers)
+- No progress/retry state (managed by Evaluator)
+
+## System Integration
+
+### Dependencies
+- Memory System: Context access and management
+- Compiler: Task parsing services
+- Evaluator: Error recovery support
+- XML Processing: Template and output handling
+
+### Responsibilities
+Provides:
+- Task execution and template management
+- LLM session encapsulation
+- XML processing and validation services
+- Error detection and propagation
 
 ## Contracts
 
@@ -45,11 +65,7 @@ Handles task definitions:
 - Resource limits enforced
 - Templates immutable during execution
 
-### Termination 
+### Termination
 - Handlers cleaned up
 - Resources released
 - No state preserved
-
-## Dependencies
-- Memory System for context
-- XML processing for templates
