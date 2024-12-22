@@ -102,26 +102,24 @@ try {
 }
 ```
 
-## Memory System Integration
+## Memory Integration Example
 ```typescript
-// Access memory system
-const context = memorySystem.shortTermMemory;
-
 // Execute task with context
 const result = await taskSystem.executeTask(
   "analyze recent changes",
   {
     shortTermMemory: {
-      files: new Map([['data.txt', {
-        content: 'Sample data',
-        metadata: { path: 'data.txt', loadedAt: new Date() },
-        sourceLocation: '/path/to/data.txt'
-      }]]),
-      dataContext: 'Analysis context'
+      content: 'Current analysis context with relevant information',
+      files: {
+        paths: ['data.txt', 'config.json'],
+        modified: new Set(['data.txt'])
+      }
     },
-    longTermStorage: {
-      files: new Map(),
-      text: ''
+    longTermMemory: {
+      content: 'Persisted historical context',
+      files: {
+        paths: ['history.log']
+      }
     }
   }
 );
