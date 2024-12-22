@@ -101,6 +101,26 @@
 - Uses associative matching templates
 - Returns relevant context selections
 
+## Memory System Integration
+
+### File Operations
+- Uses Claude's file capabilities for actual I/O
+- Tracks modified files during task execution
+- Maintains simple file path index
+- No direct file state management
+
+### Memory Structure
+- Short term memory uses unstructured text
+- Simple tracking of available and modified files
+- Long term memory preserved for future persistence
+- Structure/parsing handled by associative memory tasks
+
+### State Management
+- No complex file metadata tracking
+- Minimal state maintenance between tasks
+- Clear task execution boundaries
+- Simple file modification tracking
+
 ## Error Handling
 
 ### Detection
