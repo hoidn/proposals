@@ -76,13 +76,13 @@ The Task System:
 
 - Does not predict resource usage
 - Does not optimize task decomposition
-- Relies on Handlers for resource tracking and enforcement
-- Resource limits only influence reparsing/decomposition tasks
 - No responsibility for context window management
+- Relies on Handlers for resource tracking
+- Model selection delegated to Handler
 
 ### 4.2 Task Templates
 
-- Stored as XML files in designated directories
+- XML templates must conform to [Contract:Tasks:TemplateSchema:1.0]
 - Support both LLM-generated and manual XML structures
 - Basic XML validation with warning generation
 - XML output parsing with graceful degradation to single string
@@ -97,6 +97,19 @@ The Task System:
 - Scoring logic contained within matching prompts
 
 ### 4.4 Memory System Integration
+
+- Direct access to memory system interfaces
+- Uses Memory System interfaces directly
+- No state maintained between tasks
+- Read-only access to context
+
+### 4.5 Model Selection
+- Required in template or default config
+- Handler enforces model availability
+- No runtime model switching
+- Model validation during template parsing
+
+### 4.6 Memory System Integration
 
 - Direct access to memory system interfaces
 - Uses Memory System interfaces:
@@ -127,11 +140,11 @@ The Task System:
 ### 4.5 Configuration Constraints
 
 - Handler configuration immutable after initialization
-- Required configuration parameters:
-  - max_turns (with default)
-  - max_context_window_fraction (with default)
-  - system_prompt (defaults to empty string)
-- No runtime configuration changes supported
+- Configuration constraints:
+  * max_turns (with default)
+  * max_context_window_fraction (with default)
+  * default_model (optional)
+  * system_prompt (defaults to empty string)
 
 ### 4.6 XML Processing
 
