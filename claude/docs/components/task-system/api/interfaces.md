@@ -45,26 +45,23 @@ interface TaskSystem {
   }>>;
 }
 
-// Memory System Interfaces
-interface StorageFile {
-  content: string;
-  metadata: StorageMetadata;
-}
-
-interface WorkingFile {
-  content: string;
-  metadata: WorkingMetadata;
-  sourceLocation: string;
-}
-
+// Memory System Interface
 interface MemorySystem {
-  longTermStorage: {
-    files: Map<string, StorageFile>;
-    text: string;
-  };
+  // Short term memory for task context
   shortTermMemory: {
-    files: Map<string, WorkingFile>;
-    dataContext: string;
+    content: string;  // Unstructured text content
+    files: {
+      paths: string[];  // Available file paths
+      modified: Set<string>;  // Which files modified on disk
+    };
+  };
+  
+  // Long term memory for potential persistence
+  longTermMemory: {
+    content: string;  // Unstructured text content 
+    files: {
+      paths: string[];  // Paths of stored files
+    };
   };
 }
 ```
