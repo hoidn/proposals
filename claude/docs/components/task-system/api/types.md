@@ -35,20 +35,25 @@ interface ASTNode {
 }
 ```
 
-## Memory System Types
+## Memory System
 ```typescript
-interface StorageMetadata {
-  path: string;
-  summary?: string;
-  lastModified: Date;
-  type?: string;
-}
-
-interface WorkingMetadata {
-  path: string;
-  summary?: string;
-  loadedAt: Date;
-  status: 'active' | 'stale';
+interface MemorySystem {
+  // Short term memory for task context
+  shortTermMemory: {
+    content: string;  // Unstructured text content
+    files: {
+      paths: string[];  // Available file paths
+      modified: Set<string>;  // Which files modified on disk
+    };
+  };
+  
+  // Long term memory for potential persistence
+  longTermMemory: {
+    content: string;  // Unstructured text content 
+    files: {
+      paths: string[];  // Paths of stored files
+    };
+  };
 }
 ```
 
