@@ -69,3 +69,9 @@ Provides:
 - Handlers cleaned up
 - Resources released
 - No state preserved
+
+## System Integration Points  
+- Memory System: Accesses files and context data needed for task execution
+- Compiler: Owns XML generation and validation
+- Evaluator: Executes tasks, receives error results, and initiates recovery via new task executions 
+- Handler: Relies on Handler for resource tracking and LLM session management
