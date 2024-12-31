@@ -14,6 +14,11 @@
 - Strict limit enforcement
 - No cross-Handler pooling
 
+### Turn Management Rules
+- Turn tracking owned by Handler instance
+- Turn limit passed during Handler initialization
+- Interactive sessions count against turn limits
+
 ### Usage Tracking
 ```typescript
 interface TurnMetrics {
