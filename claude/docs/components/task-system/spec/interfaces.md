@@ -1,74 +1,76 @@
 # Task System Interfaces
 
-## Types
+## Public Interfaces
 
-### Task Results
+### TaskSystem Interface
 ```typescript
+/**
+ * Types specific to TaskSystem interface
+ */
 interface TaskResult {
     content: string;
     notes: {
         dataUsage: string;
     };
 }
-```
 
-### Task Types
-```typescript
-type TaskType = "atomic" | "sequential" | "map" | "reduce";
-type AtomicTaskSubtype = "standard" | "subtask";
-
-// Core types with documentation
-interface TaskTemplate {
+interface TaskTemplate { 
     readonly taskPrompt: string;     // Maps to <instructions> in schema
-    readonly systemPrompt: string;   // Maps to <system> in schema
+    readonly systemPrompt: string;   // Maps to <s> in schema
     readonly model: string;          // Maps to <model> in schema
     readonly inputs?: Record<string, string>;
     readonly isManualXML?: boolean;     // Maps to <manual_xml> in schema
     readonly disableReparsing?: boolean; // Maps to <disable_reparsing> in schema
-    readonly atomicSubtype?: AtomicTaskSubtype;  // Only for atomic tasks
+    readonly atomicSubtype?: AtomicTaskSubtype;  // From types.md
+}
+
+/**
+ * Core task execution interface
+ * Uses TaskType, TaskError from types.md
+ */
+interface TaskSystem {
+    // Execute a single task with the given context
+    executeTask(
+        task: string,
+        context: MemorySystem,
+        taskType?: TaskType
+    ): Promise<TaskResult>;
+
+    // Validate a task template
+    validateTemplate(template: TaskTemplate): boolean;
+    
+    // Find matching task templates for input
+    findMatchingTasks(
+        input: string,
+        context: MemorySystem
+    ): Promise<Array<{
+        template: TaskTemplate;
+        score: number;
+        taskType: TaskType;
+    }>>;
 }
 ```
 
-### Error Types
+### Memory System Interface
 ```typescript
-type TaskError = 
-    | { 
-        type: 'RESOURCE_EXHAUSTION';
-        resource: 'turns' | 'context' | 'output';
-        message: string;
-        metrics?: { used: number; limit: number; };
-    }
-    | { 
-        type: 'INVALID_OUTPUT';
-        message: string;
-        violations?: string[];
-    }
-    | { 
-        type: 'VALIDATION_ERROR';
-        message: string;
-        path?: string;
-        invalidModel?: boolean;
-    }
-    | { 
-        type: 'XML_PARSE_ERROR';
-        message: string;
-        location?: string;
-    };
-```
-
-### Memory System Types
-```typescript
+/**
+ * Types specific to Memory interface
+ */
 interface StorageFile {
     content: string;
-    metadata: StorageMetadata;
+    metadata: StorageMetadata;  // TODO: Define this type
 }
 
 interface WorkingFile {
     content: string;
-    metadata: WorkingMetadata;
+    metadata: WorkingMetadata;  // TODO: Define this type
     sourceLocation: string;
 }
 
+/**
+ * Memory management interface
+ * Handles persistent and temporary storage
+ */
 interface MemorySystem {
     longTermStorage: {
         files: Map<string, StorageFile>;
@@ -81,35 +83,22 @@ interface MemorySystem {
 }
 ```
 
-## Public Interfaces
-
-### TaskSystem
+### Handler Interface
 ```typescript
-interface TaskSystem {
-    // Task Execution
-    executeTask(
-        task: string,
-        context: MemorySystem,
-        taskType?: TaskType
-    ): Promise<TaskResult>;
-
-    // Template Management
-    validateTemplate(template: TaskTemplate): boolean;
-    
-    // Task Matching
-    findMatchingTasks(
-        input: string,
-        context: MemorySystem
-    ): Promise<Array<{
-        template: TaskTemplate;
-        score: number;
-        taskType: TaskType;
-    }>>;
+/**
+ * Types specific to Handler interface
+ */
+interface HandlerConfig {
+    maxTurns: number;
+    maxContextWindowFraction: number;
+    defaultModel?: string;
+    systemPrompt: string;
 }
-```
 
-### Handler
-```typescript
+/**
+ * LLM interaction interface
+ * Uses ResourceMetrics, ResourceLimits from types.md
+ */
 interface Handler {
     /**
      * Execute a prompt with the LLM
