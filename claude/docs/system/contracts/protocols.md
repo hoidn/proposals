@@ -2,7 +2,7 @@
 
 ## Task Template Schema [Contract:Tasks:TemplateSchema:1.0]
 
-Interface: See TaskTemplate interface in taskspec.md
+Interface: See TaskTemplate interface in [Type:TaskSystem:TaskTemplate:1.0] (spec/types.md)
 
 The task template schema defines the structure for task template XML files and maps to the TaskTemplate interface:
 
@@ -77,6 +77,6 @@ The task template schema defines the structure for task template XML files and m
 ### Interface Mapping
 
 This schema is used by the TaskSystem component. For implementation details and interface definitions, see:
-- TaskTemplate interface in taskspec.md
-- Template validation in TaskSystem.validateTemplate()
+- TaskTemplate interface in spec/types.md [Type:TaskSystem:TaskTemplate:1.0]
+- Template validation in TaskSystem.validateTemplate() 
 - Template parsing in TaskSystem constructor

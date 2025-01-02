@@ -21,12 +21,12 @@ interface TaskTemplate {
     readonly inputs?: Record<string, string>;
     readonly isManualXML?: boolean;     // Maps to <manual_xml> in schema
     readonly disableReparsing?: boolean; // Maps to <disable_reparsing> in schema
-    readonly atomicSubtype?: AtomicTaskSubtype;  // From types.md
+    readonly atomicSubtype?: AtomicTaskSubtype;  // From [Type:TaskSystem:AtomicTaskSubtype:1.0]
 }
 
 /**
  * Core task execution interface
- * Uses TaskType, TaskError from types.md
+ * Uses [Type:TaskSystem:TaskType:1.0], [Type:TaskSystem:TaskError:1.0]
  */
 interface TaskSystem {
     // Execute a single task with the given context
@@ -97,7 +97,7 @@ interface HandlerConfig {
 
 /**
  * LLM interaction interface
- * Uses ResourceMetrics, ResourceLimits from types.md
+ * Uses [Type:TaskSystem:ResourceMetrics:1.0], [Type:TaskSystem:ResourceLimits:1.0]
  */
 interface Handler {
     /**

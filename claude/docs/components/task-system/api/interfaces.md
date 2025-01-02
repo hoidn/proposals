@@ -1,5 +1,10 @@
 # Task System Interfaces
 
+For complete type definitions and implementation details, see:
+- Core types: [Type:TaskSystem:1.0] in spec/types.md
+- Internal interfaces: spec/interfaces.md
+- XML schema: [Contract:Tasks:TemplateSchema:1.0] in protocols.md
+
 ## Core Types
 ```typescript
 // Task Results
