@@ -60,8 +60,8 @@ Execute a series of tasks with explicit dependencies. Maintains execution order 
   - All input tasks execute in parallel
   - Parent task executes after all inputs complete
 - Execution fails if:
-  - Any task fails
-  - Invalid task structure
+  - Required task structure is missing/invalid
+  - Any task execution fails (with failure context indicating which task)
 
 ## Reduce Operator
 
@@ -124,11 +124,9 @@ Process a list of named inputs through repeated application of inner task and re
 - Maintains strict ordering of input processing
 - Context changes managed by memory system
 - Execution fails if:
-  - Any inner_task execution fails 
-  - Any reduction_task execution fails
-  - Invalid task structure
-- Invalid structure causes validation error
-- No partial validation support
+  - Required task structure is missing/invalid 
+  - Any inner_task execution fails (with failure context indicating which input)
+  - Any reduction_task execution fails (with failure context indicating current state)
 
 ## Integration Points
 
@@ -143,7 +141,7 @@ Process a list of named inputs through repeated application of inner task and re
 - Handles task library matching
 
 ## Dependencies
-- Error types must be defined
+- Error types defined in errorspec.md
 - Memory system must handle context
 - Task system must support XML generation
 
