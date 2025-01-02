@@ -123,30 +123,58 @@
 
 ## Error Handling
 
-### Detection
-- Resource exhaustion
-  * Handler detects limit violations
-  * Immediate task termination
-  * Surfaces through standard error type
+### Error Detection and Response
 
-- Invalid output
-  * Structural validation failure
-  * Format validation errors
-  * No semantic validation
+#### Resource Exhaustion
+- Handler detects limit violations
+- Immediate task termination
+- Surfaces through standard error type
+- Resource accounting completion
+- Clean Handler termination
+- No retry attempts
 
-- Progress failure
-  * Handler detects stalled execution
-  * Task-specific progress indicators
-  * No internal progress tracking
+#### Invalid Output
+- Structural validation failure
+- Format validation errors
+- No semantic validation
+- Preserves partial outputs when useful
+- Returns both output and notes sections
+- May trigger reparse task
 
-### Response
-- Uses standard error type system
+#### Progress Failure
+- Handler detects stalled execution
+- Task-specific progress indicators
+- No internal progress tracking
+- May trigger alternative approach
+- State preserved in error response
+- No automatic retry
+
+#### XML Validation
+- Immediate failure on invalid structure
+- No warning collection
+- Clear error messages
+- Location information when available
+- May trigger reparse if not disabled
+
+### Error Response
+
+#### Error Surfacing
+- Uses standard error type system (see types.md)
 - Includes relevant task notes
 - Preserves partial outputs when useful
-- Clean termination of LLM session
-- No retry attempts (delegated to evaluator)
+- Includes resource metrics where applicable
+- Clear error messages and locations
 
-### Resource Recovery
-- Clean resource release
-- Session termination
-- Context cleanup
+#### Handler Cleanup
+- Clean termination of LLM session
+- Resource accounting completion
+- No state preservation
+- Context window cleanup
+- Turn counter finalization
+
+#### Recovery Delegation
+- No retry attempts
+- No state maintenance
+- Delegates to evaluator
+- Provides complete error context
+- Includes notes for recovery guidance
