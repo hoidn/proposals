@@ -1,5 +1,14 @@
 # Intelligent Task Execution System
 
+## Problem Statement
+Software development and technical tasks require breaking down complex requirements into executable units. This typically requires human expertise for:
+- Decomposing large tasks into smaller, manageable pieces  
+- Recovering from failures by trying alternative approaches
+- Maintaining relevant context across related subtasks
+- Combining partial results into complete solutions
+
+This system automates this process through intelligent task decomposition and execution while handling failures gracefully and maintaining task coherence.
+
 ## Overview
 
 ### Core Purpose and Goals
