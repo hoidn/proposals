@@ -1,131 +1,82 @@
 # Error Type Hierarchy and Handling Design
 
 ## Purpose
-Define the core error taxonomy and handling strategy for the intelligent task execution system. Errors serve as a control flow mechanism to enable dynamic task adaptation and recovery.
+Define the core error types that enable control flow and task adaptation in the intelligent task execution system.
 
 ## Error Categories
 
 ### 1. Resource Exhaustion
 - **Purpose**: Signal when system resource limits are exceeded
 - **Characteristics**:
-  - Parameterized resource type and limits
-  - Clear thresholds for triggering
-  - No partial results/state needed
-- **Recovery Strategy**: 
-  - Trigger task decomposition into smaller units
-  - Resource limits inform decomposition strategy
+  - Parameterized resource type and limits (e.g., turns, context window)
+  - Clear threshold for triggering
+  - No partial results preserved
+- **Control Flow Impact**: 
+  - Signals that task requires more resources than available
 
-### 2. Invalid Output Structure
-- **Purpose**: Signal task output validation failures
+### 2. Task Failure
+- **Purpose**: Signal that a task cannot be completed as attempted
 - **Characteristics**:
-  - Independent of operator type
-  - Focused on structural correctness
-  - No semantic validation required
-- **Recovery Strategy**:
-  - Trigger alternative task formulation
-  - Requires different prompting strategy
-
-### 3. Failure to Make Progress
-- **Purpose**: Signal when task execution stalls
-- **Characteristics**:
-  - Based on task-specific progress indicators
-  - Identified through task output
-  - No internal progress tracking
-- **Recovery Strategy**:
-  - Trigger alternative task approach
-  - May require different context selection
-
-### 4. XML Validation Errors
-- **Purpose**: Signal XML structural or template validation failures
-- **Characteristics**:
-  - Immediate failure on invalid structure
-  - No warning collection
-  - Clear error messages
-- **Recovery Strategy**:
-  - Evaluator handles recovery
-  - No internal retry attempts
+  - Generic failure mechanism
+  - No internal categorization
+  - No partial results preserved
+- **Control Flow Impact**:
+  - Task terminates
+  - Control returns to parent task/evaluator
 
 ## Error Handling Principles
 
 ### 1. Separation of Concerns
-- Errors focus purely on signaling failure conditions
-- Progress tracking belongs to task system
-- Retry counting belongs to evaluator
-- Context management handled by memory system
+- Errors purely signal failure conditions
+- No recovery logic in error objects
+- No state/progress tracking
+- No partial results
 
 ### 2. Control Flow
-- Each error type maps to specific recovery path:
-  - Resource Exhaustion → Task Decomposition
-  - Invalid Output → Alternative Formulation
-  - No Progress → Alternative Approach
-  - XML Validation → Evaluator Recovery
-- Recovery limit enforced by evaluator
+- Resource Exhaustion → Task too large
+- Task Failure → Termination
+- No retry logic in components
 
 ### 3. Context Independence  
 - Errors do not carry execution state
-- No retry history in error objects
 - No partial results in errors
-- Task outputs handled by task system
+- Clean separation from context management
 
 ## Integration Points
 
 ### Task System
-- Raises appropriate error types
-- Includes outputs in standard format
-- Handles task-specific validation
+- Detects resource exhaustion
+- Signals task failures
+- Handles decomposition requests
 
 ### Evaluator
-- Tracks retry attempts
-- Maps errors to recovery strategies
-- Manages execution flow
+- Receives error signals
+- Manages control flow
+- Requests decomposition when needed
 
 ### Memory System
-- Maintains execution context
-- Handles context retrieval/updates
-- Supports context selection during recovery
+- Preserves stable context
+- No error-specific state
+- No partial results
 
 ## Design Decisions & Rationale
 
-1. Limited Error Categories
-   - Rationale: Maps to core failure modes
-   - Benefit: Direct mapping to recovery paths
-   - Impact: Predictable error handling
+1. Minimal Error Categories
+   - Only essential control flow signals
+   - Clear mapping to system behaviors
+   - Simplified error handling
 
 2. Stateless Error Design
-   - Rationale: Separates failure signaling from recovery
-   - Benefit: Clean separation of concerns
-   - Impact: Simplified error handling
+   - Separates control flow from state
+   - Clean component boundaries
+   - Simplified recovery
 
-3. Fixed Recovery Paths
-   - Rationale: Each error type has clear recovery strategy
-   - Benefit: Predictable system behavior
-   - Impact: Streamlined implementation
+3. No Complex Recovery
+   - Decomposition as consequence not strategy
+   - Simplified control flow
+   - Clear system behavior
 
 ## Dependencies
-- Task system must implement standard output format
-- Evaluator must track retries
-- Memory system must support context updates
-
-## Open Questions & Risks
-
-1. Recovery Strategy Boundaries
-   - Clear separation between strategies
-   - Strategy selection criteria
-   - Strategy effectiveness measurement
-
-2. Context Selection
-   - Context relevance during recovery
-   - Context update boundaries
-   - Context consistency requirements
-
-## Future Considerations
-
-1. Error Response Refinement
-   - Strategy effectiveness tracking
-   - Context selection optimization
-   - Recovery path optimization
-
-2. System Monitoring
-   - Error pattern analysis
-   - Resource utilization tracking
-   - Recovery success rates
+- Task system must detect resource limits
+- Evaluator must handle control flow
+- Memory system must maintain context
