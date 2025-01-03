@@ -37,9 +37,9 @@ The system consists of four core components working together to process, execute
    - Interfaces with Memory System
 
 4. Memory System
-   - Maintains working context
-   - Handles context persistence
-   - Manages file operations
+   - Maintains task data context
+   - Manages global file metadata index
+   - Provides context for associative matching
 
 ### Key Constraints
 
@@ -47,7 +47,7 @@ The system consists of four core components working together to process, execute
 - Fixed context window size
 - Limited turn counts
 - Synchronous operation only
-- Read-only memory access
+- File access via Handler tools only
 
 #### Operational Constraints  
 - One Handler per task execution
@@ -72,6 +72,11 @@ The system consists of four core components working together to process, execute
    - Execution coordination
    - Resource allocation
    - State management
+
+4. Task System ↔ Memory System
+   - Context management
+   - Metadata index access
+   - Associative matching support
 
 ### System-Wide Protocols
 - XML-based task definitions
