@@ -4,14 +4,14 @@
 
 ### Resource Management
 1. How should warning thresholds affect task execution?
-   - Should tasks be notified of warnings?
-   - Should execution continue normally until hard limits?
-   - What metrics need to be preserved?
+   - DECIDED: Warnings are purely informative and do not affect execution flow
+   - Continue normally until hard limits
+   - Basic metrics preserved for monitoring
 
 2. What is the exact protocol for minimal context selection?
-   - How is "minimal required context" determined?
-   - What happens if context selection fails?
-   - Who makes the selection decision?
+   - DECIDED: Handled at LLM + prompt level
+   - Selection performed by LLM based on task requirements
+   - Not a system architecture concern
 
 3. What cleanup guarantees are needed between tasks?
    - What must be cleaned up vs what can persist?
@@ -34,13 +34,12 @@
 ### Memory System
 1. How should memory system operations be metered?
    - Do we need limits on memory operations?
-   - How are memory operation failures handled?
+   - DECIDED: Failed operations retry once, then surface error
    - What metrics should be tracked?
 
 2. What is the associative memory matching protocol?
-   - How are matches scored?
-   - What happens with low-quality matches?
-   - How is relevance determined?
+   - DECIDED: Handled at LLM + prompt level
+   - Not a system architecture concern
 
 ### Task Execution
 1. How should task transitions be managed?
@@ -49,9 +48,9 @@
    - What cleanup is required?
 
 2. When should tasks be allowed to merge contexts?
-   - What are the rules for context combination?
-   - How are conflicts handled?
-   - What validation is needed?
+   - DECIDED: No context merging in MVP
+   - Using extension patterns instead
+   - May revisit post-MVP
 
 ## Future Considerations
 

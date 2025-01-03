@@ -18,16 +18,31 @@ Manages working memory and context for task execution, including data context, c
 ## Memory System Responsibilities
 
 ### Storage
-- Data context persistence 
-- Template and prompt storage
-- File content management
-- Long-term memory maintenance
+The memory system provides storage but does not manage content:
+- Data context: Stores but doesn't determine inheritance rules
+- Templates/Prompts: Stores but doesn't handle population/validation
+- Files: Maintains content but doesn't manage operations
+- Long-term memory: Provides persistence layer for associative matching
+
+### Context Management
+Data context for a task can come from:
+- Parent task inheritance
+- Predecessor task (for map/sequence operations)
+- Associative matching against long-term memory
+Control of context source is via task library entries, not the memory system.
 
 ### Associative Matching
-- Context generation from long-term memory
-- Relevance-based matching
-- Result filtration
-- Prior task note incorporation
+Implements context generation through:
+- Matching against long-term memory content
+- Incorporating prior task notes for relevance
+- Supporting task-specific matching criteria
+- Providing result filtration and ranking
+
+### Notes Processing
+- Stores unstructured task notes
+- Makes notes available for subsequent matching
+- Supports passing notes to child/successor tasks
+- No enforced structure on note content
 
 ## Component Integration
 - Context window management delegated to Handler

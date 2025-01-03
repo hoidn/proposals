@@ -15,6 +15,9 @@ A: Through Environment objects that combine:
 - Working memory context
 - Context frames are passed and extended through task execution
 
+Q: How is minimal required context determined?
+A: Context selection is handled at the LLM + prompt level, not by the system architecture. This allows for more intelligent and flexible context selection based on task requirements.
+
 ## Resource Ownership & Isolation
 
 Q: Who owns and tracks resources?
@@ -30,6 +33,12 @@ A: As documented:
 - Turn limit passed during Handler initialization
 - Default resource limits from config
 - Per-task limit overrides possible
+
+Q: How are memory operation failures handled?
+A: Through a simple retry mechanism:
+- Failed operations should be retried once
+- If retry fails, an informative error is surfaced
+- No complex recovery mechanisms in MVP
 
 ## Context Window Management
 
@@ -48,6 +57,7 @@ A: Through the Environment system:
 - Each task receives minimal required context
 - Associative memory system mediates between long-term and working memory
 - Environment.extend() creates new contexts with additional bindings
+- No context merging in MVP - extension patterns only
 
 ## Resource Metrics & Limits
 
@@ -62,6 +72,6 @@ Q: How are resource limits handled?
 A: As specified:
 - Default limits from config
 - Per-task overrides possible
-- Warning thresholds (80%)
+- Warning thresholds (80%) are purely informative
 - Hard limits with error handling
 - Clean termination on limit violation

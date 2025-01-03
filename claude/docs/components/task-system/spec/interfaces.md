@@ -26,13 +26,14 @@ interface TaskTemplate {
 
 /**
  * Core task execution interface
- * Uses [Type:TaskSystem:TaskType:1.0], [Type:TaskSystem:TaskError:1.0]
+ * Uses [Type:TaskSystem:TaskType:1.0] defined in types.md
+ * Uses [Type:TaskSystem:TaskError:1.0] defined in errors.md
  */
 interface TaskSystem {
     // Execute a single task with the given context
     executeTask(
         task: string,
-        context: MemorySystem,
+        context: MemorySystem,  // Now uses updated MemorySystem interface [Interface:Memory:2.0]
         taskType?: TaskType
     ): Promise<TaskResult>;
 
@@ -51,35 +52,27 @@ interface TaskSystem {
 }
 ```
 
-### Memory System Interface
+### Memory System Interface [Interface:Memory:2.0]
 ```typescript
 /**
- * Types specific to Memory interface
- */
-interface StorageFile {
-    content: string;
-    metadata: StorageMetadata;  // TODO: Define this type
-}
-
-interface WorkingFile {
-    content: string;
-    metadata: WorkingMetadata;  // TODO: Define this type
-    sourceLocation: string;
-}
-
-/**
  * Memory management interface
- * Handles persistent and temporary storage
  */
+type GlobalIndex = Map<string, string>;
+
+type FileMatch = [string, string | undefined];
+
 interface MemorySystem {
-    longTermStorage: {
-        files: Map<string, StorageFile>;
-        text: string;
-    };
-    shortTermMemory: {
-        files: Map<string, WorkingFile>;
-        dataContext: string;
-    };
+    // Get current data context
+    getContext(): Promise<string>;
+    
+    // Update data context
+    updateContext(context: string): Promise<void>;
+
+    // Get global file index
+    getGlobalIndex(): Promise<GlobalIndex>;
+
+    // Bulk update to global index
+    updateGlobalIndex(index: GlobalIndex): Promise<void>;
 }
 ```
 
@@ -117,5 +110,12 @@ interface Handler {
      * @returns Promise resolving to user's input
      */
     onRequestInput: (agentRequest: string) => Promise<string>;
+
+    /**
+     * File access tools for LLM
+     */
+    tools: {
+        readFile(path: string): Promise<string>;
+    };
 }
 ```
