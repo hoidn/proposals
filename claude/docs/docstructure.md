@@ -608,6 +608,14 @@ Required practices:
 4. Maintain consistent structure
 5. Review and cleanup regularly
 
+## Examples
+Examples in documentation are optional. When provided, they should:
+1. Illustrate core use cases
+2. Demonstrate typical integration patterns
+3. Show error handling approaches
+
+The absence of examples does not indicate incomplete documentation.
+
 ### Component-Specific Extensions
 Required guidelines:
 1. Add specialized documentation as needed
