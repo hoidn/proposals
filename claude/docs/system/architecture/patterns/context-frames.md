@@ -1,0 +1,56 @@
+# Context Frame Pattern [Pattern:ContextFrame:1.0]
+
+## Related Documents
+- Memory System ADR in [ADR:Memory:1.0]
+- Memory component in [Component:Memory:1.0]
+- Resource Management Pattern in [Pattern:ResourceManagement:1.0]
+
+## Context Frame Operations
+
+### Frame Creation and Extension
+```typescript
+interface ContextFrame {
+    // Based on Memory System design (see [ADR:Memory:1.0])
+    bindings: Map<string, any>;    // Current variable bindings
+    context: Map<string, any>;     // Working memory context
+    
+    extend(bindings: Map<string, any>): ContextFrame;
+    cleanup(): void;
+}
+```
+
+### Minimal Context Principle
+As defined in [ADR:Memory:1.0]:
+- Context source controlled by task library entries
+- Can inherit from parent/predecessor tasks
+- Can generate via associative matching
+- Uses minimal required context for operation
+
+### Memory System Integration
+- Associative memory system mediates between long-term and working memory
+- Working memory instantiated from long-term storage using associative retrieval
+- Context updates managed through frame extension
+- Resource tracking delegated to Handler
+
+## Implementation Examples
+
+### Frame Creation
+```typescript
+// Example based on [Component:Memory:1.0] implementation
+class ContextFrame implements IContextFrame {
+    private bindings: Map<string, any>;
+    private context: Map<string, any>;
+    
+    extend(newBindings: Map<string, any>): ContextFrame {
+        const frame = new ContextFrame();
+        frame.bindings = new Map([...this.bindings, ...newBindings]);
+        frame.context = this.context;  // Shared context reference
+        return frame;
+    }
+    
+    cleanup(): void {
+        // Resource cleanup handled by Handler
+        this.bindings.clear();
+        this.context = null;
+    }
+}
