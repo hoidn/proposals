@@ -6,11 +6,82 @@
 ### 1.1 Error Handling Pattern
 See [Pattern:Error:1.0] in system/architecture/patterns/errors.md for complete specification.
 
-### 1.2 Resource Management Pattern 
-[TBD: Resource management pattern definition]
+### 1.2 Resource Management Pattern [Pattern:ResourceManagement:2.0]
 
-### 1.3 Task Execution Pattern
-[TBD: Task execution pattern definition]
+Implementation in task-system/impl/resource-management.md
+
+Core Principles:
+- No resource usage prediction
+- No task decomposition optimization
+- Handler-based resource tracking
+- Clear resource ownership boundaries
+
+Resource Types:
+- Turn Counter: Per-Handler tracking with atomic operations
+- Context Window: Token-based calculation and monitoring
+- Memory Resources: Context and index management
+
+Key Behaviors:
+- Resource initialization and cleanup handled by Handler
+- Token counting for context window management
+- Explicit resource limits and monitoring
+- Clean termination on resource exhaustion
+
+Integration:
+- Handler manages resource tracking
+- Memory system provides context management
+- Clear ownership boundaries between components
+- Standard cleanup protocols
+
+See task-system/impl/resource-management.md for complete implementation details.
+
+### 1.3 Task Execution Pattern [Pattern:TaskExecution:2.0]
+
+Implementation in task-system/spec/behaviors.md
+
+Core Components:
+- Template Management: XML-based task definitions
+- Handler Management: LLM session lifecycle
+- XML Processing: Structure validation and parsing
+- Resource Tracking: Via Handler abstraction
+
+Execution Flow:
+1. Template Selection
+   - Match input to templates
+   - Score and select best match
+   - Validate template structure
+
+2. Task Initialization
+   - Create Handler instance 
+   - Configure resource limits
+   - Set system prompt
+   - Initialize context
+
+3. Execution
+   - Process task via Handler
+   - Monitor resource usage
+   - Handle interactive sessions
+   - Process XML output
+
+4. Completion
+   - Validate output structure
+   - Generate task notes
+   - Clean resource cleanup
+   - Return TaskResult
+
+5. Error Handling
+   - Resource exhaustion detection
+   - Invalid output handling
+   - Progress failure monitoring
+   - Clean termination protocols
+
+Integration Points:
+- Memory System: Context and file access
+- Compiler: Task parsing services
+- Evaluator: Error recovery support
+- Handler: Resource tracking and LLM interaction
+
+See task-system/spec/behaviors.md for complete behavioral specifications.
 
 ## 2. Component Model
 
