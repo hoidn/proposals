@@ -55,11 +55,41 @@ See [Interface:ErrorHandling:1.0] in system/contracts/interfaces.md for complete
 ### Resource Management [Pattern:Resource:2.0]
 Defines resource allocation, tracking, and lifecycle across components.
 
-Key concepts:
+#### Core Principles
 - Handler-based resource isolation
 - Per-task resource tracking
 - Context window management
 - Memory system integration
+- No cross-Handler resource sharing
+- Read-only memory access
+
+#### Component Responsibilities
+
+##### Handler
+- Owns turn counting per task execution
+- Manages context window size
+- Tracks token usage
+- Enforces resource limits
+- Ensures session termination
+
+##### Task System
+- Creates Handler instances
+- Configures immutable resource limits
+- Delegates resource tracking to Handler
+- Manages template persistence
+
+##### Memory System
+- Maintains task context data
+- Provides context management interface
+- Maintains global file metadata index
+- No file content storage
+
+#### Resource Types and Protocols
+- Turn Counter: Per-Handler atomic tracking with strict limits
+- Context Window: Token-based size monitoring and enforcement
+- Memory Resources: Short-term task context with clear boundaries
+- Resource Release: Coordinated cleanup and state invalidation
+- Error Handling: Resource exhaustion detection and preservation
 
 See [Contract:Resources:2.0] in system/contracts/resources.md for complete specification.
 
