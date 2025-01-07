@@ -116,6 +116,9 @@ Required:
    - Status accuracy verification
    - Gap identification
 
+Note: The Documentation Map in this guide serves as the primary navigation aid
+for finding specifications and understanding document relationships.
+
 ## Templates
 [See individual document templates in this guide]
 ```
