@@ -11,16 +11,23 @@ Software development and technical tasks require breaking down complex requireme
 This system automates this process through intelligent task decomposition and execution while handling failures gracefully and maintaining task coherence.
 
 ### System Goals
-- Automate task decomposition into manageable units
-- Recover gracefully from failures using alternative approaches
-- Maintain relevant context across related subtasks
-- Combine partial results into complete solutions
-- Ensure consistent behavior through:
-  - Standardized XML-based communication protocols
-  - Well-defined component interfaces and contracts
-  - Strict validation of all cross-component interactions 
-  - Versioned interface specifications
-  - Formal protocol compliance checking
+1. Primary Goals
+- Provide reliable task automation through structured decomposition and execution
+- Ensure consistent task processing despite resource constraints
+- Enable robust error recovery without human intervention
+- Maintain system coherence across task boundaries
+
+2. Quality Goals
+- Predictable resource usage through explicit tracking and limits
+- Consistent behavior through standardized protocols and interfaces
+- Extensible task handling via template-based architecture
+- Maintainable system through clear component boundaries
+
+3. Operational Goals
+- Handle varying task complexities through dynamic decomposition
+- Support diverse task types through flexible template system
+- Preserve critical context across task boundaries
+- Manage resources efficiently within defined constraints
 
 ### System Constraints
 
