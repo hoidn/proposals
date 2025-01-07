@@ -11,8 +11,7 @@ docs/
 │   │   ├── decisions/             # Architecture Decision Records (ADRs)
 │   │   └── patterns/              # Core patterns & principles
 │   ├── protocols/                  # System-wide protocols
-│   │   ├── README.md              # Protocol overview 
-│   │   └── resources.md           # Resource protocols
+│   │   └── resources.md            # Protocol-level resource definitions
 │   └── contracts/                  # System-wide contracts
 │       ├── interfaces.md          # External interfaces
 │       └── resources.md           # Resource management
@@ -86,6 +85,14 @@ Required:
 2. One sentence per line
 3. Explicit section numbering
 4. Consistent terminology
+
+## Documentation Map
+Required:
+- Core system specifications
+- Component contracts & integration
+- Core patterns & protocols
+- Key data structures
+- Documentation status
 
 ## Version Management
 Required:
