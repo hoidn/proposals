@@ -1,24 +1,18 @@
-# Task System Interfaces
+# Task System Public API
 
 ## References
 
-- Types: See [Type:TaskSystem:1.0] (`/components/task-system/spec/types.md`)
+- Core Types: See [Type:TaskSystem:1.0] (`/components/task-system/spec/types.md`)
 - Implementation: See `/components/task-system/spec/interfaces.md`
 - XML Schema: See [Contract:Tasks:TemplateSchema:1.0] (`/system/contracts/protocols.md`)
 
 ```typescript
 /**
- * Task Template Interface [Type:TaskSystem:TaskTemplate:1.0]
- * See [Contract:Tasks:TemplateSchema:1.0] for XML schema mapping
- */
-interface TaskTemplate {
-    readonly taskPrompt: string;     // Maps to <instructions> in schema
-    readonly systemPrompt: string;   // Maps to <system> in schema
-    readonly model: string;          // Maps to <model> in schema
-    readonly inputs?: Record<string, string>;
-    readonly isManualXML?: boolean;      // Maps to <manual_xml> in schema
-    readonly disableReparsing?: boolean; // Maps to <disable_reparsing> in schema
-}
+ * Public API Surface
+ * All types imported from [Type:TaskSystem:1.0]:
+ * - TaskTemplate
+ * - TaskResult 
+ * - TaskType
 
 /**
  * Primary task execution interface

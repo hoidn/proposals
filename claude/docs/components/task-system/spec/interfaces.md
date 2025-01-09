@@ -1,35 +1,24 @@
 # Task System Interfaces
 
+## References
+
+- Core Types: See [Type:TaskSystem:1.0] (`/components/task-system/spec/types.md`)
+- XML Schema: See [Contract:Tasks:TemplateSchema:1.0] (`/system/contracts/protocols.md`)
+
 ## Public Interfaces
 
 ### TaskSystem Interface
 ```typescript
 /**
- * Types specific to TaskSystem interface
- */
-interface TaskResult {
-    content: string;
-    notes: {
-        dataUsage: string;
-    };
-}
-
-interface TaskTemplate { 
-    readonly taskPrompt: string;     // Maps to <instructions> in schema
-    readonly systemPrompt: string;   // Maps to <s> in schema
-    readonly model: string;          // Maps to <model> in schema
-    readonly inputs?: Record<string, string>;
-    readonly isManualXML?: boolean;     // Maps to <manual_xml> in schema
-    readonly disableReparsing?: boolean; // Maps to <disable_reparsing> in schema
-    readonly atomicSubtype?: AtomicTaskSubtype;  // From [Type:TaskSystem:AtomicTaskSubtype:1.0]
-}
-
-/**
  * Core task execution interface
- * Uses [Type:TaskSystem:TaskType:1.0] defined in types.md
- * Uses [Type:TaskSystem:TaskError:1.0] defined in errors.md
- */
+ * Uses types defined in [Type:TaskSystem:1.0]:
+ * - TaskResult
+ * - TaskTemplate
+ * - TaskType
+ * - AtomicTaskSubtype
+
 interface TaskSystem {
+    // Uses TaskResult, TaskTemplate, TaskType from [Type:TaskSystem:1.0]
     // Execute a single task with the given context
     executeTask(
         task: string,
