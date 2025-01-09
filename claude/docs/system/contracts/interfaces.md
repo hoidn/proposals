@@ -21,11 +21,11 @@ See [Component:TaskSystem:1.0] in components/task-system/README.md
 #### Resource Contracts
 See [Contract:Resources:1.0]
 
-### 1.4 Memory System Integration [Contract:Integration:TaskMemory:2.0]
-See [Component:MemorySystem:2.0]
+### 1.4 Memory System Integration [Contract:Integration:TaskMemory:3.0]
+See [Component:MemorySystem:3.0]
 
 #### Interfaces
-- Context Management: [Interface:Memory:2.0]
+- Context Management: [Interface:Memory:3.0]
   - Task System uses context management for task data
   - Associative matching uses context for results
 - Index Management: [Interface:Memory:2.0]

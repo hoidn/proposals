@@ -1,4 +1,4 @@
-# Memory System Interfaces [Interface:Memory:2.0]
+# Memory System Interfaces [Interface:Memory:3.0]
 
 ## Overview
 The Memory System provides two core capabilities:
@@ -7,11 +7,20 @@ The Memory System provides two core capabilities:
 
 The system does not handle file content storage or retrieval.
 
-## Core Types [Interface:Memory:3.0]
+## Core Types
 
-### GlobalIndex
-```typescript
-type GlobalIndex = Map<string, string>;
+/**
+ * Represents metadata associated with a file
+ * Stored as an unstructured string for flexibility
+ */
+type FileMetadata = string;
+
+/**
+ * Global index mapping file paths to their metadata
+ * - Keys are absolute file paths
+ * - Values are unstructured metadata strings
+ */
+type GlobalIndex = Map<string, FileMetadata>;
 ```
 
 A mapping of file paths to their associated metadata strings. The index serves as a bootstrap mechanism for associative matching when full content scanning is not feasible.

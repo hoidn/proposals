@@ -41,10 +41,9 @@ interface TaskSystem {
     }>>;
 }
 
-/** @see [Interface:Memory:3.0] (`/components/memory/api/interfaces.md`) */
-interface MemorySystem {
-    getContext(): Promise<string>;
-    getGlobalIndex(): Promise<GlobalIndex>;
-    updateGlobalIndex(index: GlobalIndex): Promise<void>;
-}
+/**
+ * Memory System interface for task execution
+ * @see [Interface:Memory:3.0] (`/components/memory/api/interfaces.md`)
+ */
+import { MemorySystem, GlobalIndex, FileMatch } from '@/components/memory/api/interfaces';
 ```
