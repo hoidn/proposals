@@ -2,12 +2,12 @@
 
 ## Overview
 The Memory System provides two core capabilities:
-1. Short-term task data context management
+1. Read-only task context provision
 2. Global file metadata index maintenance
 
 The system does not handle file content storage or retrieval.
 
-## Core Types
+## Core Types [Interface:Memory:3.0]
 
 ### GlobalIndex
 ```typescript
@@ -45,19 +45,13 @@ The complete result of associative matching, containing:
 
 ## Interface Methods
 
-### Context Management
+### Context Access
 
 #### getContext()
 ```typescript
 getContext(): Promise<string>
 ```
-Retrieves the current task data context.
-
-#### updateContext(context: string)
-```typescript
-updateContext(context: string): Promise<void>
-```
-Updates the current task data context with new content.
+Retrieves the current read-only task context.
 
 ### Index Management
 

@@ -1,4 +1,4 @@
-# Memory System Component [Component:Memory:1.0]
+# Memory System Component [Component:Memory:3.0]
 
 ## Related Documents
 - Architecture decisions in [ADR:Memory:1.0] (system/architecture/decisions/001-memory-system.md)
@@ -7,10 +7,10 @@
 - Context Frame Pattern in [Pattern:ContextFrame:1.0]
 
 ## Purpose
-Manages working memory and context for task execution, including data context, chat history, system prompts, and templates. See [ADR:Memory:1.0] for architectural decisions and rationale.
+Provides read-only context for task execution, including data context, chat history, system prompts, and templates. See [ADR:Memory:1.0] for architectural decisions and rationale.
 
 ## Working Memory Components
-- Data context (from associative matching or inheritance)
+- Read-only data context (from associative matching or inheritance)
 - Chat component (LLM-handler interaction history)
 - System prompts
 - Populated prompt templates

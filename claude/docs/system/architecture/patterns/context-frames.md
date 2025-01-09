@@ -19,12 +19,11 @@ interface ContextFrame {
 }
 ```
 
-### Minimal Context Principle
-As defined in [ADR:Memory:1.0]:
-- Context source controlled by task library entries
-- Can inherit from parent/predecessor tasks
-- Can generate via associative matching
-- Uses minimal required context for operation
+### Frame Immutability
+- No modification of existing frames
+- New frames created through extension
+- Clear task isolation boundaries
+- Minimal required context principle
 
 ### Memory System Integration
 - Associative memory system mediates between long-term and working memory

@@ -51,22 +51,12 @@ interface TaskSystem {
 }
 
 // Memory System Interface
+// Uses [Interface:Memory:3.0]
 interface MemorySystem {
-  // Short term memory for task context
-  shortTermMemory: {
-    content: string;  // Unstructured text content
-    files: {
-      paths: string[];  // Available file paths
-      modified: Set<string>;  // Which files modified on disk
-    };
-  };
-  
-  // Long term memory for potential persistence
-  longTermMemory: {
-    content: string;  // Unstructured text content 
-    files: {
-      paths: string[];  // Paths of stored files
-    };
-  };
+  // Read-only context access
+  getContext(): Promise<string>;
+  // Global index management
+  getGlobalIndex(): Promise<GlobalIndex>;
+  updateGlobalIndex(index: GlobalIndex): Promise<void>;
 }
 ```
