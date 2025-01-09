@@ -1,8 +1,10 @@
 # Task System Interfaces
 
-For complete type definitions see [Type:TaskSystem:1.0] in spec/types.md.
-For implementation details see spec/interfaces.md.
-For XML schema see [Contract:Tasks:TemplateSchema:1.0] in protocols.md.
+## References
+
+- Types: See [Type:TaskSystem:1.0] (`/components/task-system/spec/types.md`)
+- Implementation: See `/components/task-system/spec/interfaces.md`
+- XML Schema: See [Contract:Tasks:TemplateSchema:1.0] (`/system/contracts/protocols.md`)
 
 ```typescript
 /**
@@ -41,7 +43,7 @@ interface TaskSystem {
     }>>;
 }
 
-/** Memory System Interface [Interface:Memory:3.0] */
+/** @see [Interface:Memory:3.0] (`/components/memory/api/interfaces.md`) */
 interface MemorySystem {
     getContext(): Promise<string>;
     getGlobalIndex(): Promise<GlobalIndex>;
