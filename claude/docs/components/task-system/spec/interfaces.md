@@ -53,11 +53,8 @@ type FileMatch = [string, string | undefined];
 interface MemorySystem {
     // Get current data context
     getContext(): Promise<string>;
-    
-    // Update data context
-    updateContext(context: string): Promise<void>;
 
-    // Get global file index
+    // Get global file index 
     getGlobalIndex(): Promise<GlobalIndex>;
 
     // Bulk update to global index

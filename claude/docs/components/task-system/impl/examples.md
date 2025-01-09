@@ -109,7 +109,6 @@ const memory = {
   getContext() {
     return 'Current analysis context with relevant information';
   },
-  updateContext(context) {},
   getGlobalIndex() {
     return new Map([
       ['data.txt', 'metadata'],
