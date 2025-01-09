@@ -73,34 +73,6 @@ interface ResourceLimits {
 }
 ```
 
-## Memory System Types
-```typescript
-// Storage types for memory system
-interface StorageFile {
-    content: string;
-    metadata: StorageMetadata;  // See Memory System documentation
-}
-
-interface WorkingFile {
-    content: string;
-    metadata: WorkingMetadata;  // See Memory System documentation
-    sourceLocation: string;
-}
-
-interface MemorySystem {
-    // Long term storage
-    longTermStorage: {
-        files: Map<string, StorageFile>;
-        text: string;
-    };
-    
-    // Short term working memory
-    shortTermMemory: {
-        files: Map<string, WorkingFile>;
-        dataContext: string;
-    };
-}
-```
 
 ## Error Types
 ```typescript
