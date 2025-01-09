@@ -109,10 +109,10 @@
 - Maintains simple file path index
 - No direct file state management
 
-### Memory Structure
-- Short term memory uses unstructured text
-- Simple tracking of available and modified files
-- Long term memory preserved for future persistence
+### Context Management
+- Context accessed via async getContext/updateContext
+- File metadata accessed via GlobalIndex
+- Existing context preserved during task execution
 - Structure/parsing handled by associative memory tasks
 
 ### State Management
