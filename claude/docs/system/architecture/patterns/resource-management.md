@@ -100,18 +100,8 @@ Defines the resource management strategy for the task execution system focusing 
 
 ### Resource Tracking
 ```typescript
-interface ResourceMetrics {
-    turns: {
-        used: number;
-        limit: number;
-        lastTurnAt: Date;
-    };
-    context: {
-        used: number;
-        limit: number;
-        peakUsage: number;
-    };
-}
+// Resource metrics definition moved to spec/types.md
+// See [Type:ResourceMetrics:1.0] for the complete interface
 ```
 
 ### Environment Management

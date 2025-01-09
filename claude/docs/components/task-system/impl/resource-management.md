@@ -21,20 +21,17 @@
 
 ### Usage Tracking
 ```typescript
-interface TurnMetrics {
-  current: number;
-  limit: number;
-  lastTurnAt: Date;
-}
+// Using canonical ResourceMetrics definition from spec/types.md
+// See [Type:ResourceMetrics:1.0]
 
 class TurnCounter {
-  private metrics: TurnMetrics;
+  private metrics: ResourceMetrics['turns'];
   
   increment(): void {
-    if (this.metrics.current >= this.metrics.limit) {
+    if (this.metrics.used >= this.metrics.limit) {
       throw new ResourceExhaustionError('turns');
     }
-    this.metrics.current++;
+    this.metrics.used++;
     this.metrics.lastTurnAt = new Date();
   }
 }
@@ -56,22 +53,19 @@ class TurnCounter {
 
 ### Implementation
 ```typescript
-interface ContextMetrics {
-  currentTokens: number;
-  maxTokens: number;
-  peakUsage: number;
-}
+// Using canonical ResourceMetrics definition from spec/types.md
+// See [Type:ResourceMetrics:1.0]
 
 class ContextManager {
-  private metrics: ContextMetrics;
+  private metrics: ResourceMetrics['context'];
   
   addContent(content: string): void {
     const tokens = this.countTokens(content);
-    if (this.metrics.currentTokens + tokens > this.metrics.maxTokens) {
+    if (this.metrics.used + tokens > this.metrics.limit) {
       throw new ResourceExhaustionError('context');
     }
-    this.metrics.currentTokens += tokens;
-    this.metrics.peakUsage = Math.max(this.metrics.peakUsage, this.metrics.currentTokens);
+    this.metrics.used += tokens;
+    this.metrics.peakUsage = Math.max(this.metrics.peakUsage, this.metrics.used);
   }
 }
 ```
