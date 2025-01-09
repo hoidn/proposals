@@ -105,23 +105,24 @@ try {
 ## Memory Integration Example
 ```typescript
 // Execute task with context
+const memory = {
+  getContext() {
+    return 'Current analysis context with relevant information';
+  },
+  updateContext(context) {},
+  getGlobalIndex() {
+    return new Map([
+      ['data.txt', 'metadata'],
+      ['config.json', 'metadata'],
+      ['history.log', 'metadata']
+    ]);
+  },
+  updateGlobalIndex(index) {}
+};
+
 const result = await taskSystem.executeTask(
-  "analyze recent changes",
-  {
-    shortTermMemory: {
-      content: 'Current analysis context with relevant information',
-      files: {
-        paths: ['data.txt', 'config.json'],
-        modified: new Set(['data.txt'])
-      }
-    },
-    longTermMemory: {
-      content: 'Persisted historical context',
-      files: {
-        paths: ['history.log']
-      }
-    }
-  }
+  "analyze recent changes", 
+  memory
 );
 ```
 
