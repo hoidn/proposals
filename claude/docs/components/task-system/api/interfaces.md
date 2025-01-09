@@ -14,6 +14,10 @@
  * - TaskResult 
  * - TaskType
 
+/** 
+ * For the full Handler interface definition, see [Interface:Handler:1.0] in spec/interfaces.md
+ */
+
 /**
  * Primary task execution interface
  * Uses [Type:TaskSystem:TaskType:1.0] and [Type:TaskSystem:TaskError:1.0]
