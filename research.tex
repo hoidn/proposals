@@ -99,11 +99,9 @@
 
 Scientific facilities like SLAC face a key challenge: as experimental capabilities grow more sophisticated, the complexity of data analysis and decision-making increases dramatically. Modern AI systems, particularly Large Language Models (LLMs), offer promising capabilities for automation and assistance but face fundamental limitations when applied to demanding scientific workflows.
 
-This section of the research program proposes a novel approach inspired by classical ideas from programming language implementation, particularly the metacircular evaluator concept from Lisp and the staged compilation techniques from modern compilers. I will argue that the LLM should be treated as a basic component of a larger system that can, if built in a certain way, be much more capable than the underlying LLM. 
+Here I'll try to develop the means of combination and abstraction that might be useful for composing LLMs interactions into more complex workflows. I will argue that the LLM should be treated as a basic component of a larger system that can, if built in a certain way, be much more capable than the underlying LLM. 
 
-If successful, the system would provide a foundation for better AI-assisted scientific workflows, enabling more aggressive automation efforts across SLAC's experimental facilities. The resulting research innovations might also give compounding returns by encouraging collaboration with the broader AI / ML research.
-
-%\subsection{Current State and Limitations}
+%\subsection{Current State and Limitations}do
 %Current approaches to ML-based agents in scientific settings typically focus on narrow, specialized tasks or attempt to use general-purpose LLMs as conversational assistants. While valuable, the latter tools hit fundamental barriers when faced with:
 %\begin{itemize}
 %    \item Reasoning requiring coherence over a series of many steps
@@ -177,15 +175,15 @@ shows proper uniformity in its p-values.
     \end{Verbatim}
 
 
-While effective for modest diagnostic tasks, the system revealed fundamental limitations in more difficult situations. Attempting to use it for analyzing large collections of log files or guiding multi-step decision processes exposed a well-known underlying limitation of LLMs: difficulty maintaining analytical context across multiple interaction turns, especially when handling large datasets. This limitation is exacerbated by how LLMs perform reasoning itself - since techniques like reflection and chain of thought demonstrate that LLM `thought' operates through token generation, each step of analysis consumes valuable context window capacity.
+While effective for modest diagnostic tasks, the system revealed fundamental limitations in more difficult situations. Attempting to use it for analyzing large collections of log files or guiding multi-step decision processes exposed a well-known underlying limitation of LLMs: difficulty maintaining analytical context across multiple interaction turns, especially when handling large datasets. This limitation is exacerbated by how LLMs perform reasoning -  techniques like reflection and chain of thought show that LLM `thought' is entangled with the process of token generation, and therefore each step of analysis consumes valuable context window capacity.
 
 
 \section{Technical Innovation: A Language-Model Architecture for Scientific Computing}
-Such limitations point to a deeper challenge: we lack supporting tools for constructing agent systems in scientific environments because the underlying kernel of a natural language agent -- the LLM itself -- is on its own insufficient. Conventional automation at light sources depends on robust software design --  similarly, we will need principled architectures for composing natural language agents into scientific workflows with sufficient scale, capability and robustness.
+The underlying challenge is that we lack principled methods for constructing natural language agent systems in scientific environments. Conventional automation at light sources depends on robust software design practices --  similarly, we will need principled architectures for composing natural language agents into scientific workflows with enough scale, capability and error-tolerance.
 
 %Scientific computing workflows demand analytical capabilities coupled with standards for reproducibility and verification. Current language model architectures, while powerful and versatile, face fundamental limitations when applied to scientific tasks. Fixed context windows put a practical cap on the amount of analysis possible within a single LLM session, as does the gradual degradation in model performance as the context window fills with output tokens.
 
-The last two years have seen rapid growth in LLM-based agent frameworks like LangChain and AutoGen, these systems rely on ad-hoc combinations of prompts and tools, making them brittle, inconsistent and hard to extend. Rather than systematically addressing the key limitations of LLMs, these agentic approaches reproduce or even compound them. A case in point is reliance on techniques such as retrieval-augmented generation (RAG) that aim to compensate for limited context window capacities but introduce serious tradeoffs in recall and accuracy.
+While the last two years have seen rapid growth in LLM-based agent frameworks like LangChain and AutoGen, these systems make premature abstractions and hide too much from the user. Also rather than compensating for the limitations of LLMs, these agentic approaches either reproduce them or address them in a way that entails questionable tradeoffs. A case in point is reliance on techniques such as retrieval-augmented generation (RAG) that overcome context window size limitations at the expense of recall and accuracy.
 
 I suggest an alternative that takes inspiration from two fundamental concepts in programming language implementation: the metacircular evaluator pattern first developed for Lisp, and staged compilation techniques used in modern compilers.
 
@@ -310,13 +308,6 @@ Source code (English) → Parse tree (XML) → AST (Python) → Task data + exec
 In Python the first three steps (\verb|Source code (English) → Parse tree (XML) → AST (Python)|) are orchestrated by the class Compiler. The remaining portion is generated by the interaction between Compile and the evaluation loop (see Evaluator, next section):
 
 \begin{lstlisting}[language=Python]
-from dataclasses import dataclass
-from typing import List, Any
-
-@dataclass
-class ASTNode:
-    operator: Any
-    args: List['ASTNode']
 
 @dataclass
 class Operator:
@@ -325,14 +316,6 @@ class Operator:
     task: str  # The actual task description
     params: Optional[Dict] = None  # Additional parameters if needed
 
-from dataclasses import dataclass
-from typing import List, Any, Optional, Dict
-from enum import Enum
-from xml.etree.ElementTree import Element
-
-from .error_types import ExecutionError, ErrorType, ResourceType
-from .environment import Environment
-from .task_system import TaskSystem, TaskType, XMLTaskParser, TaskStructure
 
 @dataclass
 class ASTNode:
@@ -346,13 +329,6 @@ class Operator:
     type: str  # Maps to TaskType values
     task: str  # Task description
     params: Optional[Dict[str, Any]] = None
-
-from dataclasses import dataclass
-from typing import Protocol, Dict, Optional
-from enum import Enum
-from xml.etree.ElementTree import Element
-
-from .error_types import ResourceType, ExecutionError
 
 class TaskSystem(Protocol):
     """Interface for task management and prompt generation"""
@@ -396,72 +372,6 @@ class TaskStructure:
     subtasks: list['TaskStructure'] = None
     parameters: Optional[Dict[str, str]] = None
 
-%class XMLTaskParser:
-%    """Parses XML task descriptions into structured form"""
-%    
-%    def parse_task(self, xml: Element) -> TaskStructure:
-%        """Parse XML into TaskStructure
-%        
-%        Handles both atomic tasks and decompositions.
-%        
-%        Args:
-%            xml: XML element representing task
-%            
-%        Returns:
-%            Parsed task structure
-%        """
-%        task_type = TaskType(xml.get('type', 'atomic'))
-%        description = xml.find('description').text
-%        
-%        # Handle parameters if present
-%        params = {}
-%        params_elem = xml.find('parameters')
-%        if params_elem is not None:
-%            for param in params_elem:
-%                params[param.get('name')] = param.text
-%                
-%        # Handle subtasks for non-atomic tasks
-%        subtasks = []
-%        if task_type != TaskType.ATOMIC:
-%            for subtask in xml.findall('subtask'):
-%                subtasks.append(self.parse_task(subtask))
-%        
-%        return TaskStructure(
-%            type=task_type,
-%            description=description,
-%            subtasks=subtasks if subtasks else None,
-%            parameters=params if params else None
-%        )
-%
-%    def task_to_ast(self, task: TaskStructure) -> ASTNode:
-%        """Convert parsed task structure to AST
-%        
-%        Maps task types to appropriate AST structures:
-%        - ATOMIC -> single node
-%        - MAP -> parallel execution structure
-%        - REDUCE -> result combination structure
-%        - SEQUENCE -> sequential execution structure
-%        
-%        Args:
-%            task: Parsed task structure
-%            
-%        Returns:
-%            Corresponding AST node
-%        """
-%        operator = Operator(
-%            type=task.type.value,
-%            task=task.description,
-%            params=task.parameters
-%        )
-%        
-%        if task.type == TaskType.ATOMIC:
-%            return ASTNode(operator=operator, args=[])
-%            
-%        # For non-atomic tasks, recursively convert subtasks
-%        return ASTNode(
-%            operator=operator,
-%            args=[self.task_to_ast(subtask) for subtask in task.subtasks]
-%        )
 
 class Compiler:
     def __init__(self, task_system: TaskSystem):
@@ -697,13 +607,6 @@ class Operator:
     type: OperatorType
     task: str           # Task description/prompt
     params: Dict = None # Optional parameters
-
-%<errors>
-%type ExecutionError = 
-%  | { type: 'resourceExhaustion'; resource: 'turns' | 'context' | 'output' }
-%  | { type: 'taskFailure'; reason: string }
-%  | { type: 'incompleteTask' };
-%</errors>
 
 class Evaluator:
     def eval(self, node: Node, env: 'Environment') -> Any:
