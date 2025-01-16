@@ -310,25 +310,37 @@ In Python the first three steps (\verb|Source code (English) → Parse tree (XML
 \begin{lstlisting}[language=Python]
 
 @dataclass
-class Operator:
-    """Represents an operation to be performed"""
-    type: str  # "atomic" or "compound" 
-    task: str  # The actual task description
-    params: Optional[Dict] = None  # Additional parameters if needed
-
-
-@dataclass
 class ASTNode:
     """Represents a node in the Abstract Syntax Tree"""
     operator: Any
     args: List['ASTNode']
 
+class OperatorType(Enum):
+    ATOMIC = "atomic"    # Direct LLM execution
+    MAP = "map"         # Process multiple inputs
+    REDUCE = "reduce"   # Combine results
+    SEQUENCE = "sequence" # Execute in order
+
 @dataclass
 class Operator:
-    """Represents an operation to be performed"""
-    type: str  # Maps to TaskType values
-    task: str  # Task description
-    params: Optional[Dict[str, Any]] = None
+    type: OperatorType
+    task: str           # Task description/prompt
+    params: Dict = None # Optional parameters
+
+class TaskType(Enum):
+    """Types of tasks in decomposition"""
+    ATOMIC = "atomic"         # Direct LLM execution
+    MAP = "map"              # Parallel subtasks
+    REDUCE = "reduce"        # Combine results
+    SEQUENCE = "sequence"    # Sequential steps
+
+@dataclass
+class TaskStructure:
+    """Parsed representation of a task from XML"""
+    type: TaskType
+    description: str
+    subtasks: list['TaskStructure'] = None
+    parameters: Optional[Dict[str, str]] = None
 
 class TaskSystem(Protocol):
     """Interface for task management and prompt generation"""
@@ -357,20 +369,6 @@ class TaskSystem(Protocol):
         """
         ...
 
-class TaskType(Enum):
-    """Types of tasks in decomposition"""
-    ATOMIC = "atomic"         # Direct LLM execution
-    MAP = "map"              # Parallel subtasks
-    REDUCE = "reduce"        # Combine results
-    SEQUENCE = "sequence"    # Sequential steps
-
-@dataclass
-class TaskStructure:
-    """Parsed representation of a task from XML"""
-    type: TaskType
-    description: str
-    subtasks: list['TaskStructure'] = None
-    parameters: Optional[Dict[str, str]] = None
 
 
 class Compiler:
@@ -415,10 +413,6 @@ class Compiler:
         Raises:
             ExecutionError: If reparsing itself fails
         """
-        # TODO the reparsing prompt shouldn't be exposed to the compiler. 
-        # Instead it should construct a specialized Operator for reparsing 
-        # And then execute it via Evaluator.execute_llm() (or whatever we're 
-        # calling the method that has that responsibility
 
         # Get specialized prompt for reparsing
         reparse_prompt = self._get_reparse_prompt(failed_task, error)
@@ -437,49 +431,55 @@ class Compiler:
         
         return node
 
-    def _get_reparse_prompt(self, task: str, error: ExecutionError) -> str:
-        """Get appropriate reparse prompt based on error type"""
-        # TODO the reparsing prompt shouldn't be exposed to the compiler. 
-        # Instead it should construct a specialized Operator for reparsing. 
-        # If we really need to track the error type, then it should be an 
-        # attribute of that specialized Operator
-        if error.type == ErrorType.RESOURCE_EXHAUSTED:
-            return self.task_system.get_decomposition_prompt(
-                task,
-                error.details["resource"]
-            )
-        elif error.type == ErrorType.TASK_FAILED:
-            return self.task_system.get_alternative_prompt(
-                task,
-                error.details["reason"]
-            )
-        else:
-            raise ExecutionError.invalid_reparse(
-                task=task,
-                validation_error="Unsupported error type for reparsing"
-            )
-
-    def _validate_reparse(self, node: ASTNode, error: ExecutionError) -> None:
-        """Validate reparsed AST is acceptable
-        
-        TODO: Implement validation logic:
-        - Check structure is valid
-        - Verify resources are bounded
-        - Ensure termination properties
-        """
-        pass
-
-    def llm_translate(self, prompt: str) -> Element:
-        """Translate natural language to XML via LLM
-        
-        TODO: Implement LLM interaction:
-        - Format prompt with XML expectations
-        - Handle LLM response parsing
-        - Validate XML structure
-        """
-        pass
 
 \end{lstlisting}
+%        # TODO the reparsing prompt shouldn't be exposed to the compiler. 
+%        # Instead it should construct a specialized Operator for reparsing 
+%        # And then execute it via Evaluator.execute_llm() (or whatever we're 
+%        # calling the method that has that responsibility
+
+
+%    def _get_reparse_prompt(self, task: str, error: ExecutionError) -> str:
+%        """Get appropriate reparse prompt based on error type"""
+%        # TODO the reparsing prompt shouldn't be exposed to the compiler. 
+%        # Instead it should construct a specialized Operator for reparsing. 
+%        # If we really need to track the error type, then it should be an 
+%        # attribute of that specialized Operator
+%        if error.type == ErrorType.RESOURCE_EXHAUSTED:
+%            return self.task_system.get_decomposition_prompt(
+%                task,
+%                error.details["resource"]
+%            )
+%        elif error.type == ErrorType.TASK_FAILED:
+%            return self.task_system.get_alternative_prompt(
+%                task,
+%                error.details["reason"]
+%            )
+%        else:
+%            raise ExecutionError.invalid_reparse(
+%                task=task,
+%                validation_error="Unsupported error type for reparsing"
+%            )
+%
+%    def _validate_reparse(self, node: ASTNode, error: ExecutionError) -> None:
+%        """Validate reparsed AST is acceptable
+%        
+%        TODO: Implement validation logic:
+%        - Check structure is valid
+%        - Verify resources are bounded
+%        - Ensure termination properties
+%        """
+%        pass
+%
+%    def llm_translate(self, prompt: str) -> Element:
+%        """Translate natural language to XML via LLM
+%        
+%        TODO: Implement LLM interaction:
+%        - Format prompt with XML expectations
+%        - Handle LLM response parsing
+%        - Validate XML structure
+%        """
+%        pass
 
 Example task structure in XML:
 \begin{lstlisting}[language=XML]
@@ -517,14 +517,15 @@ Example task structure in XML:
   </expected_output>
 </task>
     <!--
-# TODO the above xml is just an example, but we need to clearly define a mapping between the 
-# structure of xml generated by the llm (when it does <reparsing>) and AST subtrees. (We could 
-# potentially simplify this by constraining the llm <reparsing> process so that it can only generate 
-# one ASTNode at a time. In the case of composite nodes, this would mean generating xml for an outer 
-# task (e.g. a reduction function) and inner task(s) (e.g. the individual tasks whose outputs the 
-# reduction is operating on)
     -->
 \end{lstlisting}
+
+%# TODO the above xml is just an example, but we need to clearly define a mapping between the 
+%# structure of xml generated by the llm (when it does <reparsing>) and AST subtrees. (We could 
+%# potentially simplify this by constraining the llm <reparsing> process so that it can only generate 
+%# one ASTNode at a time. In the case of composite nodes, this would mean generating xml for an outer 
+%# task (e.g. a reduction function) and inner task(s) (e.g. the individual tasks whose outputs the 
+%# reduction is operating on)
 
 In summary:
 \begin{enumerate}
@@ -585,28 +586,14 @@ The second aspect is the self-hosting property mentioned above. The LLM provides
 
 Here's the core evaluator pseudo-implemented in Python:
 
+
+%# TODO only ATOMIC operators should have (or populate) the task attribute,
+%# because the other operator types aren't directly llm-executable. 
+%# Note an asymmetry between llm parsing and llm execution: when parsing, 
+%# the llm is locally aware of the AST structure, but when executing the 
+%# llm only sees one atomic node at a time. <reparsing>
+
 \begin{lstlisting}[language=Python]
-from dataclasses import dataclass
-from typing import List, Any, Optional
-from enum import Enum
-
-# Shared type definitions
-class OperatorType(Enum):
-    ATOMIC = "atomic"    # Direct LLM execution
-    MAP = "map"         # Process multiple inputs
-    REDUCE = "reduce"   # Combine results
-    SEQUENCE = "sequence" # Execute in order
-
-# TODO only ATOMIC operators should have (or populate) the task attribute,
-# because the other operator types aren't directly llm-executable. 
-# Note an asymmetry between llm parsing and llm execution: when parsing, 
-# the llm is locally aware of the AST structure, but when executing the 
-# llm only sees one atomic node at a time. <reparsing>
-@dataclass
-class Operator:
-    type: OperatorType
-    task: str           # Task description/prompt
-    params: Dict = None # Optional parameters
 
 class Evaluator:
     def eval(self, node: Node, env: 'Environment') -> Any:
