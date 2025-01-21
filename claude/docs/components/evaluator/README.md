@@ -116,3 +116,49 @@ The Evaluator coordinates the execution of tasks—represented in AST or XML-bas
 - **Error Patterns & Recovery:** See `system/architecture/patterns/errors.md`, `misc/errorspec.md`  
 - **Metacircular Evaluator Examples:** See the "Evaluator" sketches in `misc/textonly.tex.md`  
 - **Future Expansions:** Refer to Implementation Plan phases in `implementation.md` (root-level or system docs).
+
+---
+
+## Sequential Task History
+
+When evaluating a **sequential** task (type="sequential"), the Evaluator maintains a **step-by-step output history**:
+
+### Output Tracking
+1. **History per sequence**: Each sequential task run has a dedicated list (or array) of step outputs.
+2. **Preservation**: All step outputs remain available until the task completes (success or error).
+3. **Failure case**: If a step fails, the partial results from prior steps are included in the final error notes.
+4. **Resource awareness**: The evaluator must keep track of the size of stored outputs, possibly truncating or summarizing them to prevent memory or token overflow.
+
+### History Structure (example)
+```typescript
+interface SequentialHistory {
+    outputs: TaskOutput[];
+    metadata: {
+        startTime: Date;
+        currentStep: number;
+        resourceUsage: ResourceMetrics;
+    };
+}
+
+interface TaskOutput {
+    stepId: string;       // or step index
+    output: string;       // The main content from that step
+    notes: string;        // Additional or partial notes
+    timestamp: Date;
+}
+```
+
+### Lifecycle Management
+1. **Creation**: On the first step of a sequential task, the Evaluator initializes a new `SequentialHistory`.
+2. **Updates**: After each step completes, the Evaluator appends a `TaskOutput` object to `SequentialHistory.outputs`.
+3. **Clearing**: Once the entire sequence finishes (success or error), the Evaluator discards the stored step outputs to reclaim resources.
+4. **Error Handling**: If a step fails, the last known `SequentialHistory` object is packaged with the error output, so that partial results can be surfaced if needed.
+
+### Usage Example
+When a multi-step sequence is run, each subtask is executed in turn. The Evaluator:
+1. Sets up a new `SequentialHistory` with `currentStep=0`.
+2. Executes the first subtask, storing its `TaskOutput` in `outputs[0]`.
+3. Moves on to the second subtask, incrementing `currentStep`. If it fails, the Evaluator includes `outputs[0]` data in the final error's notes, to assist debugging or partial re-usage.
+4. If steps continue successfully, the final result merges all step outputs or final subtask output as the overall `TaskResult`.
+
+**Important**: Because subtask outputs can be large, the system should either store them as short notes or partial references. The data accumulation approach can be toggled with `accumulateData` (in `ContextManagement`), plus an `accumulationFormat` indicating whether to store full outputs or only summary notes.

@@ -15,6 +15,35 @@ interface TaskResult {
     };
 }
 
+/**
+ * Represents a sequential task which has its own context management block
+ * and multiple steps of subtasks.
+ */
+interface SequentialTask extends BaseTask {
+    type: 'sequential';
+    contextManagement: ContextManagement;
+    steps: Task[];
+}
+
+/**
+ * A general-purpose task result, now updated to store optional string notes
+ * or structured data. This may override or augment the existing TaskResult
+ * if needed, but is shown here as the revision plan states.
+ */
+interface RevisedTaskResult {
+    content: string;
+    notes: string;
+}
+
+/**
+ * Defines context inheritance and accumulation policies for tasks.
+ */
+interface ContextManagement {
+    inheritContext: boolean;
+    accumulateData: boolean;
+    accumulationFormat: 'full_output' | 'notes_only';
+}
+
 interface TaskTemplate {
     readonly taskPrompt: string;      // Maps to <instructions> in schema
     readonly systemPrompt: string;    // Maps to <system> in schema
