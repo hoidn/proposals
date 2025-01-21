@@ -22,7 +22,7 @@ interface TaskSystem {
     // Execute a single task with the given context
     executeTask(
         task: string,
-        context: MemorySystem,  // Now uses updated MemorySystem interface [Interface:Memory:3.0]
+        memory: MemorySystem,  // Updated to match Memory System v3.0 interface
         taskType?: TaskType
     ): Promise<TaskResult>;
 
