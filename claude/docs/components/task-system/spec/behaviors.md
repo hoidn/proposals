@@ -104,10 +104,13 @@
 ## Memory System Integration
 
 ### File Operations
-- Uses Claude's file capabilities for actual I/O
-- Tracks modified files during task execution
-- Maintains simple file path index
-- No direct file state management
+- Uses Anthropic's computer use tools:
+  * computer_20241022
+  * text_editor_20241022
+  * bash_20241022
+- No direct file operation interface
+- Managed through Anthropic's tool use system
+- See Anthropic documentation for details
 
 ### Context Management
 - Context accessed via async getContext/updateContext
