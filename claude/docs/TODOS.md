@@ -86,15 +86,15 @@
 1. Context Management
    Priority: High
    Dependencies: Interface Consolidation
-   - [ ] Document best practices
-   - [ ] Define efficient subtask patterns (sequential, reduce, map)
+   - [x] Document best practices (ADR 004)
+   - [x] Define efficient subtask patterns (sequential)
    - [ ] Extend `inherit_context` to map/reduce
-   - [ ] Provide partial-result guidance (e.g. whether we preserve partial results on context generation failure)
-   - [ ] Consolidate environment usage so that tasks can clearly see:
+   - [x] Provide partial-result guidance (via accumulation_format)
+   - [x] Consolidate environment usage:
        1. The memory system instance
-       2. Accumulated data from the parent or prior step
-       3. Any associatively retrieved files/data
-   - [ ] Add context reuse mechanisms
+       2. Accumulated data from sequential steps
+       3. Associatively retrieved data
+   - [x] Add context reuse mechanisms (via context_management)
    - [ ] Update error taxonomy for context failures
 
 2. Architecture Documentation
@@ -181,8 +181,6 @@ We have flagged that a “context generation failure” could be a Task Failure 
 
 
 ### other other todos 
-- accumulation: should it be separate or rolled into associative memory?
 - allow the agent to store and recall memory files (special subdir, markdown format, inc timestamps, can be instantiated / loaded / managed by memory system)
-- do we need separate context inheritance handlinng for the reduction and accumulation operations in reduce?
-- at the evaluator level, keep track of all the previous outputs of a sequential task
+- do we need separate context inheritance handling for the reduction and accumulation operations in reduce?
 - allow simple chaining - should be supportable through nesting but it might make more sense to make it a sequential pattern so that we can use the sequential context management features
