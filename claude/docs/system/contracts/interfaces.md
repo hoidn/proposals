@@ -25,18 +25,18 @@ See [Contract:Resources:1.0]
 See [Component:MemorySystem:3.0]
 
 #### Interfaces
-- Context Management: [Interface:Memory:3.0]
-  - Task System uses context management for task data
+- Metadata Management: [Interface:Memory:3.0]
+  - Task System uses metadata for associative matching
   - Associative matching uses context for results
-- Index Management: [Interface:Memory:2.0]
-  - Associative matching uses global index for file discovery
-  - File metadata updates handled through bulk operations
+- Index Management: [Interface:Memory:3.0]
+  - Global index serves as bootstrap for matching
+  - Bulk updates only
 
 #### Responsibilities
 Memory System:
-- Maintains short-term task context
 - Maintains global file metadata index
 - Provides bulk index updates
+- Provides metadata for associative matching
 
 Task System:
 - Uses context for task execution

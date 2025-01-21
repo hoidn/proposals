@@ -7,7 +7,8 @@ The **Evaluator** is one of the four core components in the system architecture,
 1. **Controls AST processing and execution**  
 2. **Manages failure recovery** (in collaboration with the Task System and Handler)  
 3. **Tracks resource usage** (particularly in coordination with Handlers)  
-4. **Handles reparse requests** (e.g., if a task fails due to resource exhaustion or invalid output)  
+4. **Handles reparse requests** (e.g., if a task fails due to resource exhaustion or invalid output)
+5. **Coordinates associative matching** (using Memory System metadata for task context)
 
 In other words, the Evaluator orchestrates how tasks—or AST nodes—are carried out, how errors are handled or signaled, and how optional "decomposition" or "reparse" steps might occur in response to failures.  
 

@@ -135,12 +135,12 @@ Task execution and management component.
 
 See components/task-system/README.md for complete specification.
 
-### Memory System [Component:Memory:2.0]
-Context and metadata management component.
-- Manages global file metadata index
-- Provides associative matching
+### Memory System [Component:Memory:3.0]
+Metadata management component.
+- Maintains global file metadata index
+- Provides metadata for associative matching
 - Supplies metadata for file-based lookup and partial matching
-- Does not store or manage short-term task context
+- Does not store file content or task context
 
 See [Contract:Integration:TaskMemory:2.0] for integration specification.
 
