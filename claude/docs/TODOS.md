@@ -1,5 +1,8 @@
 # System TODOs and Status
 
+# Feature / arch TODOs
+1. the context / environment should have 3 components. 1: a memory system instance. 2: all the accumulated data from the current sequential operation (empty for non sequential / reduce types). 3: working memory, which includes associatively retrieved files + associatively retrieved accumulated data.
+
 # Critical Path TODOs - Corrected Status
 
 ## Interface Consolidation ⚠️ BLOCKING
@@ -145,3 +148,16 @@ Dependencies: Individual feature completion
 - Version numbers must be kept consistent
 - Breaking changes require major version increments
 - Dependencies should be clearly marked
+
+### Other Issues Still Requiring Design Feedback
+1. Handling Partial Results on Context-Generation Failure
+The patch mentions “context generation fails,” but does not fully define whether partial results or intermediate step data should be preserved or retried. Deciding on partial result preservation or an automatic re-parse is an open design item.
+
+2. Extending inherit_context to Other Operators
+We added inherit_context only to the <task type="sequential"> element. Whether or not other operators (map, reduce) should support the same attribute (and how it interacts with parallel or iterative steps) remains to be addressed.
+
+3. Clarification of How Context Generation Tasks Are Triggered
+Although references to a “context generation task” or “associative matching” were updated, the exact mechanism—i.e. how an XML specification decides to invoke associative matching, or how that is described in the DSL—still needs more explicit design.
+
+4. Error Taxonomy for Context Issues
+We have flagged that a “context generation failure” could be a Task Failure or might need its own subcategory. Determining whether this should remain a generic “task failure” or become a separate error type is pending further design discussion.
