@@ -89,7 +89,7 @@
 
 ## Integration Points
 ### Memory System Interaction
-- Direct interface usage
+- Uses Anthropic's computer use tools for file operations
 - Read-only access
 - No state maintenance
 - Clear context boundaries
