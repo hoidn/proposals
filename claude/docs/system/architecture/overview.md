@@ -185,4 +185,33 @@ See system/contracts/resources.md for complete ownership model.
 - Resource usage tracking
 - Context management
 
+---
+
+### Sequential Task Management [Pattern:SequentialTask:2.0]
+
+The system maintains **explicit task history** for sequential operations. This design clarifies how multiple steps in a single task can share context in a controlled, trackable way, and how partial or final outputs are captured.
+
+1. **Output Tracking**
+   - The Evaluator maintains a list of all previous task outputs, keyed by step index or ID.
+   - The lifecycle for this history is well-defined; it is preserved until the sequence finishes.
+   - Storage must remain resource-aware to avoid memory limit issues. If output is large, the evaluator can store a summarized version or notes-only.
+
+2. **Context Management**
+   - Context inheritance is separated from data accumulation.
+   - Three distinct modes of operation are recognized:
+     1. **Direct parent context inheritance**: The sub-task uses the same context as its parent, unchanged.
+     2. **History-aware associative matching**: The sub-task can optionally reference all previous step outputs as additional matching data.
+     3. **Standard associative matching**: The sub-task only uses the normal memory system and the known parent context, ignoring any step-by-step accumulations.
+
+3. **Partial Failures**
+   - If a step fails, all previous step outputs remain available in the final (error) output.
+   - The final error output includes which step number or ID caused the failure.
+
+4. **Resource Handling**
+   - Maximum stored-history size is enforced by the system to prevent out-of-memory or context window exhaustion.
+   - The evaluator must handle large output storage carefully, possibly discarding or summarizing to keep track usage in check.
+   - Clear cleanup protocols ensure that once the sequence completes (successfully or in error), the stored step outputs are removed.
+
+In summary, **SequentialTask** pattern addresses multi-step tasks with optional or partial data inheritance across steps, ensuring that both resource usage and error behavior remain consistent and predictable.
+
 See system/contracts/protocols.md for protocol specifications.

@@ -20,33 +20,28 @@ Execute a series of tasks with explicit dependencies. Maintains execution order 
 ```xml
 <task type="sequential">
     <description>Overall sequence description</description>
-    <inherit_context>true</inherit_context>
+    <context_management>
+        <inherit_context>false</inherit_context>
+        <accumulate_data>true</accumulate_data>
+        <accumulation_format>notes_only</accumulation_format>
+    </context_management>
     <steps>
-        <!-- Task without dependencies -->
         <task>
-            <description>Process raw data</description>
+            <description>First step task</description>
             <inputs>
-                <input name="raw_file">
+                <input name="data">
                     <task>
-                        <description>Load data file</description>
+                        <description>Load initial data</description>
                     </task>
                 </input>
             </inputs>
         </task>
-        
-        <!-- Task with multiple parallel inputs -->
         <task>
-            <description>Combine processed results</description>
+            <description>Second step task</description>
             <inputs>
-                <input name="processed_data">
-                    <!-- Reference to previous task -->
+                <input name="config">
                     <task>
-                        <description>Transform data format</description>
-                    </task>
-                </input>
-                <input name="configuration">
-                    <task>
-                        <description>Load config settings</description>
+                        <description>Load configuration</description>
                     </task>
                 </input>
             </inputs>
@@ -54,6 +49,23 @@ Execute a series of tasks with explicit dependencies. Maintains execution order 
     </steps>
 </task>
 ```
+
+### Context Management Modes
+
+1. **Direct Inheritance** (`inherit_context="true"`)
+   - Uses the parent context as-is, without any additional associative matching.
+   - Data accumulation is disabled.
+   - Suitable when a sub-task needs the same environment as its parent.
+
+2. **History-Aware Matching** (`inherit_context="false" + accumulate_data="true"`)
+   - Each step's output is stored and can be fed into associative matching for subsequent steps.
+   - The `accumulation_format` attribute can be either `full_output` or `notes_only`.
+   - Enables multi-step context usage where each step's output can influence the next step.
+
+3. **Standard Matching** (`inherit_context="false" + accumulate_data="false"`)
+   - Steps only use the conventional memory system and the high-level environment.
+   - No step-by-step data is automatically shared.
+   - Simplifies tasks that do not need prior step outputs.
 
 ### Execution Semantics
 - Tasks execute in specified order
