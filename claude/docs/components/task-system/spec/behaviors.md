@@ -133,6 +133,14 @@
 - Managed through Anthropic's tool use system
 - See Anthropic documentation for details
 
+## Context Management Delegation
+
+The Task System delegates **all context management** to the Evaluator. In other words:
+1. The Task System's role is primarily to define task structure (sequential, map, reduce, etc.) and signal the Evaluator to execute steps.
+2. The Evaluator decides how and when to call `MemorySystem.getRelevantContextFor()`.
+3. The Handler remains focused on resource tracking (turns, tokens).
+4. No direct context accumulation logic occurs in the Task System itself.
+
 ## Error Handling
 
 ### Error Detection and Response

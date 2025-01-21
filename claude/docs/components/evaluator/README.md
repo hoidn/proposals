@@ -117,6 +117,25 @@ The Evaluator coordinates the execution of tasks—represented in AST or XML-bas
 - **Metacircular Evaluator Examples:** See the "Evaluator" sketches in `misc/textonly.tex.md`  
 - **Future Expansions:** Refer to Implementation Plan phases in `implementation.md` (root-level or system docs).
 
+## Associative Matching Invocation
+
+When executing a sequential task step with `<inherit_context>false</inherit_context>` **but** `<accumulate_data>true</accumulate_data>`, the Evaluator:
+1. Calls `MemorySystem.getRelevantContextFor()` with prior steps' partial results
+2. Merges the returned `AssociativeMatchResult` into the next step's environment
+3. Maintains complete separation from the Handler's resource management
+
+### Evaluator Responsibilities for Associative Matching
+
+* **Initiation**: The Evaluator is the *sole* caller of `MemorySystem.getRelevantContextFor()`.
+* **Sequential History**: It retrieves partial outputs from `SequentialHistory` (the step-by-step data structure it maintains).
+* **Context Merging**: If the step is configured for accumulation, the Evaluator incorporates the match results into the upcoming step's environment.
+* **Error Handling**: Any failure to retrieve context (e.g., a memory system error) is handled through the existing `TASK_FAILURE` or resource-related error flow. No new error category is introduced.
+* **No Handler Involvement**: The Handler does not participate in the retrieval or assembly of this context data, beyond tracking resource usage at a high level.
+
+This design ensures that only the Evaluator initiates associative matching, preventing confusion about which component is responsible for cross-step data retrieval. The Memory System remains a service that simply provides matches upon request.
+
+---
+
 ---
 
 ## Sequential Task History

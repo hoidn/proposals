@@ -76,6 +76,17 @@ Define the core error types that enable control flow and task adaptation in the 
    - Simplified control flow
    - Clear system behavior
 
+## Context Operation Failures
+
+In scenarios where an Evaluator step calls `MemorySystem.getRelevantContextFor()` or otherwise attempts context assembly:
+- We treat any failures as standard `TASK_FAILURE`.
+- The error message should clarify that a context operation failed.
+- **No new error category** is introduced for context issues alone.
+- **Preserve partial results** if the context operation fails during a multi-step (sequential) task. These partial results can be included in the final error details or the `notes` field of the `TaskResult`.
+- This approach ensures a consistent error taxonomy without branching into specialized context error types.
+
+In short, "context operation failures" are reported as `TASK_FAILURE` (or `INVALID_OUTPUT` if the context text is invalid for the next step), and partial sub-task outputs remain available in the error state.
+
 ## Dependencies
 - Task system must detect resource limits
 - Evaluator must handle control flow
