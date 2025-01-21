@@ -10,7 +10,8 @@ type AtomicTaskSubtype = "standard" | "subtask";
 interface TaskResult {
     content: string;
     notes: {
-        dataUsage: string;
+        dataUsage: string;  // Required field
+        [key: string]: any; // Support for unstructured data
     };
 }
 
