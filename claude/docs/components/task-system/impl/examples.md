@@ -102,13 +102,10 @@ try {
 }
 ```
 
-## Memory Integration Example
+## Global Index Example
 ```typescript
-// Execute task with context
+// Minimal memory object focusing on file metadata
 const memory = {
-  getContext() {
-    return 'Current analysis context with relevant information';
-  },
   getGlobalIndex() {
     return new Map([
       ['data.txt', 'metadata'],
@@ -119,10 +116,8 @@ const memory = {
   updateGlobalIndex(index) {}
 };
 
-const result = await taskSystem.executeTask(
-  "analyze recent changes", 
-  memory
-);
+// Now we can pass this memory object to the taskSystem
+const result = await taskSystem.executeTask("analyze recent changes", memory);
 ```
 
 ## Specialized Task Types
