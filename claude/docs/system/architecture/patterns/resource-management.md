@@ -144,6 +144,19 @@ interface HandlerConfig {
 - Error propagation
 - Recovery guidance
 
+### Sequential Task Resources
+
+For **sequential** tasks, the Evaluator maintains a step-by-step record of partial results and history, often called `SequentialHistory`. This history is **not** tracked against the Handler's context window limits. Instead:
+
+- **Evaluator** owns the entire sequential history for multi-step tasks.
+- **Handler** continues to track standard resource usage (turns, tokens).
+- Because the sequential history is purely textual or metadata that the Evaluator stores separately, it does not consume the Handler's context window.
+- If the task is configured to accumulate data (`<accumulate_data>true</accumulate_data>`), the Evaluator may pass prior step outputs into `MemorySystem.getRelevantContextFor()`.
+- This separation ensures Handler resource metrics stay consistent and the Evaluator can keep any relevant partial outputs for as long as needed.
+- Once the sequential task completes (success or failure), the Evaluator discards (or archives) the sequential history to free memory.
+
+This design ensures a clean boundary between higher-level multi-step results (owned by the Evaluator) and resource usage constraints (handled by the Handler).
+
 ## Related Patterns
 - [Pattern:Error:1.0] - Error handling strategy
 - [Pattern:TaskExecution:1.0] - Task execution flow
