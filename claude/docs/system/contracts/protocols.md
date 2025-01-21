@@ -14,9 +14,56 @@ The task template schema defines the structure for task template XML files and m
   <xs:element name="task">
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="instructions" type="xs:string"/>    <!-- Maps to taskPrompt -->
-        <xs:element name="system" type="xs:string"/>         <!-- Maps to systemPrompt -->
-        <xs:element name="model" type="xs:string"/>          <!-- Maps to model -->
+        <xs:element name="description" type="xs:string"/>
+        <xs:element name="context_management">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="inherit_context" type="xs:boolean"/>
+              <xs:element name="accumulate_data" type="xs:boolean" minOccurs="0"/>
+              <xs:element name="accumulation_format" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:enumeration value="full_output"/>
+                    <xs:enumeration value="notes_only"/>
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="steps">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="task" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="description" type="xs:string"/>
+                    <xs:element name="inputs" minOccurs="0">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="input" maxOccurs="unbounded">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="task">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element name="description" type="xs:string"/>
+                                    </xs:sequence>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                              <xs:attribute name="name" type="xs:string" use="required"/>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
         <xs:element name="inputs" minOccurs="0">             <!-- Maps to inputs -->
           <xs:complexType>
             <xs:sequence>
