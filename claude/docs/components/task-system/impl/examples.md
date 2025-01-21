@@ -174,3 +174,30 @@ const memoryResult = await taskSystem.executeTask(
 
 console.log('Retrieved context:', memoryResult.content);
 ```
+
+---
+
+<!-- Example: Sequential Task with Data Accumulation -->
+<task type="sequential">
+    <description>Process and analyze data</description>
+    <context_management>
+        <inherit_context>false</inherit_context>
+        <accumulate_data>true</accumulate_data>
+        <accumulation_format>notes_only</accumulation_format>
+    </context_management>
+    <steps>
+        <task>
+            <description>Load dataset</description>
+            <inputs>
+                <input name="data_file">
+                    <task>
+                        <description>Read input CSV file</description>
+                    </task>
+                </input>
+            </inputs>
+        </task>
+        <task>
+            <description>Filter invalid rows</description>
+        </task>
+    </steps>
+</task>
