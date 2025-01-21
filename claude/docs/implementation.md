@@ -80,6 +80,7 @@ Clarify in your documentation whether you retry automatically or require a “re
 Example Code Snippet
 xml
 Copy
+```xml
 <task type="map">
   <description>Analyze each file in parallel</description>
   <inherit_context>true</inherit_context>
@@ -98,13 +99,16 @@ Copy
     </task>
   </steps>
 </task>
-Where the environment for each sub-task automatically includes shared memory or sequential data if inherit_context="true".
+```
 
-Completion Criteria
-Operators consistently accept or ignore inherit_context.
-New or updated environment structure is used in at least one example operator chain.
-Decision on partial results is documented and/or implemented.
-Phase 3: Task Execution Enhancements
+The environment for each sub-task automatically includes shared memory or sequential data when `inherit_context="true"`.
+
+### Completion Criteria
+- Operators consistently accept or ignore inherit_context
+- New environment structure is used in at least one example operator chain
+- Decision on partial results is documented and implemented
+
+## Phase 3: Task Execution Enhancements
 Goals
 Implement “rebuild-memory” or “clear-memory” flags for tasks that need a fresh context.
 Support multi-step or “continuation” protocols for tasks that require multiple interactions without losing context state.
