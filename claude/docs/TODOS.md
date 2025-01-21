@@ -1,7 +1,10 @@
 # System TODOs and Status
 
-# Feature / arch TODOs
-1. the context / environment should have 3 components. 1: a memory system instance. 2: all the accumulated data from the current sequential operation (empty for non sequential / reduce types). 3: working memory, which includes associatively retrieved files + associatively retrieved accumulated data.
+# Feature / arch TODOs (still pending final implementation)
+1. The context / environment should explicitly combine:
+   (1) a MemorySystem instance,
+   (2) data accumulated from the current sequential operation (if relevant),
+   (3) and working memory from associative matching. 
 
 # Critical Path TODOs - Corrected Status
 
@@ -17,14 +20,17 @@
 
 ### Still Needed (❌)
 1. Update Task System Implementation
-   - Update components/task-system/spec/interfaces.md to use [Interface:Memory:2.0]
-   - Remove old memory structure definitions
-   - Update any dependent interfaces
+   - Update components/task-system/spec/interfaces.md to use [Interface:Memory:2.0 or 3.0] consistently
+   - Remove or reconcile old/deprecated memory structure definitions
+   - Update dependent interfaces to unify environment usage
+   - Ensure references to "Memory:2.0" vs "Memory:3.0" are consistent across docs
 
 2. Version Number Alignment
    - Verify all cross-references use correct versions
-   - Update any outdated references to [Interface:Memory:2.0]
+   - Update any outdated references to [Interface:Memory:2.0 or 3.0]
    - Ensure consistent version numbering across documentation
+
+   - Confirm final chosen memory interface version is used everywhere
 
 ## Resource and File Management ⚠️ BLOCKING
 
@@ -47,9 +53,11 @@
 ### Still Needed (❌)
 1. Interface Updates
    - Update Task System interfaces to reflect current patterns
-   - Remove deprecated memory structures
-   - Add missing Handler tool interfaces if needed
-   - Ensure consistent patterns across all interface documentation
+   - Remove or replace any deprecated memory system fields
+   - Add missing Handler tool interfaces if needed (e.g., `writeFile` if required)
+   - Ensure consistency across doc references
+   - Confirm we only store file metadata in Memory System (and use Handler for actual I/O)
+   - Re-check that partial references to "getContext()" align with new approach
 
 ## Next Steps
 1. Focus on updating Task System interfaces
@@ -67,21 +75,27 @@
 1. Memory Component Separation
    - Full component definition
    - Clear interfaces
-   - Integration documentation
+   - Integration documentation (✓)
 
 2. Task Type System
    - Basic types defined
    - Subtask support
    - Map operator implementation
 
-### In-Progress Features (🔄)
+### In-Progress Features (🔄 / Partially Implemented)
 1. Context Management
    Priority: High
    Dependencies: Interface Consolidation
    - [ ] Document best practices
-   - [ ] Define efficient subtask patterns
+   - [ ] Define efficient subtask patterns (sequential, reduce, map)
+   - [ ] Extend `inherit_context` to map/reduce
+   - [ ] Provide partial-result guidance (e.g. whether we preserve partial results on context generation failure)
+   - [ ] Consolidate environment usage so that tasks can clearly see:
+       1. The memory system instance
+       2. Accumulated data from the parent or prior step
+       3. Any associatively retrieved files/data
    - [ ] Add context reuse mechanisms
-   - [ ] Document pattern examples
+   - [ ] Update error taxonomy for context failures
 
 2. Architecture Documentation
    Priority: Medium
@@ -94,7 +108,7 @@
 1. Task Execution Enhancements
    Priority: High
    Dependencies: Context Management
-   - [ ] Rebuild-memory flag in templates
+   - [ ] "Rebuild-memory" or "clear-memory" flag in templates
    - [ ] Task continuation protocol
    - [ ] Summary output handling in evaluator
    - [ ] Several-shot examples for reparsing
@@ -108,12 +122,15 @@
 
 ## Documentation Updates
 
-### Interface Documentation
+### Interface and Implementation Documentation
 Priority: High
 Dependencies: Interface Consolidation
-- [ ] Update Task System specs to [Interface:Memory:2.0]
+- [ ] Update Task System specs to [Interface:Memory:2.0 or 3.0]
 - [ ] Update API documentation
 - [ ] Update component READMEs
+- [ ] Document subtask usage (map, reduce, sequential) with context
+- [ ] Provide best practices for partial output vs. re-parse
+- [ ] Align final references to single Memory interface version
 - [ ] Add context management practices
 - [ ] Document subtask patterns
 
