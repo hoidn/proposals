@@ -178,3 +178,8 @@ Although references to a “context generation task” or “associative matchin
 
 4. Error Taxonomy for Context Issues
 We have flagged that a “context generation failure” could be a Task Failure or might need its own subcategory. Determining whether this should remain a generic “task failure” or become a separate error type is pending further design discussion.
+
+
+### other todos 
+- accumulation: should it be separate or rolled into associative memory?
+- do we need separate context inheritance handlinng for the reduction and accumulation operations in reduce?
