@@ -41,23 +41,27 @@ interface TaskSystem {
 }
 ```
 
-### Memory System Interface [Interface:Memory:2.0]
+### Memory System Interface [Interface:Memory:3.0]
 ```typescript
 /**
- * Memory management interface
+ * Memory management interface focused on metadata
  */
-type GlobalIndex = Map<string, string>;
+type FileMetadata = string;
+
+type GlobalIndex = Map<string, FileMetadata>;
 
 type FileMatch = [string, string | undefined];
 
+interface AssociativeMatchResult {
+    context: string;      // Unstructured data context
+    matches: FileMatch[]; // Relevant file matches
+}
+
 interface MemorySystem {
-    // Get current data context
-    getContext(): Promise<string>;
-
-    // Get global file index 
+    // Get global file metadata index
     getGlobalIndex(): Promise<GlobalIndex>;
-
-    // Bulk update to global index
+    
+    // Update global file metadata index
     updateGlobalIndex(index: GlobalIndex): Promise<void>;
 }
 ```
