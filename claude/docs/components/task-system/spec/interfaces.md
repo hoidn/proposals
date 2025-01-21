@@ -102,12 +102,5 @@ interface Handler {
      * @returns Promise resolving to user's input
      */
     onRequestInput: (agentRequest: string) => Promise<string>;
-
-    /**
-     * File access tools for LLM
-     */
-    tools: {
-        readFile(path: string): Promise<string>;
-    };
 }
 ```
