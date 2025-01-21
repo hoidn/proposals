@@ -2,8 +2,7 @@
 
 ## Overview
 The Memory System provides two core capabilities:
-1. Read-only task context provision
-2. Global file metadata index maintenance
+1. Global file metadata index maintenance for associative matching
 
 The system does not handle file content storage or retrieval.
 
@@ -54,13 +53,6 @@ The complete result of associative matching, containing:
 
 ## Interface Methods
 
-### Context Access
-
-#### getContext()
-```typescript
-getContext(): Promise<string>
-```
-Retrieves the current read-only task context.
 
 ### Index Management
 
@@ -78,4 +70,4 @@ Performs a bulk update of the global file metadata index. Replaces the entire ex
 
 ## Integration Points
 - Handler: Uses file paths from AssociativeMatchResult to read files via tools
-- Associative Matching Task: Uses GlobalIndex for initial file filtering
+- Associative Matching: Uses GlobalIndex as basis for context generation in tasks

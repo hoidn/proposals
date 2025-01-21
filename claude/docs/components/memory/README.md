@@ -7,42 +7,25 @@
 - Context Frame Pattern in [Pattern:ContextFrame:1.0]
 
 ## Purpose
-Provides read-only context for task execution, including data context, chat history, system prompts, and templates. See [ADR:Memory:1.0] for architectural decisions and rationale.
-
-## Working Memory Components
-- Read-only data context (from associative matching or inheritance)
-- Chat component (LLM-handler interaction history)
-- System prompts
-- Populated prompt templates
+Maintains global file metadata index to support associative matching in tasks. See [ADR:Memory:1.0] for architectural decisions and rationale.
 
 ## Memory System Responsibilities
 
 ### Storage
-The memory system provides storage but does not manage content:
-- Data context: Stores but doesn't determine inheritance rules
-- Templates/Prompts: Stores but doesn't handle population/validation
-- Files: Maintains content but doesn't manage operations
-- Long-term memory: Provides persistence layer for associative matching
-
-### Context Management
-Data context for a task can come from:
-- Parent task inheritance
-- Predecessor task (for map/sequence operations)
-- Associative matching against long-term memory
-Control of context source is via task library entries, not the memory system.
+The memory system:
+- Maintains global index of file paths and metadata
+- Does not store or manage file content
+- Provides base data for associative matching
+- Does not handle task-specific context generation
 
 ### Associative Matching
-Implements context generation through:
-- Matching against long-term memory content
-- Incorporating prior task notes for relevance
-- Supporting task-specific matching criteria
-- Providing result filtration and ranking
+Supports associative matching by:
+- Providing GlobalIndex of file paths and metadata
+- Enabling file discovery through metadata search
+- Supporting task-specific matching via metadata
+- Not handling actual context generation
 
-### Notes Processing
-- Stores unstructured task notes
-- Makes notes available for subsequent matching
-- Supports passing notes to child/successor tasks
-- No enforced structure on note content
+Note: Actual context generation and inheritance is handled at the task execution level.
 
 ## Component Integration
 - Context window management delegated to Handler

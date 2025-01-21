@@ -20,6 +20,7 @@ Execute a series of tasks with explicit dependencies. Maintains execution order 
 ```xml
 <task type="sequential">
     <description>Overall sequence description</description>
+    <inherit_context>true</inherit_context>
     <steps>
         <!-- Task without dependencies -->
         <task>
