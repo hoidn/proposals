@@ -180,6 +180,9 @@ Although references to a “context generation task” or “associative matchin
 We have flagged that a “context generation failure” could be a Task Failure or might need its own subcategory. Determining whether this should remain a generic “task failure” or become a separate error type is pending further design discussion.
 
 
-### other todos 
+### other other todos 
 - accumulation: should it be separate or rolled into associative memory?
+- allow the agent to store and recall memory files (special subdir, markdown format, inc timestamps, can be instantiated / loaded / managed by memory system)
 - do we need separate context inheritance handlinng for the reduction and accumulation operations in reduce?
+- at the evaluator level, keep track of all the previous outputs of a sequential task
+- allow simple chaining - should be supportable through nesting but it might make more sense to make it a sequential pattern so that we can use the sequential context management features
