@@ -15,7 +15,7 @@ Manages individual LLM sessions:
 - Context window management
 - Direct LLM interaction
 - Interactive session support
-- Resource usage tracking
+- Resource tracking
 
 ### Template Manager
 Handles task definitions:
@@ -34,7 +34,7 @@ Handles task definitions:
 ### Operational
 - One Handler per task execution
 - Immutable Handler configuration
-- Template immutability during execution
+- XML-based task definitions
 - No direct resource usage tracking (delegated to Handlers)
 - No progress/retry state (managed by Evaluator)
 
@@ -42,6 +42,7 @@ Handles task definitions:
 
 ### Dependencies
 - Memory System: Context access and management
+- Anthropic Tools: File and computer operations
 - Compiler: Task parsing services
 - Evaluator: Error recovery support
 - XML Processing: Template and output handling

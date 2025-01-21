@@ -121,6 +121,15 @@
 - Clear task execution boundaries
 - Simple file modification tracking
 
+## File Operations
+- Uses Anthropic's computer use tools:
+  * computer_20241022
+  * text_editor_20241022
+  * bash_20241022
+- No direct file operation interface
+- Managed through Anthropic's tool use system
+- See Anthropic documentation for details
+
 ## Error Handling
 
 ### Error Detection and Response
@@ -174,7 +183,6 @@
 
 #### Recovery Delegation
 - No retry attempts
-- No state maintenance
 - Delegates to evaluator
 - Provides complete error context
 - Includes notes for recovery guidance
