@@ -1,5 +1,7 @@
 # Task System Interfaces
 
+import { MemorySystem, FileMatch } from "../../memory/api/interfaces";
+
 ## References
 
 - Core Types: See [Type:TaskSystem:1.0] (`/components/task-system/spec/types.md`)
