@@ -184,3 +184,4 @@ We have flagged that a “context generation failure” could be a Task Failure 
 - allow the agent to store and recall memory files (special subdir, markdown format, inc timestamps, can be instantiated / loaded / managed by memory system)
 - do we need separate context inheritance handling for the reduction and accumulation operations in reduce?
 - allow simple chaining - should be supportable through nesting but it might make more sense to make it a sequential pattern so that we can use the sequential context management features
+- the agent / llm interface (which will be accessed by the handler) should support a basic set of tools in a fairly model-agnostic way. for example, for anthropic models interactions that use 'file edit' or 'shell' tools will use the underlying anthropic-specific computer use mechanisms. the handler should be able to select one or more abstract tool types without knowing about these details
