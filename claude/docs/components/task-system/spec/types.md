@@ -3,7 +3,7 @@
 ## Core Task Types
 ```typescript
 // Basic task types used across interfaces
-type TaskType = "atomic" | "sequential" | "map" | "reduce";
+type TaskType = "atomic" | "sequential" | "reduce";
 type AtomicTaskSubtype = "standard" | "subtask";
 
 // Results and Templates
@@ -42,6 +42,11 @@ interface ContextManagement {
     inheritContext: boolean;
     accumulateData: boolean;
     accumulationFormat: 'full_output' | 'notes_only';
+    /**
+     * Note: 'map' is no longer a core type in this system.
+     * A map-like operation can be implemented by enumerating inputs
+     * in a 'sequential' or 'parallelized' pattern as needed.
+     */
 }
 
 interface TaskTemplate {

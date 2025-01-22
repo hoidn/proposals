@@ -25,7 +25,7 @@ interface TaskSystem {
     executeTask(
         task: string,
         memory: MemorySystem,  // Updated to match Memory System v3.0 interface
-        taskType?: TaskType
+        taskType?: TaskType    // Now limited to atomic, sequence, reduce
     ): Promise<TaskResult>;
 
     // Validate a task template
@@ -38,7 +38,7 @@ interface TaskSystem {
     ): Promise<Array<{
         template: TaskTemplate;
         score: number;
-        taskType: TaskType;
+        taskType: TaskType;    // Now limited to atomic, sequence, reduce
     }>>;
 }
 ```
