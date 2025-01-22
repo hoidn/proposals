@@ -54,7 +54,7 @@ Execute a series of tasks with explicit dependencies. Maintains execution order 
 
 1. **Direct Inheritance** (`inherit_context="true"`)
    - Uses the parent context as-is, without any additional associative matching.
-   - Data accumulation is disabled.
+   - Data accumulation is disabled unless explicitly enabled.
    - Suitable when a sub-task needs the same environment as its parent.
 
 2. **History-Aware Matching** (`inherit_context="false" + accumulate_data="true"`)
@@ -66,6 +66,12 @@ Execute a series of tasks with explicit dependencies. Maintains execution order 
    - Steps only use the conventional memory system and the high-level environment.
    - No step-by-step data is automatically shared.
    - Simplifies tasks that do not need prior step outputs.
+
+4. **Combined Inheritance and Accumulation** (`inherit_context="true" + accumulate_data="true"`)
+   - Maintains both inherited parent context and accumulated step outputs separately.
+   - Both contexts are available during task execution but kept distinct internally.
+   - Allows selective combination of contexts when generating prompts.
+   - Provides maximum flexibility while preserving context separation.
 
 ### Execution Semantics
 - Tasks execute in specified order

@@ -69,17 +69,27 @@ updateGlobalIndex(index: GlobalIndex): Promise<void>
 Performs a bulk update of the global file metadata index. Replaces the entire existing index.
 
 /**
+ * Input structure for context generation requests
+ */
+interface ContextGenerationInput {
+    previousOutputs?: string;   // Accumulated outputs from previous steps
+    inheritedContext?: string;  // Context inherited from parent tasks
+    taskText: string;          // The primary request text or task description
+}
+
+/**
  * Retrieve context using associative matching.
+ * 
+ * The Memory System does NOT perform ranking or prioritization of matches.
+ * It only provides associative matching based on the input structure.
  *
- * The Evaluator calls this method when a step (typically in a sequential task)
- * has `<inherit_context>false</inherit_context>` but `<accumulate_data>true</accumulate_data>`.
- *
- * @param text - The input string aggregated from prior step outputs or partial results.
+ * @param input - The ContextGenerationInput containing task context
  * @returns A promise resolving to an AssociativeMatchResult object containing:
  *   - `context`: Unstructured text data relevant to the query
- *   - `matches`: A list of file paths (and optional metadata) relevant to the query
+ *   - `matches`: An unordered list of file paths (and optional metadata) relevant to the query
+ * @throws {INVALID_INPUT} If the input structure is malformed or missing required fields
  */
-declare function getRelevantContextFor(text: string): Promise<AssociativeMatchResult>;
+declare function getRelevantContextFor(input: ContextGenerationInput): Promise<AssociativeMatchResult>;
 
 ## Integration Points
 - Handler: Uses file paths from AssociativeMatchResult to read files via tools

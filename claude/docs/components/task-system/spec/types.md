@@ -43,10 +43,24 @@ interface ContextManagement {
     accumulateData: boolean;
     accumulationFormat: 'full_output' | 'notes_only';
     /**
+     * When both inheritContext and accumulateData are true:
+     * - Inherited context from parent tasks is maintained separately
+     * - Accumulated data from previous steps is tracked independently
+     * - Contexts can be combined during task execution as needed
+     * 
      * Note: 'map' is no longer a core type in this system.
      * A map-like operation can be implemented by enumerating inputs
      * in a 'sequential' or 'parallelized' pattern as needed.
      */
+}
+
+/**
+ * Input structure for Memory System context requests
+ */
+interface ContextGenerationInput {
+    previousOutputs?: string;   // Outputs accumulated from previous steps
+    inheritedContext?: string;  // Context inherited from parent tasks
+    taskText: string;          // The primary task description or request
 }
 
 interface TaskTemplate {
