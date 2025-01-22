@@ -169,8 +169,8 @@ Dependencies: Individual feature completion
 1. Handling Partial Results on Context-Generation Failure
 The patch mentions “context generation fails,” but does not fully define whether partial results or intermediate step data should be preserved or retried. Deciding on partial result preservation or an automatic re-parse is an open design item.
 
-2. Extending inherit_context to Other Operators
-We added inherit_context only to the <task type="sequential"> element. Whether or not other operators (map, reduce) should support the same attribute (and how it interacts with parallel or iterative steps) remains to be addressed.
+2. Extending inherit_context to Other Operators  
+   We added inherit_context only to the <task type="sequential"> element. Whether or not other operators (like reduce or any derived "map" pattern) should support the same attribute (and how it interacts with parallel or iterative steps) remains to be addressed.
 
 3. Clarification of How Context Generation Tasks Are Triggered
 Although references to a “context generation task” or “associative matching” were updated, the exact mechanism—i.e. how the evaluator decides to invoke associative matching, or how that is described in the DSL—still needs more explicit design.
