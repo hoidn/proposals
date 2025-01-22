@@ -49,7 +49,7 @@ In many existing code examples (both TypeScript-like and Scheme-like), the syste
    - Not purely "owns" resource tracking (that's part of the Handler), but integrates with it. The Evaluator is aware of usage or limit errors and decides whether to attempt decomposition or fail outright.  
 
 4. **Context and Environment Handling**  
-   - In multi-step or operator-based tasks (sequential, map, reduce, etc.), the Evaluator ensures the environment or partial context is passed along.  
+   - In multi-step or operator-based tasks (sequential, reduce, etc.), the Evaluator ensures the environment or partial context is passed along.  
    - The Evaluator references the Memory System indirectly—usually by letting tasks retrieve needed metadata—but does not store or manage file content.  
 
 5. **Integration with Task System**  
