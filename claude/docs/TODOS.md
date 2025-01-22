@@ -111,13 +111,12 @@
    - [ ] "Rebuild-memory" or "clear-memory" flag in templates
    - [ ] Task continuation protocol
    - [ ] Summary output handling in evaluator
-   - [ ] Several-shot examples for reparsing
 
 2. Agent Features
    Priority: Medium
    Dependencies: Interface Consolidation
    - [ ] Agent history storage
-   - [ ] REPL implementation
+   - [ ] REPL implementation - the handler / task system needs to give the llm a 'question answering' tool. 
    - [ ] Multi-LLM support
 
 ## Documentation Updates
@@ -186,4 +185,5 @@ We have flagged that a “context generation failure” could be a Task Failure 
 - allow simple chaining - should be supportable through nesting but it might make more sense to make it a sequential pattern so that we can use the sequential context management features
 - the agent / llm interface (which will be accessed by the handler) should support a basic set of tools in a fairly model-agnostic way. for example, for anthropic models interactions that use 'file edit' or 'shell' tools will use the underlying anthropic-specific computer use mechanisms. at the beginning of a session, the handler should be able to select one or more abstract tool types without knowing about these details
 - function definition / call primitives / syntax / task types. A function is a named procedure that can be either compound or atomic. Will need to define some language syntax and maybe a repl in which things can be defined and run interactively. Could be a lisp dialect. New surface syntax on top of the existing task structure should be good enough. Maybe there's an existing python impl of a lisp parser that i can reuse. alternatively, could stick with xml for now and deal with language syntax / parsing later. 
-- write some user stories. example 0: o1 to generate impl plan; sonnet to incrementally take and incorporate feedback; o1 to revise the updated plan; sequential sonnet (preceded by cheap model to break the steps into an explicit list) or zero shot o1 to generate diffs for all of the files. example 1: the inconsistency resolution workflow that i wrote down a while ago. example 2: something about generating documentation / building an index (e.g. mermaid diagram)
+- write some user stories. example 0: o1 to generate impl plan; sonnet to incrementally take and incorporate feedback; o1 to revise the updated plan; sequential sonnet (preceded by cheap model to break the steps into an explicit list) or zero shot o1 to generate diffs for all of the files. example 1: the inconsistency resolution workflow that i wrote down a while ago. example 2: something about generating documentation / building an index (e.g. mermaid diagram). 
+- at some point (maybe not part of mvp), we'll want the agent to be able to request files to be added or removed to its context. this might not be necessary for anthropic models (computer use gives them direct access), but maybe we want that for other models. (on the other hand, limiting oai models to 'pure function' roles might be an ok approach too).
