@@ -127,3 +127,32 @@ This schema is used by the TaskSystem component. For implementation details and 
 - TaskTemplate interface in spec/types.md [Type:TaskSystem:TaskTemplate:1.0]
 - Template validation in TaskSystem.validateTemplate() 
 - Template parsing in TaskSystem constructor
+
+### Map Pattern Implementation
+
+Map operations are implemented using sequential tasks:
+
+```xml
+<task type="sequential">
+  <description>Process multiple items in parallel</description>
+  <context_management>
+    <inherit_context>false</inherit_context>
+    <accumulate_data>true</accumulate_data>
+    <accumulation_format>full_output</accumulation_format>
+  </context_management>
+  <steps>
+    <task>
+      <description>Process item 1</description>
+      <inputs>
+        <input name="data">data1</input>
+      </inputs>
+    </task>
+    <task>
+      <description>Process item 2</description>
+      <inputs>
+        <input name="data">data2</input>
+      </inputs>
+    </task>
+  </steps>
+</task>
+```
