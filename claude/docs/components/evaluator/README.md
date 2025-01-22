@@ -117,6 +117,28 @@ The Evaluator coordinates the execution of tasks—represented in AST or XML-bas
 - **Metacircular Evaluator Examples:** See the "Evaluator" sketches in `misc/textonly.tex.md`  
 - **Future Expansions:** Refer to Implementation Plan phases in `implementation.md` (root-level or system docs).
 
+## Dual Context Tracking
+
+The Evaluator maintains two distinct types of context when both inheritance and accumulation are enabled:
+
+1. **Inherited Context**: The parent task's context that is passed down unchanged
+2. **Accumulated Data**: The step-by-step outputs collected during sequential execution
+
+When both `inheritContext` and `accumulateData` are true, these contexts remain separate internally but can be combined during task execution. The Evaluator:
+
+1. Maintains the parent's inherited context unchanged throughout execution
+2. Separately tracks accumulated outputs from previous steps
+3. Calls `getRelevantContextFor()` with both contexts when needed:
+   ```typescript
+   const contextInput: ContextGenerationInput = {
+       previousOutputs: accumulatedData,    // From sequential history
+       inheritedContext: parentContext,     // From parent task
+       taskText: currentTaskDescription     // Current step
+   };
+   const matchResult = await getRelevantContextFor(contextInput);
+   ```
+4. Uses the returned context and matches during prompt generation
+
 ## Associative Matching Invocation
 
 When executing a sequential task step with `<inherit_context>false</inherit_context>` **but** `<accumulate_data>true</accumulate_data>`, the Evaluator:

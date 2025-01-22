@@ -135,6 +135,10 @@ Process a list of named inputs through repeated application of inner task and re
   1. Execute inner_task with:
      - Current input
      - Any additional specified inputs
+     - When both inheritance and accumulation are enabled:
+       * Parent context is preserved separately
+       * Previous reduction results are accumulated separately
+       * Both contexts available during execution
   2. Execute reduction_task with:
      - Current inner_task result
      - Current accumulator value

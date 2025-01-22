@@ -53,7 +53,7 @@ Defines how errors propagate and recover across component boundaries.
 See [Interface:ErrorHandling:1.0] in system/contracts/interfaces.md for complete specification.
 
 ### Resource Management [Pattern:Resource:2.0]
-Defines resource allocation, tracking, and lifecycle across components.
+Defines resource usage tracking and lifecycle across components.
 
 #### Core Principles
 - Handler-based resource isolation
@@ -138,9 +138,10 @@ See components/task-system/README.md for complete specification.
 ### Memory System [Component:Memory:3.0]
 Metadata management component.
 - Maintains global file metadata index
-- Provides metadata for associative matching
+- Provides metadata for associative matching without ranking or prioritization
 - Supplies metadata for file-based lookup and partial matching
 - Does not store file content or task context
+- Does not allocate or manage resources - only provides matching services
 
 See [Contract:Integration:TaskMemory:2.0] for integration specification.
 
