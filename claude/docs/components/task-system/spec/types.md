@@ -6,9 +6,16 @@
 type TaskType = "atomic" | "sequential" | "reduce";
 type AtomicTaskSubtype = "standard" | "subtask";
 
+// Task execution status
+type ReturnStatus = 
+    | 'COMPLETE'      // Task completed successfully
+    | 'CONTINUATION'  // Task spawned subtask, not yet complete
+    | 'FAILED';       // Task failed to complete
+
 // Results and Templates
 interface TaskResult {
     content: string;
+    status: ReturnStatus;
     notes: {
         dataUsage: string;  // Required field
         [key: string]: any; // Support for unstructured data
