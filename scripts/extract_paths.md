@@ -2,7 +2,7 @@
 
 ## High-Level Objective
 
-Extract all paths named in the input file and write them to a new file edit_paths.txt
+Extract all paths named in the input file and write them to a new file edit_paths.json
 
 
 ### Beginning Context
@@ -11,10 +11,10 @@ Extract all paths named in the input file and write them to a new file edit_path
 
 ### Ending Context
 
-- `edit_paths.txt` (list of files to be changed, along with reasons and other required information)
+- `edit_paths.json` (list of files to be changed, along with reasons and other required information)
 
 <output_format>
-create a new file called edit_paths.txt with the following:
+create a new file called edit_paths.json with the following:
 
 # Files Extracted
 list of file paths in json
