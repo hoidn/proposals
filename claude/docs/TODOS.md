@@ -203,5 +203,8 @@ or have to pass through a rigid api, whereas subtasks are llm to llm
 interactions. Having the llm call aider kind of blends the two. I think
 it'd be better as a subtask, bc in any case some subtasks will require
 conforming to an outupt signature.
+- anthropic computer use could be replaced by evaluator subtasks, but it'd involve more boilerplate with subprocess.run and all that at 
+the DSL interpreter level and it might be annoying to have to handle a special case. though i guess the output xml could have a universal
+optional 'execute this script' field that always gets run if it's present
 
 
