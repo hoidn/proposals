@@ -66,7 +66,7 @@ def process_subset(description: str, answers_file: str = None):
     # Initialize the AI model
     model = Model(
         "o1-preview",
-        editor_model="claude-3-5-sonnet-20241022",
+        editor_model="o1-preview",
         editor_edit_format="diff",
     )
 
@@ -80,6 +80,10 @@ def process_subset(description: str, answers_file: str = None):
         auto_commits=False,
         suggest_shell_commands=False,
     )
+
+    print("PROMPT:")
+    print(prompt)
+    print("END PROMPT")
 
     # Run the code modification
     coder.run(prompt)
