@@ -1,0 +1,11 @@
+{
+  "questions": [
+    "1. What are the specific return status values beyond 'continuation'?",
+    "2. How should existing tasks that rely on partial output be migrated?",
+    "3. Should continuation status include metadata about the intended subtask?",
+    "4. How does the return status system interact with resource exhaustion errors?",
+    "5. What is the scope of \"subtask spawning\" - is it limited to predefined task types or more flexible?",
+    "6. How should sequential tasks handle continuation status from their steps?",
+    "7. Should reduce tasks support continuation status in their inner_task or reduction_task?"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "files": [
+    "docs/system/architecture/overview.md",
+    "docs/system/contracts/interfaces.md", 
+    "docs/components/task-system/spec/types.md",
+    "docs/components/evaluator/README.md",
+    "docs/system/architecture/patterns/errors.md",
+    "docs/misc/operators.md"
+  ]
+}
