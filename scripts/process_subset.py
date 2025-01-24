@@ -47,13 +47,14 @@ def process_subset(description: str):
     # Initialize the AI model
     model = Model(
         "claude-3-5-sonnet-20241022",
-        editor_edit_format="whole",
+        editor_model="claude-3-5-sonnet-20241022",
+        editor_edit_format="diff",
     )
 
     # Initialize the AI Coding Assistant
     coder = Coder.create(
         main_model=model,
-        edit_format="whole",
+        edit_format="architect",
         io=InputOutput(yes=True),
         fnames=context_editable,
         read_only_fnames=context_read_only,
