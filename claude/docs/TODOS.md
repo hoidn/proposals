@@ -196,3 +196,12 @@ We have flagged that a “context generation failure” could be a Task Failure 
 - llm output-to-evaluator level bindings / variables can be used to pass discrete values like file paths between tasks, which would be useful to implement something like the director-evaluator pattern
 - Add the Lispy stuff to docs if they're not already there
 - add `aider` code blocks to the prompts
+- think about how to use aider as a coding / file editing backend and for passing information between tasks (via files). It might make sense to go through files bc a lot of the time task outputs will be run or referred to later. There could be a subset of templates that 'know' how to format aider inputs (essentially using tool calls).
+- need to clarify the difference between tool calls and subtasks (the
+essential difference should be that tool calls are either deterministic
+or have to pass through a rigid api, whereas subtasks are llm to llm
+interactions. Having the llm call aider kind of blends the two. I think
+it'd be better as a subtask, bc in any case some subtasks will require
+conforming to an outupt signature.
+
+
