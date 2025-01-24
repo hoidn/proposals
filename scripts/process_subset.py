@@ -5,12 +5,13 @@ from aider.io import InputOutput
 import sys
 import json
 
-def process_subset(description: str):
+def process_subset(description: str, answers_file: str = None):
     """
-    Process a subset of files according to the given description.
+    Process files listed in edit_paths.json according to the description.
 
     Args:
         description (str): Description of the changes to make.
+        answers_file (str, optional): Path to file containing answers to questions.
     """
     # Read the spec from process_subset.md
     spec_path = Path.cwd() / "process_subset.md"
@@ -21,8 +22,26 @@ def process_subset(description: str):
     with open(spec_path, "r") as spec_file:
         spec_content = spec_file.read()
 
-    # Include the description in the spec prompt
+    # Load and format Q&A if provided
+    questions_text = ""
+    if answers_file:
+        # Load questions
+        with open("questions.json", "r") as qf:
+            questions = json.load(qf)["questions"]
+        
+        # Load answers
+        with open(answers_file, "r") as af:
+            answers = [line.strip() for line in af.readlines() if line.strip()]
+        
+        # Format Q&A pairs
+        qa_pairs = []
+        for q, a in zip(questions, answers):
+            qa_pairs.extend([f"Q: {q}", f"A: {a}"])
+        questions_text = "\n".join(qa_pairs)
+
+    # Include both description and questions in the spec prompt
     spec_prompt = spec_content.replace("<description>", description)
+    spec_prompt = spec_prompt.replace("<questions>", questions_text)
 
     # Read the list of files to process from edit_paths.json
     json_path = Path.cwd() / "edit_paths.json"
@@ -67,9 +86,10 @@ def process_subset(description: str):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python process_subset.py '<description>'")
-        sys.exit(1)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("description", help="Description of the changes to make")
+    parser.add_argument("--answers", help="Optional path to file containing answers to questions")
+    args = parser.parse_args()
 
-    description = sys.argv[1]
-    process_subset(description)
+    process_subset(args.description, args.answers)
