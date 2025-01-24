@@ -1,0 +1,99 @@
+# Files Requiring Updates
+
+## docs/system/architecture/overview.md
+- Location: docs/system/architecture
+- Reason for modification: Contains core architectural patterns and control flow definitions
+- Key changes needed:
+  - Remove partial output handling sections
+  - Add return status system description
+  - Update control flow mechanisms
+  - Add continuation status definition
+- Dependencies affected:
+  - Task System component
+  - Evaluator component
+  - Error handling patterns
+
+## docs/system/contracts/interfaces.md
+- Location: docs/system/contracts
+- Reason for modification: Defines core interfaces that need return status
+- Key changes needed:
+  - Add return status types and interfaces
+  - Remove partial output references
+  - Update task result structures
+  - Add continuation handling interfaces
+- Dependencies affected:
+  - All components using task interfaces
+  - Error handling contracts
+
+## docs/components/task-system/spec/types.md
+- Location: docs/components/task-system/spec
+- Reason for modification: Contains TaskResult and related type definitions
+- Key changes needed:
+  - Add ReturnStatus type definition
+  - Remove partial output fields
+  - Update TaskResult structure
+  - Add continuation status handling
+- Dependencies affected:
+  - Task System implementation
+  - Evaluator implementation
+
+## docs/components/evaluator/README.md
+- Location: docs/components/evaluator
+- Reason for modification: Defines evaluation and control flow logic
+- Key changes needed:
+  - Update control flow mechanisms
+  - Add status-based flow control
+  - Remove partial output handling
+  - Add continuation handling
+- Dependencies affected:
+  - Task execution flow
+  - Error handling mechanisms
+
+## docs/system/architecture/patterns/errors.md
+- Location: docs/system/architecture/patterns
+- Reason for modification: Error handling patterns need to work with return status
+- Key changes needed:
+  - Update error handling flows
+  - Integrate with return status
+  - Remove partial output error cases
+  - Add continuation error handling
+- Dependencies affected:
+  - Error recovery mechanisms
+  - Task System error handling
+
+## docs/misc/operators.md
+- Location: docs/misc
+- Reason for modification: Operator specifications need return status support
+- Key changes needed:
+  - Update operator execution semantics
+  - Add return status handling
+  - Remove partial output sections
+  - Add continuation support
+- Dependencies affected:
+  - Sequential operator implementation
+  - Reduce operator implementation
+
+# Architectural Impact Assessment
+This change represents a significant shift in control flow and error handling:
+1. Simplifies error handling by removing partial output complexity
+2. Provides clearer task execution states through return status
+3. Enables more flexible control flow through continuation status
+4. May require updates to existing task implementations
+5. Will affect how components communicate execution state
+
+# Implementation Order Recommendation
+1. Update core types and interfaces (types.md, interfaces.md)
+2. Modify error handling patterns (errors.md)
+3. Update architectural overview
+4. Revise operator specifications
+5. Update evaluator documentation
+6. Update component-specific documentation
+
+# Questions for Clarification
+1. What are the specific return status values beyond 'continuation'?
+2. How should existing tasks that rely on partial output be migrated?
+3. Should continuation status include metadata about the intended subtask?
+4. How does the return status system interact with resource exhaustion errors?
+5. What is the scope of "subtask spawning" - is it limited to predefined task types or more flexible?
+6. How should sequential tasks handle continuation status from their steps?
+7. Should reduce tasks support continuation status in their inner_task or reduction_task?
