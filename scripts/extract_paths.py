@@ -3,10 +3,11 @@ from aider.coders import Coder
 from aider.models import Model
 from aider.io import InputOutput
 import sys
+import json
 
 def extract():
     """
-    Create a new chart type based on the given description.
+    Extract paths and questions from tochange.yaml into JSON files.
     """
 
     # Read the spec from 'new-chart-type.md'
@@ -55,6 +56,30 @@ def extract():
 
     # Run the code modification
     coder.run(prompt)
+
+    # Read the generated tochange.yaml to extract questions
+    yaml_path = Path.cwd() / "tochange.yaml"
+    if yaml_path.exists():
+        with open(yaml_path, "r") as f:
+            content = f.read()
+            # Extract questions section
+            questions_section = ""
+            if "# Questions for Clarification" in content:
+                questions_section = content.split("# Questions for Clarification")[1].strip()
+            
+            # Convert bullet points to list
+            questions = []
+            for line in questions_section.split("\n"):
+                line = line.strip()
+                if line.startswith("- ") or line.startswith("* "):
+                    questions.append(line[2:])
+                elif line and not line.startswith("#"):
+                    questions.append(line)
+            
+            # Write questions to JSON
+            questions_json = {"questions": questions}
+            with open("questions.json", "w") as qf:
+                json.dump(questions_json, qf, indent=2)
 
 
 if __name__ == "__main__":
