@@ -1,13 +1,22 @@
+<role>Software architect</role>
 ## Context
 
 ## High-Level Objective
 
-Process the subset of files listed in edit_paths.json according to the given description and Q&A clarifications
+Update the subset of files listed in edit_paths.json according to the given description and Q&A clarifications. 
+
+## Mid-Level Objective
+
+- Explain why each file needs modification
+- Note dependencies and potential impacts
+- Evaluate whether the change, as described, is ambiguous. Review the q and a to see whether the ambiguity is addressed.
+- Draft the necessary architectural changes
+- Make the documentation changes corresponding to the architectural changes
 
 ### Beginning Context
 
 - Files listed in edit_paths.json
-- Description of changes to make: '<description>'
+- Description of TODO / changes to make: '<description>'
 - Questions and answers: '<questions>'
 
 ### Ending Context
@@ -20,10 +29,7 @@ Process the subset of files listed in edit_paths.json according to the given des
    - Implications for the implementation
    - How this affects the requested changes
 
-2. Then process the files according to:
-   - Description: '<description>'
-   - Q&A context: '<questions>'
+2. Then draft the architectural changes necessary to implement the changes described by the feature / TODO description
 
-Maintain existing structure and formatting where possible.
-Make only necessary changes to implement the described modifications.
+Don't make speculative changes.
 </output_format>
