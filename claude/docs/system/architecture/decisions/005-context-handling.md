@@ -5,6 +5,7 @@ Accepted
 
 ## Context
 Recent feedback provided several important clarifications about context generation and associative matching that were either unclear or inconsistent in existing documentation.
+The system needs clear policies for how context inheritance and accumulation work across different operator types. This includes sequential tasks, reduce operations, and potential future parallel tasks. We need to define both the inheritance rules and error handling approaches.
 
 ## Key Clarifications
 
@@ -47,3 +48,48 @@ Update architecture documentation to reflect these clarifications, particularly:
 - More precise context management specification
 - Removal of ambiguous resource management concepts
 - Better defined Memory System boundaries
+
+
+# more decisions
+### 1. Context Support by Operator Type
+
+- **Sequential Tasks**: Full support for both inheritance and accumulation via `context_management` block
+- **Reduce Tasks**: Support context inheritance only (no accumulation)
+- **Parallel Execution**: Not implemented in MVP
+
+### 2. Context Management Configuration
+- Context management settings (`inherit_context`, `accumulate_data`) are fixed at template definition time
+- No dynamic modification during task execution
+- Settings remain consistent within a task/sequence
+
+### 3. Reduce Task Context Flow
+- Inner task results automatically influence reduction_task context
+- Reduction task has access to:
+  * Inherited context (if enabled)
+  * Results from inner task execution
+
+### 4. Error Handling
+- No custom error handling for context failures in MVP
+- All context failures map to standard `TASK_FAILURE`
+- Future versions may support advanced context handling (e.g., input data reduction)
+- No operator-specific error handling mechanisms
+
+## Consequences
+
+### Positive
+- Clear, consistent context management model
+- Simpler implementation without parallel execution concerns
+- Predictable behavior with fixed settings
+- Standard error handling reduces complexity
+- Clear development path for future enhancements
+
+### Negative
+- Less flexibility in dynamic context management
+- May require template changes for different context needs
+- No operator-specific error handling in MVP
+- Must handle all errors through standard `TASK_FAILURE`
+
+## Related
+- [Pattern:SequentialTask:2.0]
+- [Interface:Memory:3.0]
+- Task System operator specifications
