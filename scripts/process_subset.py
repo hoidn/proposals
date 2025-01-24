@@ -65,7 +65,7 @@ def process_subset(description: str, answers_file: str = None):
 
     # Initialize the AI model
     model = Model(
-        "claude-3-5-sonnet-20241022",
+        "o1-preview",
         editor_model="claude-3-5-sonnet-20241022",
         editor_edit_format="diff",
     )
