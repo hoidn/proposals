@@ -208,5 +208,8 @@ the DSL interpreter level and it might be annoying to have to handle a special c
 optional 'execute this script' field that always gets run if it's present
 - maybe it doesn't make sense to have both 'continuation' and tool use
 - think about how feedback will go from subtask to parent (tool use response?)
+- there should be an option, for sequential task, for the associative matching to just extract a subset of the parent context
+- let's have the director evaluator pattern be a special case of a task-subtask
+- 'genetic' behavior, such as multiplle tries and selecting the best one
 
 
