@@ -160,3 +160,9 @@ class Compiler:
 
 # TODO: Consider adding a CompilerOptions class for configuration
 # This would make the compiler more configurable without complicating the core interface
+
+PROJECT_DESCRIPTOR="spec"; find ./ptycho -name "*.py" -type f -exec sh -c 'echo "<file path=\"${1}\" project=\"'${PROJECT_DESCRIPTOR}'\">"; cat "${1}"; echo "</file>"' sh {} \; > context
+
+
+PROJECT_DESCRIPTOR="spec"; find . \( -path "*.py" -o -path "*.md"   \) -exec sh -c 'echo "<file path=\"${1}\" project=\"'${PROJECT_DESCRIPTOR}'\">"; cat "${1}"; echo "</file>"' sh {} \;  > context
+

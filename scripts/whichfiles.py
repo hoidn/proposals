@@ -4,20 +4,10 @@ from aider.models import Model
 from aider.io import InputOutput
 import sys
 
-# TODO: 
-# REPLACE read-only files with ['context']
-# set editable files to empty list
-# set architect model to ol-preview
-
-def whichfiles(description: str):
+def main(description: str):
     """
-    Create a new chart type based on the given description.
-
-    Args:
-        description (str): Description of the new chart type to generate.
     """
 
-    # Read the spec from 'new-chart-type.md'
     spec_path = Path.cwd() / "whichfiles.md"
     if not spec_path.exists():
         raise FileNotFoundError(
@@ -27,6 +17,7 @@ def whichfiles(description: str):
         spec_content = spec_file.read()
 
     # Include the description in the spec prompt
+    # TODO: for each yaml key in the yaml file, replace the corresponding <key> with the value
     spec_prompt = spec_content.replace("<description>", description)
 
     # Setup BIG THREE: context, prompt, and model
@@ -58,7 +49,7 @@ def whichfiles(description: str):
         io=InputOutput(yes=True),
         fnames=context_editable,
         read_only_fnames=context_read_only,
-        auto_commits=False,
+        auto_commits=True,
         suggest_shell_commands=False,
     )
 
@@ -68,9 +59,19 @@ def whichfiles(description: str):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python whichfiles.py '<description>'")
+        print("Usage: python main.py '<description>'")
         sys.exit(1)
 
+    # TODO: generalize to take a positional argument, a yaml file path 
+    # the yaml file can contain an arbitrary number of key-value pairs
+    # in this case, it would just be ('description', whatever the user typed)
+    # TODO: the yaml file should also contain the following key: list of values maps,
+    # replacing the current hard-coded values:
+    # - context_editable
+    # - context_read_only
+    # TODO: the cli script should also take the spec path as an argument (hard-coded 
+    # as 'whichfiles.md' currently)
+    # TODO: use argparse for all this instead of simple sys.argv
     description = sys.argv[1]
-    whichfiles(description)
+    main(description)
 
