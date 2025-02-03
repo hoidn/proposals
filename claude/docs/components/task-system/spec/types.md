@@ -44,21 +44,15 @@ interface RevisedTaskResult {
 
 /**
  * Defines context inheritance and accumulation policies for tasks.
+ * The new model replaces a boolean inheritContext flag with an enumeration:
+ *   - "full" for complete inheritance,
+ *   - "none" for no inheritance, and
+ *   - "subset" for selective inheritance.
  */
 interface ContextManagement {
-    inheritContext: boolean;
+    inheritContext: 'full' | 'none' | 'subset';
     accumulateData: boolean;
     accumulationFormat: 'full_output' | 'notes_only';
-    /**
-     * When both inheritContext and accumulateData are true:
-     * - Inherited context from parent tasks is maintained separately
-     * - Accumulated data from previous steps is tracked independently
-     * - Contexts can be combined during task execution as needed
-     * 
-     * Note: 'map' is no longer a core type in this system.
-     * A map-like operation can be implemented by enumerating inputs
-     * in a 'sequential' or 'parallelized' pattern as needed.
-     */
 }
 
 /**

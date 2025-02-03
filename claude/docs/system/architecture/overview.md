@@ -45,7 +45,9 @@ This system automates this process through intelligent task decomposition and ex
 
 ## Core Patterns
 
-The system architecture is built on three fundamental patterns that define component interaction and resource management.
+The system now follows a unified context management model. In particular, the previous director-evaluator separation has been removed. Instead, context is managed via a single `<context_management>` block that distinguishes between:
+ - **Inheritance:** (using the new `inherit_context` enumeration)
+ - **Accumulation:** (using the boolean `accumulate_data` and the `accumulation_format` setting)
 
 ### Error Handling [Pattern:Error:1.0]
 Defines how errors propagate and recover across component boundaries.

@@ -78,12 +78,8 @@ Define the core error types that enable control flow and task adaptation in the 
 
 ## Context Operation Failures
 
-In scenarios where an Evaluator step calls `MemorySystem.getRelevantContextFor()` or otherwise attempts context assembly:
-- We treat any failures as standard `TASK_FAILURE`.
-- The error message should clarify that a context operation failed.
-- **No new error category** is introduced for context issues alone.
-- **Preserve partial results** if the context operation fails during a multi-step (sequential) task. These partial results can be included in the final error details or the `notes` field of the `TaskResult`.
-- This approach ensures a consistent error taxonomy without branching into specialized context error types.
+In scenarios where a task step calls `MemorySystem.getRelevantContextFor()` (or otherwise attempts context assembly), any failure is reported as a standard `TASK_FAILURE` (or, if output is invalid, as `INVALID_OUTPUT`).
+Partial results from previous steps (if any) may be attached in the `notes` field. No separate "context-generation" error type is defined.
 
 In short, "context operation failures" are reported as `TASK_FAILURE` (or `INVALID_OUTPUT` if the context text is invalid for the next step), and partial sub-task outputs remain available in the error state.
 
