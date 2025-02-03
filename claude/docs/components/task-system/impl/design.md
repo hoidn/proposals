@@ -81,19 +81,24 @@
 - Clear violation metrics
   
 ### Error Detection Mechanisms
-- Resource limit monitoring
-- Progress tracking
-- Output validation
-- XML structure checking
-- Input validation
+- Resource limit monitoring, progress tracking, output and XML structure validation, and input validation.
+
+### Script Execution Implementation
+The system now supports executing external scripts as part of a static director-evaluator workflow. When a task of type "script" is encountered, the Handler:
+- Detects the "script" task type.
+- Executes the specified external command (e.g. a bash script).
+- Captures the command's standard output, error output, and exit code.
+- Passes the script's output to the subsequent evaluator task.
+
+This design ensures that the director's output flows seamlessly through the script execution step before final evaluation.
 
 ## Integration Points
 ### Memory System Interaction
-- Uses Anthropic's computer use tools for file operations
-- Read-only access
-- No state maintenance
-- Clear context boundaries
-- Standard memory structure
+- Uses Anthropic's computer use tools for file operations.
+- Read-only access.
+- No state maintenance.
+- Clear context boundaries.
+- Standard memory structure.
   
 ### Compiler Integration
 - Task parsing services
