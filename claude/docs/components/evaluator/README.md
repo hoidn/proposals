@@ -9,8 +9,6 @@ The **Evaluator** is the unified task-execution component of the system. It is r
 3. **Tracking resource usage** (in coordination with Handlers)
 4. **Handling reparse/decomposition requests** when tasks fail (e.g. due to resource exhaustion or invalid output)
 
-In this unified model there is no separate "director" or "special evaluator" – all tasks are processed using a single, consistent control flow.
-
 ### References in Existing Documentation
 
 - **System-Level References**  

@@ -27,7 +27,7 @@ The system consists of four core components working together to process, execute
 
 2. **Evaluator**
    - Provides unified task execution – processing AST nodes, managing recovery, and tracking resources
-   - Uses standard task return statuses (`COMPLETE`, `CONTINUATION`, `FAILED`) without any specialized director/evaluator separation
+   - Uses standard task return statuses (`COMPLETE`, `CONTINUATION`, `FAILED`) 
 
 3. **Task System**
    - Coordinates task execution via Handlers

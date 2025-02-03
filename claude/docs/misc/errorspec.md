@@ -47,7 +47,6 @@ Define the core error types that enable control flow and task adaptation in the 
 All components in the unified task-execution system use the same generic error signaling.
 In particular:
  - The Task System (and its unified execution component) detects resource exhaustion and signals a generic `TASK_FAILURE` with attached metadata.
- - Error signals no longer distinguish between "director" or "evaluator" issues.
  - The Memory System continues to provide context without carrying error state.
 
 ## Design Decisions & Rationale

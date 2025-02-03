@@ -1,8 +1,3 @@
-– Objective: Remove tasks that refer to the obsolete director/evaluator pattern and add new TODO items for verifying the unified context management model.
-Action Items:
- - Remove or mark as complete any TODOS referring to director/evaluator-specific handling.
- - Add new TODO items to confirm that all XML examples, decision records, and Q&A sections now document the unified model with explicit `<context_management>` settings.
-
 # Critical Path TODOs - Corrected Status
 
 ## Interface Consolidation ⚠️ BLOCKING
