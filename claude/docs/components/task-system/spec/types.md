@@ -3,7 +3,7 @@
 ## Core Task Types
 ```typescript
 // Basic task types used across interfaces
-type TaskType = "atomic" | "sequential" | "reduce";
+type TaskType = "atomic" | "sequential" | "reduce" | "script";
 type AtomicTaskSubtype = "standard" | "subtask";
 
 // Task execution status
@@ -104,6 +104,15 @@ interface HandlerConfig {
     maxContextWindowFraction: number;
     defaultModel?: string;
     systemPrompt: string;
+}
+
+/**
+ * Represents the result of executing a script task.
+ */
+interface ScriptTaskResult extends TaskResult {
+    stdout: string;
+    stderr: string;
+    exitCode: number;
 }
 
 interface ResourceMetrics {
