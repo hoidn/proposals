@@ -72,4 +72,51 @@ The updated Director-Evaluator pattern fully embraces the dynamic subtask concep
 
 ## Conclusion
 
-The updated Director-Evaluator pattern exemplifies the dynamic task-subtask paradigm. By returning a `CONTINUATION` status along with an `evaluation_request`, a Director task signals that additional evaluation is required. The Evaluator then dynamically spawns an evaluation subtask—invoking a bash script callback via the Handler or its own mechanism if specified—to process and refine the output before feeding the results back to the parent task. This approach ensures flexibility and a seamless integration of external evaluation within the unified execution architecture.
+The updated Director-Evaluator pattern exemplifies the dynamic task–subtask paradigm. By returning a CONTINUATION status along with an embedded evaluation_request, a Director task signals that additional evaluation is required. The Evaluator then dynamically spawns an evaluation subtask—invoking a bash script callback via the Handler (or its own mechanism) if specified—to process and refine the output before feeding the results back to the parent task. This approach ensures flexibility and a seamless integration of external evaluation within the unified execution architecture.
+
+## Static Director-Evaluator Variant
+
+In addition to the dynamic pattern described above, a static variant is available for scenarios where the entire execution sequence is predetermined. In the static variant:
+ - The Director Task generates the initial output.
+ - A Target Script Execution task immediately runs an external command (e.g. a bash script) using the director's output.
+ - The Evaluator Task then processes the output from the script.
+
+### XML Template Example
+```xml
+<task type="sequential">
+    <description>Static Director-Evaluator Pipeline</description>
+    <context_management>
+        <inherit_context>none</inherit_context>
+        <accumulate_data>true</accumulate_data>
+        <accumulation_format>notes_only</accumulation_format>
+    </context_management>
+    <steps>
+        <!-- Director Task -->
+        <task>
+            <description>Generate Initial Output</description>
+        </task>
+        <!-- Target Script Execution -->
+        <task type="script">
+            <description>Run Target Script</description>
+            <inputs>
+                <input name="director_output">
+                    <task>
+                        <description>Pass director output to script</description>
+                    </task>
+                </input>
+            </inputs>
+        </task>
+        <!-- Evaluator Task -->
+        <task>
+            <description>Evaluate Script Output</description>
+            <inputs>
+                <input name="script_output">
+                    <task>
+                        <description>Process output from target script</description>
+                    </task>
+                </input>
+            </inputs>
+        </task>
+    </steps>
+</task>
+```
