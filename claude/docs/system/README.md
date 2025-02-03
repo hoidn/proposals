@@ -81,6 +81,10 @@ The system consists of four core components working together to process, execute
 - Resource usage tracking
 - Context management
 
+### Supported Patterns
+ - Dynamic Director-Evaluator Pattern: Uses continuation and dynamic evaluation.
+ - Static Director-Evaluator Pattern: Pre-compiles the execution sequence—including script execution tasks—for predictable control flow. (See [Pattern:DirectorEvaluator:1.1](system/architecture/patterns/director-evaluator.md) for details.)
+
 ## Development Sequence
 
 ### Phase 1: Core Pipeline
