@@ -21,25 +21,22 @@ The system automates the process of breaking down complex software development a
 ### High-Level Architecture
 The system consists of four core components working together to process, execute, and manage tasks:
 
-1. Compiler
+1. **Compiler**
    - Translates natural language to XML/AST
-   - Handles task structure transformation
-   - Manages template validation
+   - Handles task structure transformation and template validation
 
-2. Evaluator
-   - Controls AST processing and execution
-   - Manages failure recovery
-   - Tracks resource usage
+2. **Evaluator**
+   - Provides unified task execution – processing AST nodes, managing recovery, and tracking resources
+   - Uses standard task return statuses (`COMPLETE`, `CONTINUATION`, `FAILED`) without any specialized director/evaluator separation
 
-3. Task System
+3. **Task System**
    - Coordinates task execution via Handlers
-   - Manages task templates and matching
-   - Interfaces with Memory System
+   - Manages task templates, matching, and XML processing
+   - Delegates context handling to the unified Evaluator
 
-4. Memory System
-   - Maintains task data context
-   - Manages global file metadata index
-   - Provides context for associative matching
+4. **Memory System**
+   - Maintains task-related context (via a global file metadata index)
+   - Supports associative matching for context generation
 
 ### Key Constraints
 
