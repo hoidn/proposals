@@ -31,9 +31,9 @@ In many existing code examples (both TypeScript-like and Scheme-like), the syste
 ## Responsibilities and Role
 
 1. **AST Execution Controller**  
-   - Orchestrates the step-by-step or operator-by-operator execution of tasks represented as an AST.  
-   - Calls out to the Handler for any LLM-specific interactions or resource tracking (turn counts, context window checks).  
-   - Potentially interacts with the Compiler if a re-parse / decomposition is needed.
+   - Orchestrates the step-by-step or operator-by-operator execution of tasks represented as an AST.
+   - Calls out to the Handler for LLM-specific interactions and resource tracking (e.g. turn counts, context window checks).
+   - Interacts with the Compiler when re-parsing or decomposition is required.
 
 2. **Failure Recovery**  
    - Detects or receives error signals when tasks fail or exceed resources.  
@@ -189,6 +189,9 @@ interface TaskOutput {
 2. **Updates**: After each step completes, the Evaluator appends a `TaskOutput` object to `SequentialHistory.outputs`.
 3. **Clearing**: Once the entire sequence finishes (success or error), the Evaluator discards the stored step outputs to reclaim resources.
 4. **Error Handling**: If a step fails, the last known `SequentialHistory` object is packaged with the error output, so that partial results can be surfaced if needed.
+
+### Static Pattern Execution
+The Evaluator now supports a static Director-Evaluator variant. In this mode, after the Director task generates the initial output, a script execution task (of type "script") is automatically invoked. The Evaluator captures the script's output—including stdout, stderr, and exit code—and feeds it into the subsequent evaluation step, ensuring a predictable, pre-compiled control flow.
 
 ### Usage Example
 When a multi-step sequence is run, each subtask is executed in turn. The Evaluator:
