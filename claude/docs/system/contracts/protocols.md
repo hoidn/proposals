@@ -114,6 +114,8 @@ The task template schema defines the structure for task template XML files and m
   <instructions>Analyze the given code for readability issues.</instructions>
   <system>You are a code quality expert focused on readability.</system>
   <model>claude-3-sonnet</model>
+  <!-- The criteria element provides a free-form description used for dynamic evaluation template selection via associative matching -->
+  <criteria>validate, log</criteria>
   <inputs>
     <input name="code">The code to analyze</input>
   </inputs>

@@ -16,6 +16,10 @@ type ReturnStatus =
 interface TaskResult {
     content: string;
     status: ReturnStatus;
+    /**
+     * A free-form description provided by the Director task for dynamic evaluation template selection via associative matching.
+     */
+    criteria?: string;
     notes: {
         dataUsage: string;  // Required field
         [key: string]: any; // Support for unstructured data

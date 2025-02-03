@@ -35,6 +35,9 @@ docs/
 ## Common Types
 [Rest of common types section remains unchanged]
 
+## Cross-Reference Updates
+Ensure that all components referencing the Director-Evaluator pattern mention the use of a free-form criteria for dynamic evaluation template selection via associative matching.
+
 ## Document Standards
 
 ### System Level Documents

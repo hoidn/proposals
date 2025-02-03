@@ -75,5 +75,8 @@ In short, "context operation failures" are reported as `TASK_FAILURE` (or `INVAL
 
 ## Dependencies
 - Task system must detect resource limits
+
+## Script Execution Errors
+Script execution errors (e.g. non-zero exit codes) are captured and passed along to the evaluator for downstream decision-making rather than causing an immediate task failure.
 - Evaluator must handle control flow
 - Memory system must maintain context

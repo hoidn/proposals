@@ -6,7 +6,7 @@ The Director-Evaluator pattern is a specialized variant of the unified task‐su
 
 **Note:** The `evaluation_request` object must include:
  - `type`: a string indicating the evaluation type,
- - `criteria`: an array of strings specifying evaluation criteria, and
+ - `criteria`: a free-form string providing descriptive criteria used for dynamic evaluation template selection via associative matching,
  - `target`: a string representing the target (for example, the bash script command to run or the evaluation focus).
 
 ## Pattern Description
