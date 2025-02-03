@@ -201,3 +201,38 @@ console.log('Retrieved context:', memoryResult.content);
         </task>
     </steps>
 </task>
+
+<!-- Example: Static Director-Evaluator with Script Execution -->
+<task type="sequential">
+    <description>Static Director-Evaluator Pipeline</description>
+    <context_management>
+        <inherit_context>none</inherit_context>
+        <accumulate_data>true</accumulate_data>
+        <accumulation_format>notes_only</accumulation_format>
+    </context_management>
+    <steps>
+        <task>
+            <description>Generate Initial Output</description>
+        </task>
+        <task type="script">
+            <description>Run Target Script</description>
+            <inputs>
+                <input name="director_output">
+                    <task>
+                        <description>Pass director output to script</description>
+                    </task>
+                </input>
+            </inputs>
+        </task>
+        <task>
+            <description>Evaluate Script Output</description>
+            <inputs>
+                <input name="script_output">
+                    <task>
+                        <description>Process output from target script</description>
+                    </task>
+                </input>
+            </inputs>
+        </task>
+    </steps>
+</task>
