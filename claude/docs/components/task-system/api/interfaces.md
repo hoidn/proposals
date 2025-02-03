@@ -1,5 +1,11 @@
 # Task System Public API
 
+/**
+ * Note: The TaskResult returned by executeTask includes an optional "criteria" field,
+ * which is a free-form description provided by the Director task for dynamic evaluation
+ * template selection via associative matching.
+ */
+
 ## References
 
 - Core Types: See [Type:TaskSystem:1.0] (`/components/task-system/spec/types.md`)

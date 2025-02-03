@@ -125,6 +125,17 @@ interface ResourceLimits {
     warningThreshold: number;
     timeout?: number;
 }
+
+/**
+ * EvaluationInput interface clarifies that target_content refers to the original output from the Director task.
+ * The raw outputs from the script (stdout, stderr, exit_code) are passed directly without preprocessing.
+ */
+interface EvaluationInput {
+    target_content: string; // The original output from the Director task.
+    stdout?: string;        // Raw standard output from the script.
+    stderr?: string;        // Raw standard error output from the script.
+    exit_code?: number;     // Script exit code (non-zero exit codes do not block evaluation but inform decision-making).
+}
 ```
 
 
