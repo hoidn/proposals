@@ -12,15 +12,15 @@
 - Per-session resource isolation
 - Clean resource release on completion
 
-### Task Templates
-- XML templates must conform to [Contract:Tasks:TemplateSchema:1.0]
-- Support both LLM-generated and manual XML structures
-- Basic XML validation with warning generation
-- XML output parsing with graceful degradation to single string
-- Support for disabling reparsing on manual XML tasks
-- Template persistence in disk-based XML format
-- No runtime template modification
-- Clear template versioning support
+### Task Templates and Script Execution Support
+- XML templates must conform to [Contract:Tasks:TemplateSchema:1.0] and now support script execution tasks within sequential workflows.
+- Support both LLM-generated and manual XML structures.
+- Basic XML validation with warning generation and graceful degradation.
+- Support for disabling reparsing on manual XML tasks.
+- Template persistence in disk-based XML format with clear versioning.
+- Script Task Requirements:
+   - The XML schema must allow specification of command details for script execution.
+   - Define clear input/output contracts to pass data from the director task to the script and from the script to the evaluator.
 
 ### Task Matching
 - Limited to top N candidates (aim for 5 or fewer)
