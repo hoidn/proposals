@@ -205,3 +205,10 @@ optional 'execute this script' field that always gets run if it's present
 - 'genetic' behavior, such as multiplle tries and selecting the best one
 
 
+Loose ends:
+- need to specify how bash commands will be called in between the director and evaluation steps of the director-evaluator pattern.
+- output of the evaluation bash script needs to go to evaluator
+- let llm design more speculatively. then feedback in the form of correctinng arch decisions i don't like.
+- have reasoning model address list of underspecified parts, let it take initiative on decisions and then feed back on that
+- try the goat workflow
+- distill the director-evaluator .py into an arch component. check how it manages context over multiple  turns
