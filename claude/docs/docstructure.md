@@ -36,7 +36,7 @@ docs/
 [Rest of common types section remains unchanged]
 
 ## Cross-Reference Updates
-Ensure that all components referencing the Director-Evaluator pattern mention the use of a free-form criteria for dynamic evaluation template selection via associative matching.
+Ensure that all components referencing the Director-Evaluator pattern mention both the dynamic and static variants. In particular, update references to [Pattern:DirectorEvaluator:1.1] to include the static variant with script execution support.
 
 ## Document Standards
 
