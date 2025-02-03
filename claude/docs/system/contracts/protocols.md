@@ -95,6 +95,51 @@ The task template schema defines the structure for task template XML files and m
 </xs:schema>
 ```
 
+### Script Execution Support
+
+The XML task template schema now supports defining tasks for script execution within sequential tasks. These tasks enable:
+ - Command Specification: Defining external commands (e.g. bash scripts) to be executed.
+ - Input/Output Contracts: Passing the director's output as input to the script task, and capturing the script's output for subsequent evaluation.
+
+Example:
+```xml
+<task type="sequential">
+  <description>Static Director-Evaluator Pipeline</description>
+  <context_management>
+    <inherit_context>none</inherit_context>
+    <accumulate_data>true</accumulate_data>
+    <accumulation_format>notes_only</accumulation_format>
+  </context_management>
+  <steps>
+    <task>
+      <description>Generate Initial Output</description>
+    </task>
+    <task type="script">
+      <description>Run Target Script</description>
+      <inputs>
+        <input name="director_output">
+          <task>
+            <description>Pass director output to script</description>
+          </task>
+        </input>
+      </inputs>
+    </task>
+    <task>
+      <description>Evaluate Script Output</description>
+      <inputs>
+        <input name="script_output">
+          <task>
+            <description>Process output from target script</description>
+          </task>
+        </input>
+      </inputs>
+    </task>
+  </steps>
+</task>
+```
+
+This extension to the schema ensures a clear definition of script execution tasks within a sequential workflow.
+
 ### Required Fields
 
 - `instructions`: Task instructions for the LLM (TaskTemplate.taskPrompt)
