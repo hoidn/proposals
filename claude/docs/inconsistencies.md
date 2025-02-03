@@ -5,8 +5,8 @@ Below are areas where the documents highlight open design questions or competing
 ## Partial-Results Policy for Failing Operators
 
 Options:
-- A: Discard partial outputs on sub-task failure, treat the entire operator as a single unit of success/failure.
-- B: Keep partial outcomes (in TaskResult.notes.partialResults, etc.) and let higher-level tasks decide how to handle them.
+- A: Discard partial outputs on sub‐task failure, treating the entire operator as a single unit of success/failure.
+- B: Preserve partial outcomes (e.g. in TaskResult.notes.partialResults) so higher‐level tasks can decide how to handle them.
 
 Recommendation: If your use cases frequently require partial data (e.g., some parallel tasks succeed while others fail), choose (B) and store partial results. If the system rarely benefits from partial data, keep (A) for simplicity.
 

@@ -38,9 +38,12 @@ Define the core error types that enable control flow and task adaptation in the 
 - No retry logic in components
 
 ### 3. Context Independence  
-- Errors do not carry execution state
-- No partial results in errors
-- Clean separation from context management
+- Errors do not carry execution state.
+- No partial results in errors.
+- Clean separation from context management.
+
+### Missing Argument Handling
+When a task attempts to resolve an input and no binding is found in the entire environment frame chain, the evaluator returns a standard `TASK_FAILURE` error. The error message will indicate which required argument is missing.
 
 ## Integration Points
 

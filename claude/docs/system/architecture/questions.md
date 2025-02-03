@@ -74,3 +74,14 @@
 - Focus areas derived from current documentation gaps
 - Some questions may be answerable through implementation experience rather than up-front design
 - Security considerations may raise additional questions that need to be prioritized
+
+## Argument Passing Open Questions
+
+1. **Missing Required Arguments:** If a task's required input is not found in the environment frame chain, should the task immediately fail?
+   - *Current Decision (MVP):* Yes, the evaluator will return a `TASK_FAILURE` error.
+
+2. **Extra Arguments:** What should be done if extra (non‐defined) arguments are provided?
+   - *Current Decision (MVP):* Extra arguments are allowed but only required arguments are validated.
+
+3. **Argument Immutability:** Should task arguments be immutable?
+   - *Decision:* Yes, once bound, argument values cannot be modified.

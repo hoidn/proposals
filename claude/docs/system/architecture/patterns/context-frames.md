@@ -19,6 +19,20 @@ interface ContextFrame {
 }
 ```
 
+## EnvironmentFrame Interface
+
+To support argument passing during task evaluation, we introduce a new interface:
+
+```typescript
+interface EnvironmentFrame {
+    bindings: Map<string, any>;    // Arguments bound to this scope
+    parent?: EnvironmentFrame;     // Parent scope for lookup chain
+    context: Record<string, any>;    // Task execution context (separate from bindings)
+}
+```
+
+This `EnvironmentFrame` is created at the start of each task execution (using the new `createFrame` method) and is chained to any existing parent frame. Its purpose is to maintain a clear separation between argument bindings and the overall task context.
+
 ### Frame Immutability
 - No modification of existing frames
 - New frames created through extension
