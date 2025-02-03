@@ -7,6 +7,12 @@
 Q: How should TaskSystem interact with LLM sessions?  
 A: Create/manage LLM sessions directly.
 
+### Static Director-Evaluator Validation
+Test cases for the static variant should include:
+ - Verifying that the director's output is correctly passed as input to the script execution task.
+ - Ensuring that a task of type "script" returns the expected stdout, stderr, and exit code.
+ - Validating that the Evaluator correctly processes the script's output and integrates it into the final task result.
+
 Q: Who is responsible for sending prompts to the LLM?  
 A: The Handler.
 
