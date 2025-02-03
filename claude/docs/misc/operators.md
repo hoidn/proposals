@@ -21,7 +21,7 @@ Execute a series of tasks with explicit dependencies. Maintains execution order 
 <task type="sequential">
     <description>Overall sequence description</description>
     <context_management>
-        <inherit_context>false</inherit_context>
+        <inherit_context>none</inherit_context>
         <accumulate_data>true</accumulate_data>
         <accumulation_format>notes_only</accumulation_format>
     </context_management>
@@ -52,26 +52,14 @@ Execute a series of tasks with explicit dependencies. Maintains execution order 
 
 ### Context Management Modes
 
-1. **Direct Inheritance** (`inherit_context="true"`)
-   - Uses the parent context as-is, without any additional associative matching.
-   - Data accumulation is disabled unless explicitly enabled.
-   - Suitable when a sub-task needs the same environment as its parent.
+In the updated model, the `<inherit_context>` element is now an enumeration with allowed values:
+ - **full** – the full parent context is passed unchanged,
+ - **none** – no parent context is inherited,
+ - **subset** – only a subset (as determined by task-specific rules) is inherited.
 
-2. **History-Aware Matching** (`inherit_context="false" + accumulate_data="true"`)
-   - Each step's output is stored and can be fed into associative matching for subsequent steps.
-   - The `accumulation_format` attribute can be either `full_output` or `notes_only`.
-   - Enables multi-step context usage where each step's output can influence the next step.
+The accumulation of step outputs remains controlled by the boolean `<accumulate_data>` element, and `<accumulation_format>` is restricted to either `notes_only` or `full_output`.
 
-3. **Standard Matching** (`inherit_context="false" + accumulate_data="false"`)
-   - Steps only use the conventional memory system and the high-level environment.
-   - No step-by-step data is automatically shared.
-   - Simplifies tasks that do not need prior step outputs.
-
-4. **Combined Inheritance and Accumulation** (`inherit_context="true" + accumulate_data="true"`)
-   - Maintains both inherited parent context and accumulated step outputs separately.
-   - Both contexts are available during task execution but kept distinct internally.
-   - Allows selective combination of contexts when generating prompts.
-   - Provides maximum flexibility while preserving context separation.
+For example, the above XML snippet indicates that no parent context is inherited while step outputs are accumulated in "notes-only" mode.
 
 ### Execution Semantics
 - Tasks execute in specified order

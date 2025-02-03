@@ -18,7 +18,15 @@ The task template schema defines the structure for task template XML files and m
         <xs:element name="context_management">
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="inherit_context" type="xs:boolean"/>
+              <xs:element name="inherit_context">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:enumeration value="full"/>
+                    <xs:enumeration value="none"/>
+                    <xs:enumeration value="subset"/>
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
               <xs:element name="accumulate_data" type="xs:boolean" minOccurs="0"/>
               <xs:element name="accumulation_format" minOccurs="0">
                 <xs:simpleType>

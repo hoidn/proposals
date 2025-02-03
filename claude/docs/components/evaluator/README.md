@@ -2,17 +2,14 @@
 
 ## Overview
 
-The **Evaluator** is one of the four core components in the system architecture, alongside the Compiler, Task System, and Memory System. It is described in multiple documents as an **execution control component** that:
+The **Evaluator** is the unified task-execution component of the system. It is responsible for:
 
-1. **Controls AST processing and execution**  
-2. **Manages failure recovery** (in collaboration with the Task System and Handler)  
-3. **Tracks resource usage** (particularly in coordination with Handlers)  
-4. **Handles reparse requests** (e.g., if a task fails due to resource exhaustion or invalid output)
-5. **Coordinates associative matching** (using Memory System metadata for task context)
+1. **Controlling AST processing and execution**  
+2. **Managing failure recovery** via standard task return statuses (`COMPLETE`, `CONTINUATION`, `FAILED`)
+3. **Tracking resource usage** (in coordination with Handlers)
+4. **Handling reparse/decomposition requests** when tasks fail (e.g. due to resource exhaustion or invalid output)
 
-In other words, the Evaluator orchestrates how tasks—or AST nodes—are carried out, how errors are handled or signaled, and how optional "decomposition" or "reparse" steps might occur in response to failures.  
-
-This aligns with the higher-level system goal: to break down complex tasks, track context and resources, and either succeed with final results or pivot to alternative approaches when direct execution fails.
+In this unified model there is no separate "director" or "special evaluator" – all tasks are processed using a single, consistent control flow.
 
 ### References in Existing Documentation
 
