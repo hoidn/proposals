@@ -71,6 +71,10 @@ Required:
    - Each document covers one concern
    - Clear boundaries between concerns
    - Explicit dependencies
+2. Template Consistency
+   - All new task templates must use the unified template substitution mechanism.
+   - Evaluator's lexically scoped variables are referenced using the `{{variable_name}}` syntax.
+   - Input bindings can be explicitly declared using the optional `from` attribute on `<input>` elements.
 
 2. Contract Completeness
    - All requirements stated

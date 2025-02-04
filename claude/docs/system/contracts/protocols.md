@@ -80,6 +80,7 @@ The task template schema defines the structure for task template XML files and m
                   <xs:simpleContent>
                     <xs:extension base="xs:string">
                       <xs:attribute name="name" type="xs:string" use="required"/>
+                      <xs:attribute name="from" type="xs:string" use="optional"/>
                     </xs:extension>
                   </xs:simpleContent>
                 </xs:complexType>
