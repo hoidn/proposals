@@ -100,6 +100,7 @@ The task template schema defines the structure for task template XML files and m
 The XML task template schema now supports defining tasks for script execution within sequential tasks. These tasks enable:
  - Command Specification: Defining external commands (e.g. bash scripts) to be executed.
  - Input/Output Contracts: Passing the director's output as input to the script task, and capturing the script's output for subsequent evaluation.
+Script execution errors (e.g. non-zero exit codes) are treated as generic TASK_FAILURE conditions. The evaluator captures the script's stdout and stderr in a designated notes field for downstream decision-making.
 
 Example:
 ```xml
@@ -123,6 +124,8 @@ Example:
           </task>
         </input>
       </inputs>
+      <!-- The script task captures stdout and stderr in the notes field.
+           Non-zero exit codes are treated as TASK_FAILURE. -->
     </task>
     <task>
       <description>Evaluate Script Output</description>
