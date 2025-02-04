@@ -22,7 +22,7 @@ type FileMetadata = string;
 type GlobalIndex = Map<string, FileMetadata>;
 ```
 
-A mapping of file paths to their associated metadata strings. The index serves as a bootstrap mechanism for associative matching when full content scanning is not feasible.
+A mapping of file paths to their associated metadata strings. **Note:** The Memory System is responsible only for providing file metadata (including file paths and unstructured metadata strings). All file I/O operations (reading, writing, deletion) are delegated to Handler tools. The index serves as a bootstrap mechanism for associative matching when full content scanning is not feasible.
 
 Key characteristics:
 - Keys are absolute file paths

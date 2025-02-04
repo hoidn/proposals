@@ -1,4 +1,8 @@
-Here's a simplified Director-Evaluator flow plan that only retains the latest evaluator output:
+Here's a simplified Director-Evaluator flow plan that only retains the latest evaluator output. The evaluator will provide its output to the director as an object of the form:
+
+```javascript
+EvaluationResult(success: boolean, feedback: string | null)
+```
 
 1. Revised Context Management Protocol
 
@@ -24,7 +28,7 @@ Step	Component	Action
 1	Director	Completes with CONTINUATION status and evaluation_request
 2	System	Clears all environment vars except last_evaluator_output
 3	Evaluator	Executes and writes output to env.last_evaluator_output
-4	Director (resume)	Receives ONLY last_evaluator_output as input
+4	Director (resume)	Receives an EvaluationResult as input—`success` is true if evaluation succeeded, and `feedback` contains any error message (or null).
 5	System	Clears last_evaluator_output after director consumes it
 4. XML Schema Changes
 
