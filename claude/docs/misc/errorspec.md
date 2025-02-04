@@ -71,10 +71,10 @@ In particular:
 
 ## Context Operation Failures
 
-In scenarios where a task step calls `MemorySystem.getRelevantContextFor()` (or otherwise attempts context assembly), any failure is reported as a standard `TASK_FAILURE` (or, if output is invalid, as `INVALID_OUTPUT`).
-Partial results from previous steps (if any) may be attached in the `notes` field. No separate "context-generation" error type is defined.
+In scenarios where a task step calls `MemorySystem.getRelevantContextFor()` (or otherwise attempts context assembly), any failure is reported as a standard `TASK_FAILURE`.
+Partial results are not preserved; on any failure, intermediate data is discarded.
 
-In short, "context operation failures" are reported as `TASK_FAILURE` (or `INVALID_OUTPUT` if the context text is invalid for the next step), and partial sub-task outputs remain available in the error state.
+In short, "context operation failures" are reported solely as `TASK_FAILURE`, and no partial sub-task outputs are retained.
 
 ## Dependencies
 - Task system must detect resource limits
