@@ -19,7 +19,7 @@ Execute a series of tasks with explicit dependencies. Maintains execution order 
 ### Structure
 ```xml
 <task type="sequential">
-    <description>Overall sequence description</description>
+    <description>Analyze {{dataset_name}} using provided configuration</description>
     <context_management>
         <inherit_context>none</inherit_context>
         <accumulate_data>true</accumulate_data>
@@ -27,23 +27,15 @@ Execute a series of tasks with explicit dependencies. Maintains execution order 
     </context_management>
     <steps>
         <task>
-            <description>First step task</description>
+            <description>Load initial data</description>
             <inputs>
-                <input name="data">
-                    <task>
-                        <description>Load initial data</description>
-                    </task>
-                </input>
+                <input name="data" from="raw_data"/>
             </inputs>
         </task>
         <task>
-            <description>Second step task</description>
+            <description>Apply configuration from {{config_profile}}</description>
             <inputs>
-                <input name="config">
-                    <task>
-                        <description>Load configuration</description>
-                    </task>
-                </input>
+                <input name="config" from="default_config"/>
             </inputs>
         </task>
     </steps>

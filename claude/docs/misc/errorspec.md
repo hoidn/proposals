@@ -43,7 +43,7 @@ Define the core error types that enable control flow and task adaptation in the 
 - Clean separation from context management.
 
 ### Missing Argument Handling
-When a task attempts to resolve an input and no binding is found in the entire environment frame chain, the evaluator returns a standard `TASK_FAILURE` error. The error message will indicate which required argument is missing.
+When a task attempts to resolve an input, the evaluator first performs template substitution on any placeholders in the form `{{variable_name}}` within the task definition—using values from its current lexical environment. Additionally, if an `<input>` element specifies a `from` attribute, the evaluator binds that input using the value associated with that environment variable. If a required binding is missing, the evaluator returns a standard `TASK_FAILURE` error with a message such as "Missing required input: variable_name."
 
 ## Integration Points
 
