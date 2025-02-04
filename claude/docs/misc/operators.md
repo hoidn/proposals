@@ -57,7 +57,7 @@ In the updated model, the `<inherit_context>` element is now an enumeration with
  - **none** – no parent context is inherited,
  - **subset** – only a subset (as determined by task-specific rules) is inherited.
 
-The accumulation of step outputs remains controlled by the boolean `<accumulate_data>` element, and `<accumulation_format>` is restricted to either `notes_only` or `full_output`.
+The accumulation of step outputs remains controlled by the boolean `<accumulate_data>` element, and `<accumulation_format>` is restricted to either `notes_only` or `full_output`. **Note:** For the MVP, no partial results are preserved—if any subtask fails, intermediate outputs are discarded.
 
 For example, the above XML snippet indicates that no parent context is inherited while step outputs are accumulated in "notes-only" mode.
 
@@ -123,10 +123,7 @@ Process a list of named inputs through repeated application of inner task and re
   1. Execute inner_task with:
      - Current input
      - Any additional specified inputs
-     - When both inheritance and accumulation are enabled:
-       * Parent context is preserved separately
-       * Previous reduction results are accumulated separately
-       * Both contexts available during execution
+     - When both inheritance and accumulation are enabled in a reduce operator, a basic inheritance model is used without merging accumulated outputs. Advanced dual-context tracking is deferred to future iterations.
   2. Execute reduction_task with:
      - Current inner_task result
      - Current accumulator value
