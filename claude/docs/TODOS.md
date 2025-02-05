@@ -212,3 +212,25 @@ Loose ends:
 - have reasoning model address list of underspecified parts, let it take initiative on decisions and then feed back on that
 - try the goat workflow
 - distill the director-evaluator .py into an arch component. check how it manages context over multiple  turns
+- might want to remove the stuff about anthropic computer use, since we're taking a more model agnostic approach instead
+- clarify when director-evaluator involves running bash and when not, and how to handle the not case
+
+- How does the evaluator output go back to the director? (when the director is running in continuation mode)
+- need 'define' or 'let'
+- passing through questions
+- model temperature (and model selection in general -- how are we going to handle this?)
+- how would we approach multiple tries -> selection of the best candidate result? I'm thinking something like a many-to-one version of the director-evaluator pattern. Essentially: many tries in parallel (with sandboxing so that the instances don't interfere with one another) --> evaluation and selection of the 'best' outcome.
+
+<brainstorming prompt>
+- need to impl function calling in the DSL.
+- what data structure should we use to represent the task library in-memory? should that be part of the Evaluator Environment, or should it be separate? How should tasks be organized by type in the environment (e.g. should assoc matching tasks be separate from the rest?). Is it redundant to have both a subtype hierarchy for different atomic task types AND an in-memory hierarchy? (I don't think so, but the mapping between these two things will have to be worked out)
+- how will tasks be loaded from file? will they be in-lined in the AST or references? former might be simpler for minimum implemenrtation, but eventually both tasks and composite procedures should be abstracted as first-class functions
+- do we want to add 'cond' as a primitive? in that case (and maybe also for other reasons) we need a bridge between task outputs and python types. Look into imposing json formatting for task outputs.
+</brainstorming prompt>
+
+Misc:
+- RL on GPT 2?
+- is there a way to mix numbers with discrete tokens? Maybe attention over each of the bits in floating point representation?
+- can llms be trained at half precision?
+- how does llm compute requirement scale in the size of the token dictionary?
+- what's the biggest trainable model?
