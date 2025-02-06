@@ -189,11 +189,7 @@ console.log('Retrieved context:', memoryResult.content);
         <task>
             <description>Load dataset</description>
             <inputs>
-                <input name="data_file">
-                    <task>
-                        <description>Read input CSV file</description>
-                    </task>
-                </input>
+                <input name="data_file" from="csv_file_path"/>
             </inputs>
         </task>
         <task>
@@ -217,11 +213,7 @@ console.log('Retrieved context:', memoryResult.content);
         <task type="script">
             <description>Run Target Script</description>
             <inputs>
-                <input name="director_output">
-                    <task>
-                        <description>Pass director output to script</description>
-                    </task>
-                </input>
+                <input name="director_output" from="last_director_output"/>
             </inputs>
         </task>
         <task>
