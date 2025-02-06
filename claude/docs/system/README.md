@@ -12,11 +12,7 @@ This system automates this process through intelligent task decomposition and ex
 ## Overview
 
 ### Core Purpose and Goals
-The system automates the process of breaking down complex software development and technical tasks into executable units by:
-- Decomposing large tasks into manageable pieces
-- Recovering from failures through alternative approaches
-- Maintaining relevant context across subtasks
-- Combining partial results into complete solutions
+The system automates task decomposition and execution. Notably, task inputs are now resolved via a template substitution mechanism that uses the `{{...}}` syntax to bridge the Evaluator's lexically scoped variables with task XML definitions. Inputs can also be explicitly bound using the optional `from` attribute.
 
 ### High-Level Architecture
 The system consists of four core components working together to process, execute, and manage tasks:
