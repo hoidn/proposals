@@ -47,7 +47,9 @@ This system automates this process through intelligent task decomposition and ex
 
 The Director-Evaluator Pattern supports both dynamic and static variants. The static variant pre-compiles the execution sequence—including script execution tasks—for predictable control flow (see [Pattern:DirectorEvaluator:1.1](system/architecture/patterns/director-evaluator.md)).
 
-The system now follows a unified context management model. Context is managed via a single `<context_management>` block that distinguishes between:
+The system now follows a unified context management model. In addition, task input values are dynamically substituted using the `{{...}}` syntax, allowing the Evaluator to inject lexically scoped variables into task descriptions and input declarations. This explicit binding mechanism (augmented by the optional `from` attribute) improves clarity and flexibility in task execution.
+
+Context is managed via a single `<context_management>` block that distinguishes between:
  - **Inheritance:** (using the new `inherit_context` enumeration)
  - **Accumulation:** (using the boolean `accumulate_data` and the `accumulation_format` setting)
 
