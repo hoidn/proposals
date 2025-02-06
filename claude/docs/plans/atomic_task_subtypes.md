@@ -25,6 +25,15 @@ Copy
     <input_source>last_eval_input</input_source>
     <validation_rules>strict</validation_rules>
 </task>
+
+<!-- Example using template substitution for input binding -->
+<task type="atomic">
+    <description>Process {{input_data}} with parameters from {{config}}</description>
+    <inputs>
+        <input name="data" from="input_data"/>
+        <input name="settings" from="config"/>
+    </inputs>
+</task>
 Run HTML
 3. Advantages of Atomic Subtyping
 
