@@ -1,35 +1,38 @@
 # Task System Behaviors
 
-## Template Management
+This document describes the runtime behaviors of the Task System.
 
-- Store and retrieve task templates in XML format
-- Match human input to candidate task templates
-- Match AST nodes to candidate task templates
-- Support specialized template types for reparsing and memory operations
-- Basic XML structure validation with warning generation
-- Support manual XML tasks with optional reparsing flag
-- Maintain task template persistence in disk-based XML format
+## Overview
 
-## Handler Management
+The Task System is responsible for managing LLM task execution, including:
+ - Template matching and management,
+ - Lifecycle handling for Handlers,
+ - XML processing with graceful degradation, and
+ - Error detection and recovery.
 
-### Core Responsibilities
-- Create and manage LLM sessions through encapsulated Handlers
-- Initialize Handlers with immutable configuration:
-  - System prompts
-  - Resource constraints
-  - Turn limits
-  - Context window limits
-- Delegate prompt execution to Handlers
-- Surface Handler errors through the standard error type hierarchy
-- Ensure proper context propagation through Handler lifecycle
+## Key Behavior Highlights
 
-### Configuration Constraints
-- Handler configuration immutable after initialization
-- Configuration parameters:
-  * max_turns (with default)
-  * max_context_window_fraction (with default)
-  * default_model (optional)
-  * system_prompt (defaults to empty string)
+1. **Template Management:**  
+   - Task templates are stored and validated against the XML schema defined in [Contract:Tasks:TemplateSchema:1.0].  
+   - The system matches both natural language inputs and AST nodes to candidate templates (up to 5 candidates), using numeric scoring.
+
+2. **Handler Lifecycle:**  
+   - A new Handler is created for each task execution with an immutable configuration.
+   - The Handler enforces resource limits (turn counts, context window limits) as described in [Pattern:ResourceManagement:1.0].
+
+3. **XML Processing:**  
+   - Basic structural validation is performed, with warnings generated for non‑critical issues.
+   - In cases of partial XML parsing failure, the original content is preserved and error details are included in the task notes.
+
+4. **Error Handling:**  
+   - Errors such as RESOURCE_EXHAUSTION and TASK_FAILURE are surfaced according to the rules defined in [Pattern:Error:1.0].
+   - The Evaluator delegates error recovery (e.g., reparse tasks) and includes partial outputs when available.
+
+## See Also
+
+ - [Task System Requirements](requirements.md)
+ - [Task System Interfaces](interfaces.md)
+ - System-level error handling: [Pattern:Error:1.0]
 
 ### Interactive Sessions
 - Handler monitors LLM responses for input requests

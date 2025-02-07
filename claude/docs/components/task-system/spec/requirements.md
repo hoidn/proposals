@@ -1,58 +1,30 @@
 # Task System Requirements
 
-## System Constraints
+This document outlines the high-level functional and non‑functional requirements for the Task System.
 
-### Resource Management
-- Does not predict resource usage
-- Does not optimize task decomposition
-- No responsibility for context window management
-- Relies on Handlers for resource tracking
-- Model selection delegated to Handler
-- No cross-Handler resource pooling
-- Per-session resource isolation
-- Clean resource release on completion
+## Key Requirements Summary
 
-### Task Templates and Script Execution Support
-- XML templates must conform to [Contract:Tasks:TemplateSchema:1.0] and now support script execution tasks within sequential workflows.
-- Support both LLM-generated and manual XML structures.
-- Basic XML validation with warning generation and graceful degradation.
-- Support for disabling reparsing on manual XML tasks.
-- Template persistence in disk-based XML format with clear versioning.
-- Script Task Requirements:
-   - The XML schema must allow specification of command details for script execution.
-   - Define clear input/output contracts to pass data from the director task to the script and from the script to the evaluator.
+1. **XML-based Task Templates:**  
+   - All task templates must conform to [Contract:Tasks:TemplateSchema:1.0].  
+   - Both LLM‑generated and manual XML structures are supported, with options to disable reparsing.
 
-### Task Matching
-- Limited to top N candidates (aim for 5 or fewer)
-- Scoring is numeric only
-- Context limited to node level for AST matching
-- Initial environment limited to human-provided files
-- Scoring logic contained within matching prompts
-- No cross-session matching history
-- Independent scoring for human vs AST matching
-- Clear score ordering requirements
+2. **Handler and Resource Management:**  
+   - One Handler is created per task execution with immutable configuration and strict resource tracking.
+   - Resource limits (turn counts, context window) are enforced by the Handler. For details, see [Pattern:ResourceManagement:1.0].
 
-### Memory Integration
-- Direct access to memory system interfaces
-- Read-only context access
-- No state maintenance between tasks
-- Clear separation from Evaluator state
-- Standard memory structure requirements
-- No caching or persistence
-- Explicit context boundaries
+3. **Task Matching:**  
+   - The system matches natural language inputs and AST nodes to candidate task templates (up to 5 candidates) using numeric scoring.
 
-### Handler Management
-- One Handler per task execution
-- Clean Handler lifecycle management
-- Immutable Handler configuration
-- Resource tracking requirements
-- Clear turn counting rules
-- Context window management
-- No Handler state persistence
-- Independent Handler execution
+4. **Memory Integration:**  
+   - The Task System uses a read‑only Memory System interface for context retrieval. See [Interface:Memory:3.0].
 
-### Functional Requirements
-Task Definition:
-- Extend the XML schema to support script execution tasks.
-- Define a command specification format within <task> elements for script execution.
-- Establish clear input/output contracts for passing data to and from script tasks.
+5. **Script Execution Support:**  
+   - XML schema extensions support specifying external command details for script tasks. Clear input/output contracts must be defined.
+
+For detailed operational behavior, see the Behaviors document. Additional system‑level details are available in the central contracts and architecture documents.
+
+## See Also
+
+ - [Task System Behaviors](behaviors.md)
+ - [Task System Interfaces](interfaces.md)
+ - System-level contracts: [Contract:Tasks:TemplateSchema:1.0] and [Pattern:ResourceManagement:1.0]
