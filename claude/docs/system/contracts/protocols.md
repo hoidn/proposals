@@ -2,9 +2,9 @@
 
 ## Task Template Schema [Contract:Tasks:TemplateSchema:1.0]
 
-Interface: See TaskTemplate interface in [Type:TaskSystem:TaskTemplate:1.0] (spec/types.md)
+**Note:** This document is the authoritative specification for the XML schema used in task template definitions. All field definitions, allowed enumerations (such as for `<inherit_context>` and `<accumulation_format>`), and validation rules are defined here. For complete validation guidelines, please see Appendix A in [Contract:Resources:1.0].
 
-The task template schema defines the structure for task template XML files and maps to the TaskTemplate interface:
+The task template schema defines the structure for XML task template files and maps to the TaskTemplate interface.
 
 ### XML Schema Definition
 
@@ -144,17 +144,8 @@ Example:
 
 This extension to the schema ensures a clear definition of script execution tasks within a sequential workflow.
 
-### Required Fields
-
-- `instructions`: Task instructions for the LLM (TaskTemplate.taskPrompt)
-- `system`: System prompt defining LLM behavior (TaskTemplate.systemPrompt)
-- `model`: Target LLM model (TaskTemplate.model)
-
-### Optional Fields
-
-- `inputs`: Named input definitions (TaskTemplate.inputs)
-- `manual_xml`: Whether the task uses manual XML structure (TaskTemplate.isManualXML, default: false)
-- `disable_reparsing`: Whether to disable automatic reparsing (TaskTemplate.disableReparsing, default: false)
+### Field Definitions
+All required and optional fields (including `instructions`, `system`, `model`, and `inputs`) are defined by this schema. For full details and allowed values, please see Appendix A in [Contract:Resources:1.0].
 
 ### Example Template
 

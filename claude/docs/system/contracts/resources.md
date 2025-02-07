@@ -3,42 +3,29 @@
 ## 1. Resource Types
 
 ### 1.1 Turn Counter
-Implemented in [Component:Handler:1.0]
-- Tracking defined in [Interface:Handler:ResourceMonitoring:1.0]
-- Limits enforced via [Pattern:Error:1.0]
-[TBD: Complete specification]
+Implemented in [Component:Handler:1.0]. Tracking is defined in [Interface:Handler:ResourceMonitoring:1.0] and limits are enforced via [Pattern:Error:1.0]. For additional details, please refer to Appendix A.
 
 ### 1.2 Context Window
-See [Interface:Handler:ContextManagement:1.0]
-[TBD: Complete specification]
+See [Interface:Handler:ContextManagement:1.0]. Detailed constraints and usage guidelines are provided in Appendix A.
 
 ### 1.3 Memory Resources
-See [Component:MemorySystem:1.0]
-[TBD: Complete specification]
+See [Component:MemorySystem:1.0]. Further specifications are outlined in Appendix A.
 
 ## 2. Resource Management Protocols
 
-### 2.1 Usage Tracking
-Defined in [Interface:Handler:ResourceMonitoring:1.0]
-[TBD: Tracking requirements]
+For tracking, allocation, and release requirements, please refer to Appendix A.
 
-### 2.2 Resource Allocation
-Related to [Contract:Integration:TaskMemory:1.0]
-[TBD: Allocation requirements]
+### 3. Contract Validation
+Resource, operational, and implementation constraints are governed by the guidelines set forth in Appendix A.
 
-### 2.3 Resource Release
-See [Pattern:Error:1.0] for error handling during release.
-[TBD: Release requirements]
+## Appendix A: Contract Validation Guidelines
 
-## 3. Contract Validation
+The following guidelines apply across all resource management and integration contracts:
 
-### 3.1 Resource Constraints
-See [Interface:Handler:ResourceMonitoring:1.0]
-[TBD: Constraint validation]
+1. **Required Fields:** All mandatory fields (e.g. turn limits, context window sizes) must be present and conform to type specifications.
+2. **Uniqueness:** Input names and resource identifiers must be unique within their respective scopes.
+3. **Format Validation:** Boolean fields must be exactly "true" or "false", and string fields must adhere to defined LLM identifier formats.
+4. **Resource Limits:** Warning thresholds should be triggered at 80% usage, with hard limits enforced at 100%.
+5. **Context Management:** Context data must be extended (not merged) to ensure immutability; new information is added via extension.
 
-### 3.2 Operational Constraints
-Related to [Pattern:TaskExecution:1.0]
-[TBD: Operational constraints]
-
-### 3.3 Implementation Constraints
-[TBD: Implementation constraints]
+For further details and future updates, consult the development roadmap.
