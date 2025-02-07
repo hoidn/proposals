@@ -1,22 +1,16 @@
 # Open Architecture Questions
 
-## Critical (Required for MVP)
+This document now lists only *unresolved* questions. Many items previously listed have been answered in the ADRs or clarified in the patterns.
 
-### Resource Management
-1. How should warning thresholds affect task execution?
-   - DECIDED: Warnings are purely informative and do not affect execution flow
-   - Continue normally until hard limits
-   - Basic metrics preserved for monitoring
+## Unresolved Questions
 
-2. What is the exact protocol for minimal context selection?
-   - DECIDED: Handled at LLM + prompt level
-   - Selection performed by LLM based on task requirements
-   - Not a system architecture concern
+1. **Context Generation Failures:** When associative matching fails, should partial outputs be preserved for re‑try? (See ADRs 002 and 005 for related discussion.)
 
-3. What cleanup guarantees are needed between tasks?
-   - What must be cleaned up vs what can persist?
-   - How are resources released?
-   - What happens to in-progress operations?
+2. **Operator Inheritance for Reduce/Map:** Should the `inherit_context` attribute be extended to reduce and parallel operators, and if so, how should it interact with accumulation?
+
+3. **Subtask Spawning Mechanism:** How exactly should subtasks be created dynamically (beyond the Director‑Evaluator pattern)? This remains an open design area.
+
+For additional background, see also [decisions/005-context-handling.md](decisions/005-context-handling.md) and [questions.md](questions.md) in previous revisions.
 
 ### Error Handling
 1. How should resource exhaustion errors be handled?
