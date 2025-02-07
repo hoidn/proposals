@@ -1,100 +1,72 @@
 Files_Requiring_Updates:
+  - path: ./system/contracts/protocols.md
+    reason: Update XML schema to support changes in Director-Evaluator pattern
+    spec_of_changes:
+      - Add EvaluationResult type definition
+      - Add output_slot and input_source elements to task schema
+      - Update context_management section defaults
+      - Add script execution error handling specifics
+    dependencies:
+      - Contract:Tasks:TemplateSchema:1.0
+      - Pattern:DirectorEvaluator:1.1
+
   - path: ./components/task-system/spec/types.md
-    reason: Need to add new TaskLibrary and function calling types
+    reason: Add new types for evaluation results and environment management
     spec_of_changes:
-      - Add TaskDefinition interface to store task metadata
-      - Add TaskLibrary interface to manage task registry
-      - Add FunctionCall node type for AST
-      - Update TaskType enum to include script type
-      - Add ContextManagement type updates for inheritance modes
+      - Add EvaluationResult interface
+      - Update DirectorEnv interface
+      - Add prepareContinuationEnv function type
+      - Add storeEvaluatorResult function type
     dependencies:
-      - Evaluator component
-      - XML schema definitions
-      - AST processing
-  
-  - path: ./components/task-system/spec/interfaces.md
-    reason: Need to add TaskLibrary and function interfaces
-    spec_of_changes:
-      - Add TaskLibrary interface methods
-      - Add function calling methods to TaskSystem
-      - Update Handler interface for script execution
-      - Add environment chaining support
-    dependencies:
-      - TaskSystem component
-      - Evaluator component
-      - Handler component
+      - Interface:TaskSystem:1.0
+      - TaskResult type
+      - Environment type
 
   - path: ./components/evaluator/README.md
-    reason: Update for new environment model and function calling
+    reason: Update evaluator behavior documentation for new pattern
     spec_of_changes:
-      - Add nested environment model details
-      - Document function calling behavior
-      - Update context inheritance description
+      - Document single output variable handling
+      - Update context management section
+      - Add script execution and feedback flow
+      - Update environment handling documentation
+    dependencies:
+      - Pattern:DirectorEvaluator:1.1
+      - Pattern:ContextFrame:1.0
+
+  - path: ./components/task-system/impl/design.md
+    reason: Update implementation design for Director-Evaluator changes
+    spec_of_changes:
+      - Add design for output slot management
+      - Document environment preparation
+      - Update context clearing rules
       - Add script execution handling
     dependencies:
-      - Task System types
-      - XML schema
+      - Component:Evaluator:1.0
+      - Pattern:ResourceManagement:1.0
 
-  - path: ./system/contracts/protocols.md
-    reason: XML schema updates needed for new features
+  - path: ./system/architecture/patterns/director-evaluator.md
+    reason: Update pattern documentation with new simplified flow
     spec_of_changes:
-      - Add function definition schema
-      - Add script task schema
-      - Update context management schema
-      - Add ref and subtype attributes
+      - Update flow description for latest-only retention
+      - Document environment variable management
+      - Add script execution pattern
+      - Update XML examples
     dependencies:
-      - Task System types
-      - Template validation
-
-  - path: ./system/architecture/patterns/resource-management.md
-    reason: Update for script execution and sequential history
-    spec_of_changes:
-      - Add script resource management details
-      - Update sequential history tracking
-      - Document environment extension pattern
-    dependencies:
-      - Handler component
-      - Memory System
-
-  - path: ./components/memory/api/interfaces.md
-    reason: Update for new environment model 
-    spec_of_changes:
-      - Remove updateContext method
-      - Add structured input format for getRelevantContextFor
-      - Update GlobalIndex interface
-    dependencies:
-      - Memory System component
-      - Task System integration
+      - Pattern:ContextFrame:1.0
+      - Pattern:ResourceManagement:1.0
 
 Architectural_Impact_Assessment:
-  backwards_compatibility:
-    - XML schema changes are backwards compatible via optional attributes
-    - Error handling remains unchanged
-    - Memory interface changes are breaking but planned
-  
-  new_dependencies: 
-    - Task Library requires persistent storage
-    - Function calling requires environment chaining
-    - Script execution requires Handler integration
-  
-  complexity_changes:
-    - More complex environment model with chaining
-    - Additional task types to manage
-    - New validation requirements for task definitions
-    - Script execution adds external process management
-  
-  performance_considerations:
-    - Environment chaining depth should be monitored
-    - Script execution timing needs limits
-    - Task Library lookup performance important
-    - Sequential history size needs limits
+  memory_usage: Significant reduction in memory usage (60-80%) by retaining only latest evaluator output
+  error_handling: Simplified error recovery due to single point of validation
+  context_management: Clearer boundaries between task executions due to minimal context carryover
+  resource_tracking: Improved resource usage predictability with reduced context accumulation
+  component_coupling: Reduced coupling between Director and Evaluator through standardized interface
+  backwards_compatibility: Changes maintain compatibility through XML schema extensions
 
 Questions_For_Clarification:
-  - What is the persistence model for the TaskLibrary - in-memory only or disk backed?
-  - Should script execution have separate resource limits from LLM tasks?
-  - How should environment chain depth be limited to prevent stack overflow?
-  - What validation should be done on script task inputs/outputs?
-  - Should TaskLibrary support versioning of task definitions?
-  - What's the cleanup protocol for sequential history in error cases?
-  - How should script execution timeouts be handled?
-  - Should there be a limit on the number of registered tasks?
+  - Should the EvaluationResult include any metadata beyond success and feedback fields?
+  - How should the system handle partial script execution results when exitCode is non-zero?
+  - Is environment clearing atomic or should there be a grace period for cleanup?
+  - Should there be a maximum size limit for the last_evaluator_output value?
+  - Do we need to version the EvaluationResult type for future extensions?
+  - How should the system handle cases where the evaluator fails to process script output?
