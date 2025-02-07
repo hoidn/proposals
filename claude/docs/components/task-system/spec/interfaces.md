@@ -30,10 +30,6 @@ export interface TaskSystem {
 }
 
 // Handler interface details are maintained in external documentation.
-
-### Memory System Interface [Interface:Memory:3.0]
-```typescript
-/**
  * Memory management interface focused on metadata
  */
 type FileMetadata = string;
