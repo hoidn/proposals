@@ -1,13 +1,14 @@
-# System-Level README
+# Intelligent Task Execution System
 
-This **LLM Interpreter** is a DSL that compiles to LLM 'executables'. It uses an associative matching scheme for context management and dynamic template selection, with structured XML task definitions forming a bridge between the LLM and the language's internal representation. 
+## Overview
 
-## Core Architecture
+This system enables controlled execution of complex tasks through LLM-based task decomposition and structured execution. It treats natural language interaction as a form of code execution, using a DSL (domain-specific language) to represent task decomposition and manage execution flow.
 
-### Evaluator
+### Key Components
+
 ```mermaid
 graph TD
-    NL[Natural Language Task] --> Compiler
+    NL[Natural Language Query] --> Compiler
     Compiler --> AST[Task Structure]
     AST --> Evaluator
     
@@ -24,42 +25,79 @@ graph TD
     end
 ```
 
-The system translates natural language into structured task workflows while managing:
-- Resource constraints
-- Error recovery
-- Context flow
-- Task composition
+## Core Architecture
 
-### Context Management
+### 1. Task System
+- Manages template matching and execution
+- Handles XML task definitions with graceful degradation
+- Enforces resource limits through Handlers
+- Provides error detection and propagation
 
+### 2. Evaluator
+- Controls AST processing and execution
+- Manages failure recovery through task decomposition
+- Tracks resource usage with Handlers
+- Handles reparse/decomposition requests
+- Maintains context across task boundaries
+
+### 3. Memory System
+- Maintains global file metadata index
+- Provides associative matching for context retrieval
+- Delegates file operations to Handler tools
+- Manages task execution context
+
+### 4. Task Expression Framework
+Supports multiple operator types:
+- **Sequential**: Ordered execution with context inheritance
+- **Reduce**: Result aggregation with accumulation
+- **Map**: Parallel task processing
+- **Atomic**: Direct LLM execution
+
+## Key Patterns
+
+### 1. Director-Evaluator Pattern
 ```xml
-<!-- Example: Sequential analysis with context management -->
 <task type="sequential">
-    <description>Analyze experimental data</description>
+    <description>Static Director-Evaluator Pipeline</description>
     <context_management>
-        <inherit_context>subset</inherit_context>
+        <inherit_context>none</inherit_context>
         <accumulate_data>true</accumulate_data>
         <accumulation_format>notes_only</accumulation_format>
     </context_management>
     <steps>
         <task>
-            <description>Load and validate raw data</description>
+            <description>Generate Initial Output</description>
+        </task>
+        <task type="script">
+            <description>Run Target Script</description>
         </task>
         <task>
-            <description>Identify key patterns</description>
-        </task>
-        <task>
-            <description>Generate insights report</description>
+            <description>Evaluate Script Output</description>
         </task>
     </steps>
 </task>
 ```
 
-## Key Concepts
+### 2. Context Management
+- Explicit control through `context_management` blocks
+- Three inheritance modes: full, none, subset
+- Support for data accumulation across steps
+- Clean separation between inheritance and accumulation
+
+### 3. Resource Management
+- Handler-based resource isolation
+- Per-task resource tracking
+- Clear ownership boundaries
+- Explicit cleanup procedures
+
+### 4. Error Handling
+Two primary error types:
+- **Resource Exhaustion**: Signals when system limits are exceeded
+- **Task Failure**: Indicates unrecoverable execution failures
+
+## Integration Patterns
 
 ### 1. Environment Model
-The system uses a standard environment model for lexical scoping:
-
 ```typescript
 interface Environment {
     // Lexical scope for variable bindings
@@ -76,15 +114,7 @@ interface Environment {
 }
 ```
 
-Benefits:
-- Clear separation of bindings and context
-- Predictable variable resolution
-- Clean task isolation
-- Efficient memory usage
-
-### 2. Associative Memory
-Context management through LLM-based associative matching:
-
+### 2. Memory Integration
 ```typescript
 interface MemorySystem {
     // Find relevant context for current task
@@ -92,94 +122,99 @@ interface MemorySystem {
     
     // Access global metadata index
     getGlobalIndex(): Promise<GlobalIndex>
-    
-    // Result structure with context and matches
-    interface Context {
-        content: string        // Relevant context
-        matches: FileMatch[]   // Matching files
-    }
 }
 ```
 
-Features:
-- Dynamic context selection with the help of a global metadata index
-- Automatic relevance matching
+### 3. Script Execution
+- Support for external command execution
+- Capture of stdout, stderr, and exit codes
+- Integration with evaluation workflows
+- Clean error propagation
 
-### 3. First-Class Functions
-Tasks as composable, first-class procedures:
+## Resource Constraints
 
-```xml
-<!-- Example: Reusable data processing function -->
-<task type="function">
-    <name>process_experimental_data</name>
-    <parameters>
-        <param name="raw_data" type="DataSet"/>
-        <param name="config" type="ProcessingConfig"/>
-    </parameters>
-    <returns type="ProcessedData"/>
-    <body>
-        <task type="sequential">
-            <step>
-                <description>Validate input format</description>
-            </step>
-            <step>
-                <description>Apply processing pipeline</description>
-            </step>
-            <step>
-                <description>Generate quality metrics</description>
-            </step>
-        </task>
-    </body>
-</task>
+### 1. Execution Limits
+- Fixed context window size
+- Limited turn counts
+- Synchronous operation only
+- One Handler per task execution
+
+### 2. Memory System
+- Read-only file metadata access
+- No direct file content storage
+- Context updates through extension only
+- Clear cleanup protocols
+
+## Development Guidelines
+
+### 1. Task Templates
+- Must conform to XML schema
+- Support both LLM-generated and manual XML
+- Include clear input/output contracts
+- Specify context management requirements
+
+### 2. Error Recovery
+- Implement proper resource cleanup
+- Surface errors with complete context
+- Support task decomposition
+- Maintain execution history
+
+### 3. Context Management
+- Use explicit context inheritance
+- Implement clean data accumulation
+- Follow resource cleanup protocols
+- Maintain context boundaries
+
+## Usage Example
+
+```typescript
+// Initialize system components
+const taskSystem = new TaskSystem({
+    maxTurns: 10,
+    maxContextWindowFraction: 0.8,
+    systemPrompt: "System-level context"
+});
+
+const memorySystem = new MemorySystem();
+
+// Execute a task
+const result = await taskSystem.executeTask(
+    "Process and analyze experimental data",
+    memorySystem
+);
+
+// Check results and handle any errors
+if (result.status === "FAILED") {
+    console.error("Task failed:", result.error);
+    // Implement recovery logic
+}
 ```
 
+## Future Directions
 
-## Error Recovery
+### 1. Planned Enhancements
+- Advanced context optimization
+- Parallel execution support
+- Enhanced error recovery
+- Dynamic resource management
 
-The system uses errors as feedback and control flow.
+### 2. Potential Extensions
+- Multi-LLM support
+- Persistent context storage
+- Interactive sessions
+- Enhanced debugging tools
 
-A concrete, simple example is the following pattern:
+## References
 
-### Director-Evaluator Pattern
-```xml
-<!-- Example: Dynamic code review workflow -->
-<task type="director-evaluator">
-    <description>Review code changes</description>
-    <director>
-        <description>Analyze changes and suggest improvements</description>
-    </director>
-    <evaluator>
-        <description>Validate suggestions and check implementation</description>
-    </evaluator>
-</task>
-```
+1. **Core Documentation**
+   - Architecture Decisions (ADRs)
+   - Pattern Specifications
+   - Component Interfaces
 
-### Composable Operators
-Built-in operators for task composition:
-- **Sequential**: Ordered execution with context flow
-- **Reduce**: Result aggregation with accumulation
-- **Map**: Parallel execution (coming soon)
+2. **Component Documentation**
+   - Task System
+   - Evaluator
+   - Memory System
+   - Handler Interface
 
-
-## Further Reading
-
-1. [Task Composition Guide](./docs/tasks.md)
-   - Function patterns
-   - Operator usage
-   - Composition examples
-
-2. [Error Recovery Patterns](./docs/errors.md)
-   - Recovery strategies
-   - Resource management
-   - Error handling patterns
-
-3. [Memory System Guide](./docs/memory.md)
-   - Context management
-   - Associative matching
-   - Resource optimization
-
-4. [Environment Model](./docs/environment.md)
-   - Scoping rules
-   - Context inheritance
-   - Memory management
-
+For detailed implementation specifications and patterns, refer to the component-level documentation.
