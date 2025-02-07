@@ -179,30 +179,4 @@ This schema is used by the TaskSystem component. For implementation details and 
 - Template parsing in TaskSystem constructor
 
 ### Map Pattern Implementation
-
-Map operations are implemented using sequential tasks:
-
-```xml
-<task type="sequential">
-  <description>Process multiple items in parallel</description>
-  <context_management>
-    <inherit_context>false</inherit_context>
-    <accumulate_data>true</accumulate_data>
-    <accumulation_format>full_output</accumulation_format>
-  </context_management>
-  <steps>
-    <task>
-      <description>Process item 1</description>
-      <inputs>
-        <input name="data">data1</input>
-      </inputs>
-    </task>
-    <task>
-      <description>Process item 2</description>
-      <inputs>
-        <input name="data">data2</input>
-      </inputs>
-    </task>
-  </steps>
-</task>
-```
+Refer to the XML schema for correct usage. For a complete example, please see the Task System documentation.
