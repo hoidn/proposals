@@ -2,7 +2,7 @@
 
 ## Overview
 
-This system enables controlled execution of complex tasks through LLM-based task decomposition and structured execution. It treats natural language interaction as a form of code execution, using a DSL (domain-specific language) to represent task decomposition and manage execution flow.
+This system will coordinate LLM-based task decomposition and structured execution. It treats natural language interaction as a form of code execution, using a DSL (domain-specific language) to represent task decomposition and manage execution flow.
 
 ### Key Components
 
@@ -40,7 +40,7 @@ graph TD
 ## Core Architecture
 
 ### 1. DSL Interpretation
-The system provides a DSL for expressing task composition and control flow:
+The system a DSL frontent for expressing task composition and control flow (this feature will be added last):
 
 ```scheme
 ; Example DSL expression
@@ -55,10 +55,8 @@ The system provides a DSL for expressing task composition and control flow:
 ```
 
 Key aspects of DSL interpretation:
-- Lisp-like syntax for composable expressions
 - First-class functions and task definitions
 - Environment-based lexical scoping
-- Dynamic task composition
 
 The DSL interpreter follows a classic eval/apply model:
 ```typescript

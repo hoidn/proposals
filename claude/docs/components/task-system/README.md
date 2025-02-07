@@ -1,78 +1,103 @@
 # Task System Component
 
-## Purpose
-The Task System manages LLM task execution through structured templates and handlers, providing:
-- Task template matching and management
-- LLM session management via encapsulated Handlers
-- XML task generation and validation with graceful degradation
-- Management of specialized tasks (reparsing and associative memory)
+## Overview
 
-## Core Components
+The Task System orchestrates LLM task execution through structured XML templates and handlers. It proovides template-based task definition, resource tracking, and an XML-based interface with the LLM.
 
-### Handler
-Manages individual LLM sessions:
-- Turn counting and resource limits enforcement
-- Context window management
-- Direct LLM interaction
-- Interactive session support
-- Resource tracking
+## Core Architecture
 
-### Template Manager
-Handles task definitions:
-- Template validation
-- Task matching
-- XML processing
+The system manages task execution through isolated Handler instances, with one Handler per task to enforce resource limits and manage LLM interactions. 
 
-## Key Constraints
+Task definitions use an XML-based template system that supports both manual and LLM-generated structures. 
 
-### Architectural
-- Synchronous operation only
-- No persistent state maintenance
-- XML-based task definitions
-- Read-only memory system access
+## Core Interface
 
-### Operational
-- One Handler per task execution
-- Immutable Handler configuration
-- XML-based task definitions
-- No direct resource usage tracking (delegated to Handlers)
-- No progress/retry state (managed by Evaluator)
+```typescript
+interface TaskSystem {
+    executeTask(
+        task: string,
+        context: MemorySystem,
+        taskType?: TaskType
+    ): Promise<TaskResult>;
 
-## System Integration
+    validateTemplate(template: TaskTemplate): boolean;
+    
+    findMatchingTasks(
+        input: string,
+        context: MemorySystem
+    ): Promise<Array<{
+        template: TaskTemplate;
+        score: number;
+        taskType: TaskType;
+    }>>;
+}
+```
 
-### Dependencies
-- Memory System: Context access and management
-- Anthropic Tools: File and computer operations
-- Compiler: Task parsing services
-- Evaluator: Error recovery support
-- XML Processing: Template and output handling
+## Task Types and Execution
 
-### Responsibilities
-Provides:
-- Task execution and template management
-- LLM session encapsulation
-- XML processing and validation services
-- Error detection and propagation
+The system supports several task types for different execution patterns. Atomic tasks provide direct LLM execution with resource tracking and output validation. Sequential tasks enable ordered execution with context management between steps. Reduce tasks handle iterative data processing with accumulator management. Script tasks support external command execution with output capture and evaluation flow integration.
 
-## Contracts
+Each task type can specify its context management requirements through XML configuration:
 
-### Initialization
-- Memory system access configured
-- Resource limits defined
-- Template directory available
+```xml
+<task>
+    <description>Task description</description>
+    <context_management>
+        <inherit_context>none|full|subset</inherit_context>
+        <accumulate_data>true|false</accumulate_data>
+        <accumulation_format>notes_only|full_output</accumulation_format>
+    </context_management>
+    <inputs>
+        <input name="input_name" from="source_var"/>
+    </inputs>
+</task>
+```
 
-### Runtime
-- One Handler per task
-- Resource limits enforced
-- Templates immutable during execution
+## Integration and Dependencies
 
-### Termination
-- Handlers cleaned up
-- Resources released
-- No state preserved
+The Task System integrates with several core components. It uses the Memory System for context access and management, Handler Tools for file and system operations, the Compiler for task parsing and transformation, and the Evaluator for error recovery and task decomposition. These integrations enable comprehensive task execution while maintaining clean component boundaries.
 
-## System Integration Points  
-- Memory System: Accesses files and context data needed for task execution
-- Compiler: Owns XML generation and validation
-- Evaluator: Executes tasks, receives error results, and initiates recovery via new task executions 
-- Handler: Relies on Handler for resource tracking and LLM session management
+## Usage
+
+Here's how the Task System would be instantiated:
+
+```typescript
+const taskSystem = new TaskSystem({
+    maxTurns: 10,
+    maxContextWindowFraction: 0.8,
+    systemPrompt: "Default system prompt"
+});
+
+// Execute a task
+const result = await taskSystem.executeTask(
+    "analyze data",
+    memorySystem
+);
+
+// Validate a template
+const validation = taskSystem.validateTemplate({
+    taskPrompt: "<task>...</task>",
+    systemPrompt: "System context",
+    model: "claude-3-sonnet",
+    isManualXML: false
+});
+```
+
+## Error Handling
+
+The system handles several error types during execution, including resource exhaustion (for turns, context, or output), invalid output structure, XML parsing or validation errors, and general task execution failures. Each error type includes relevant context and metrics to aid in recovery and debugging. Errors will be surfaced to the Evaluator, which will use them for control flow.
+
+## Resource Management
+
+Resource management follows strict constraints with fixed context window sizes and limited turn counts. The system ensures clean resource release after task execution and prevents cross-Handler resource sharing. Handler configuration controls these limits:
+
+```typescript
+interface HandlerConfig {
+    maxTurns: number;
+    maxContextWindowFraction: number;
+    defaultModel?: string;
+    systemPrompt: string;
+}
+```
+
+For detailed implementation specifications and patterns, refer to the component-level documentation and system contracts.
