@@ -8,11 +8,16 @@ This system enables controlled execution of complex tasks through LLM-based task
 
 ```mermaid
 graph TD
-    NL[Natural Language Query] --> Compiler
-    Compiler --> AST[Task Structure]
-    AST --> Evaluator
-    
+    subgraph "Input Processing"
+        NL[Natural Language Query] --> Compiler
+        DSL[DSL Expression] --> Parser
+        Parser --> AST_DSL[DSL AST]
+        Compiler --> AST_NL[Task AST]
+    end
+
     subgraph "Execution Environment"
+        AST_DSL --> Evaluator
+        AST_NL --> Evaluator
         Evaluator -->|Execute| LLM
         Evaluator -->|Recover| Compiler
         Evaluator -->|Query| Memory
@@ -23,30 +28,66 @@ graph TD
         Working[Working Memory]
         LongTerm -->|Associative Match| Working
     end
+
+    subgraph "Runtime Environment"
+        TaskLib[Task Library]
+        Env[Environment Frame]
+        TaskLib --> Evaluator
+        Env --> Evaluator
+    end
 ```
 
 ## Core Architecture
 
-### 1. Task System
+### 1. DSL Interpretation
+The system provides a DSL for expressing task composition and control flow:
+
+```scheme
+; Example DSL expression
+(define (process-data data-source)
+  (sequential
+    (task "load-data" data-source)
+    (reduce
+      (lambda (chunk acc)
+        (task "analyze-chunk" chunk acc))
+      initial-value
+      chunks)))
+```
+
+Key aspects of DSL interpretation:
+- Lisp-like syntax for composable expressions
+- First-class functions and task definitions
+- Environment-based lexical scoping
+- Dynamic task composition
+
+The DSL interpreter follows a classic eval/apply model:
+```typescript
+interface Interpreter {
+    eval(expr: Expression, env: Environment): Promise<any>;
+    apply(proc: Procedure, args: any[], env: Environment): Promise<any>;
+}
+```
+
+### 2. Task System
 - Manages template matching and execution
 - Handles XML task definitions with graceful degradation
 - Enforces resource limits through Handlers
 - Provides error detection and propagation
 
-### 2. Evaluator
+### 3. Evaluator
 - Controls AST processing and execution
 - Manages failure recovery through task decomposition
 - Tracks resource usage with Handlers
 - Handles reparse/decomposition requests
 - Maintains context across task boundaries
 
-### 3. Memory System
+### 4. Memory System
 - Maintains global file metadata index
 - Provides associative matching for context retrieval
 - Delegates file operations to Handler tools
 - Manages task execution context
 
-### 4. Task Expression Framework
+### 5. Task Expression Framework
 Supports multiple operator types:
 - **Sequential**: Ordered execution with context inheritance
 - **Reduce**: Result aggregation with accumulation
