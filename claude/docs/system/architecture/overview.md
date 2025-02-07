@@ -2,13 +2,22 @@
 
 ## Problem Statement and Goals
 
-Software development and technical tasks require breaking down complex requirements into executable units. This typically requires human expertise for:
-- Decomposing large tasks into smaller, manageable pieces  
-- Handling failures through alternative approaches
-- Maintaining context across related subtasks
-- Combining partial results into complete solutions
+This document provides a high‑level overview of the system architecture. Detailed technical discussions have been moved into canonical files in the sub‑folders:
 
-This system automates this process through intelligent task decomposition and execution while handling failures gracefully and maintaining task coherence.
+- **Patterns:** Core patterns such as Director‑Evaluator, Error Handling, and Resource Management (see files under `system/architecture/patterns/`).
+– **Decisions (ADRs):** Architecture Decision Records on topics such as context management and memory system design (see `system/architecture/decisions/`).
+– **Q&A and Open Questions:** Clarifications and unresolved issues (see `system/architecture/qa/` and `system/architecture/questions.md`).
+
+## Document Map
+
+**This folder contains:**
+ - `overview.md`: This high‑level summary and navigation index.
+ - `patterns/`: Detailed technical descriptions of core patterns.
+ - `decisions/`: Architecture Decision Records (ADRs) with rationale and scope.
+ - `qa/`: Frequently asked questions and clarifications.
+ - `questions.md`: A list of open and unresolved architecture questions.
+
+For full technical details on any topic, please refer to the canonical file listed above.
 
 ### System Goals
 1. Primary Goals

@@ -1,4 +1,6 @@
-# Director-Evaluator Pattern [Pattern:DirectorEvaluator:1.1]
+# Director‑Evaluator Pattern [Pattern:DirectorEvaluator:1.1]
+
+**Canonical Reference:** This document is the authoritative description of the Director‑Evaluator Pattern. All extended descriptions in planning or misc files should refer here.
 
 ## Overview
 

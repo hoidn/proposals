@@ -1,4 +1,6 @@
-# Error Handling Pattern [Pattern:Error:1.0]
+# Error Handling and Recovery Pattern [Pattern:Error:1.0]
+
+**Intended Focus:** This document covers overall error detection, classification, and recovery strategies. For resource‑related cleanup details, see the "Resource Cleanup" subsection below. (For low‑level resource metrics, refer to [Handler Resource Tracking](../decisions/001-memory-system.md) and related docs.)
 
 ## 1. Pattern Definition
 
