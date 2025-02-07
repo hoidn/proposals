@@ -18,6 +18,13 @@ This document defines the resource management strategy for the task execution sy
 
 ### Resource Tracking
 
+The Handler is responsible for:
+ - Tracking turn counts and enforcing limits.
+ - Monitoring context window usage (tokens) with warning thresholds (e.g. 80%) and hard limits.
+ - Reporting resource metrics for error handling.
+
+### Resource Tracking
+
 #### Handler Responsibility
 - One Handler per task execution
 - Tracks resource usage:

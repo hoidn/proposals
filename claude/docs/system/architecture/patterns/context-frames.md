@@ -17,6 +17,9 @@ interface ContextFrame {
     extend(bindings: Map<string, any>): ContextFrame;
     cleanup(): void;
 }
+
+---
+**Related Decisions:** For higher‑level context management decisions, see [decisions/002-context-management.md](../decisions/002-context-management.md) and [decisions/005-context-handling.md](../decisions/005-context-handling.md).
 ```
 
 ## EnvironmentFrame Interface
