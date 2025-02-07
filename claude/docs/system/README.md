@@ -4,7 +4,7 @@ This **LLM Interpreter** is a DSL that compiles to LLM 'executables'. It uses an
 
 ## Core Architecture
 
-### Intelligent Task Processing
+### Evaluator
 ```mermaid
 graph TD
     NL[Natural Language Task] --> Compiler
@@ -30,7 +30,7 @@ The system translates natural language into structured task workflows while mana
 - Context flow
 - Task composition
 
-### Smart Context Management
+### Context Management
 
 ```xml
 <!-- Example: Sequential analysis with context management -->
@@ -58,7 +58,7 @@ The system translates natural language into structured task workflows while mana
 ## Key Concepts
 
 ### 1. Environment Model
-The system uses a Lispy-inspired environment model for clean task composition:
+The system uses a standard environment model for lexical scoping:
 
 ```typescript
 interface Environment {
@@ -83,7 +83,7 @@ Benefits:
 - Efficient memory usage
 
 ### 2. Associative Memory
-Intelligent context management through associative matching:
+Context management through LLM-based associative matching:
 
 ```typescript
 interface MemorySystem {
@@ -102,9 +102,7 @@ interface MemorySystem {
 ```
 
 Features:
-- Smart context selection
-- Efficient metadata indexing
-- Resource-aware retrieval
+- Dynamic context selection with the help of a global metadata index
 - Automatic relevance matching
 
 ### 3. First-Class Functions
@@ -135,31 +133,12 @@ Tasks as composable, first-class procedures:
 </task>
 ```
 
-Capabilities:
-- Parameter binding
-- Return value handling
-- Composition operators
-- Higher-order operations
 
 ## Error Recovery
 
-The system implements two robust recovery strategies:
+The system uses errors as feedback and control flow.
 
-### 1. Resource-Driven Decomposition
-When tasks exceed resource limits:
-- Automatic task breakdown
-- Smart subtask scheduling
-- Context preservation
-- Result aggregation
-
-### 2. Output Validation & Retry
-When tasks fail validation:
-- Structured error analysis
-- Alternative approach generation
-- Incremental refinement
-- Result verification
-
-## Advanced Features
+A concrete, simple example is the following pattern:
 
 ### Director-Evaluator Pattern
 ```xml
