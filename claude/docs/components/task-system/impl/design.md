@@ -66,12 +66,8 @@
 - Clear error locations
 
 ## Resource Management
-### Turn Counter Implementation
-- Per-Handler tracking
-- Limit enforcement
-- No cross-Handler pooling
-- Clear counting rules
-- Turn usage metrics
+
+The Task System enforces resource limits via a per‑Handler turn counter and context window monitoring. For the complete low‑level implementation (including code examples and configuration details), please refer to [resource-management.md](./resource-management.md).
   
 ### Context Window Management
 - Token counting approach
