@@ -49,7 +49,7 @@ interface RevisedTaskResult {
  *   - "none" for no inheritance, and
  *   - "subset" for selective inheritance.
  */
-interface ContextManagement {
+export interface ContextManagement {
     inheritContext: 'full' | 'none' | 'subset';
     accumulateData: boolean;
     accumulationFormat: 'full_output' | 'notes_only';
@@ -76,6 +76,11 @@ interface TaskTemplate {
 ```
 
 ## AST Types
+
+export interface FunctionCall extends ASTNode {
+    funcName: string;
+    args: ASTNode[];
+}
 ```typescript
 interface OperatorSpec {
     type: TaskType;
@@ -93,7 +98,49 @@ interface ASTNode {
 }
 ```
 
+export interface Environment {
+    bindings: Record<string, any>;
+    outer?: Environment;
+    /**
+     * Perform a lexical lookup for varName.
+     * Returns the value if found; otherwise, throws an error.
+     */
+    find(varName: string): any;
+}
+
 ## Resource Management Types
+
+export interface TaskDefinition {
+    name: string;                     // Unique task identifier
+    isatomic: boolean;
+    type: TaskType;                   // e.g., "atomic" or "sequential"
+    subtype?: string;                 // Optional subtype, e.g., "director", "evaluator", etc.
+    metadata?: Record<string, any>;   // Parameter schemas, return specs, etc.
+    astNode: ASTNode;                 // Parsed AST for the task
+}
+
+export class TaskLibrary {
+    private tasks: Map<string, TaskDefinition>;
+
+    constructor() {
+        this.tasks = new Map();
+    }
+
+    public registerTask(taskDef: TaskDefinition): void {
+        if (this.tasks.has(taskDef.name)) {
+            throw new Error(`Task ${taskDef.name} is already registered.`);
+        }
+        this.tasks.set(taskDef.name, taskDef);
+    }
+
+    public getTask(name: string): TaskDefinition {
+        const taskDef = this.tasks.get(name);
+        if (!taskDef) {
+            throw new Error(`Task ${name} not found in TaskLibrary.`);
+        }
+        return taskDef;
+    }
+}
 ```typescript
 interface HandlerConfig {
     maxTurns: number;
