@@ -1,47 +1,35 @@
 # Task System Interfaces
 
-import { MemorySystem, FileMatch } from "../../memory/api/interfaces";
+// For core type definitions (e.g. TaskResult, TaskTemplate, TaskType, AtomicTaskSubtype),
+// please refer to components/task-system/spec/types.md.
 
-## References
+import { MemorySystem } from "../../memory/api/interfaces";
 
-- Core Types: See [Type:TaskSystem:1.0] (`/components/task-system/spec/types.md`)
-- XML Schema: See [Contract:Tasks:TemplateSchema:1.0] (`/system/contracts/protocols.md`)
-
-## Public Interfaces
-
-### TaskSystem Interface
-```typescript
 /**
- * Core task execution interface
- * Uses types defined in [Type:TaskSystem:1.0]:
- * - TaskResult
- * - TaskTemplate
- * - TaskType
- * - AtomicTaskSubtype
-
-interface TaskSystem {
-    // Uses TaskResult, TaskTemplate, TaskType from [Type:TaskSystem:1.0]
-    // Execute a single task with the given context
+ * TaskSystem Interface
+ * 
+ * Provides methods to execute tasks, validate templates, and find matching templates.
+ */
+export interface TaskSystem {
     executeTask(
         task: string,
-        memory: MemorySystem,  // Updated to match Memory System v3.0 interface
-        taskType?: TaskType    // Now limited to atomic, sequence, reduce
+        memory: MemorySystem,
+        taskType?: "atomic" | "sequential" | "reduce" | "script"
     ): Promise<TaskResult>;
 
-    // Validate a task template
     validateTemplate(template: TaskTemplate): boolean;
     
-    // Find matching task templates for input
     findMatchingTasks(
         input: string,
         context: MemorySystem
     ): Promise<Array<{
         template: TaskTemplate;
         score: number;
-        taskType: TaskType;    // Now limited to atomic, sequence, reduce
+        taskType: "atomic" | "sequential" | "reduce" | "script";
     }>>;
 }
-```
+
+// Handler interface details are maintained in external documentation.
 
 ### Memory System Interface [Interface:Memory:3.0]
 ```typescript

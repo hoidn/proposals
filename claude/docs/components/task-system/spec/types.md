@@ -1,28 +1,24 @@
 # Task System Types
 
-## Core Task Types
-```typescript
-// Basic task types used across interfaces
-type TaskType = "atomic" | "sequential" | "reduce" | "script";
-type AtomicTaskSubtype = "standard" | "subtask";
+// Core task types used across the Task System.
+export type TaskType = "atomic" | "sequential" | "reduce" | "script";
+export type AtomicTaskSubtype = "standard" | "subtask";
 
-// Task execution status
-type ReturnStatus = 
-    | 'COMPLETE'      // Task completed successfully
-    | 'CONTINUATION'  // Task spawned subtask, not yet complete
-    | 'FAILED';       // Task failed to complete
+// Task execution status.
+export type ReturnStatus = "COMPLETE" | "CONTINUATION" | "FAILED";
 
-// Results and Templates
-interface TaskResult {
+// Core interfaces:
+
+export interface TaskResult {
     content: string;
     status: ReturnStatus;
     /**
-     * A free-form description provided by the Director task for dynamic evaluation template selection via associative matching.
+     * Optional free-form description used for dynamic evaluation template selection.
      */
     criteria?: string;
     notes: {
-        dataUsage: string;  // Required field
-        [key: string]: any; // Support for unstructured data
+        dataUsage: string;
+        [key: string]: any;
     };
 }
 
