@@ -1,104 +1,256 @@
-# Intelligent Task Execution System
+# System-Level README
 
-## Problem Statement
-Software development and technical tasks require breaking down complex requirements into executable units. This typically requires human expertise for:
-- Decomposing large tasks into smaller, manageable pieces  
-- Recovering from failures by trying alternative approaches
-- Maintaining relevant context across related subtasks
-- Combining partial results into complete solutions
+This **LLM Interpreter** is a DSL that compiles to LLM 'executables'. It uses an associative matching scheme for context management and dynamic template selection, with structured XML task definitions forming a bridge between the LLM and the language's internal representation. 
 
-This system automates this process through intelligent task decomposition and execution while handling failures gracefully and maintaining task coherence.
+## Example Workflows
 
-## Overview
+### 1. Complex Document Analysis
+```python
+# Analyze a large codebase that exceeds context limits
+result = interpreter.execute("""
+    Review our Python codebase and:
+    1. Identify security vulnerabilities
+    2. Suggest performance improvements
+    3. Generate a detailed report
+""")
 
-### Core Purpose and Goals
-The system automates task decomposition and execution. Notably, task inputs are now resolved via a template substitution mechanism that uses the `{{...}}` syntax to bridge the Evaluator's lexically scoped variables with task XML definitions. Inputs can also be explicitly bound using the optional `from` attribute.
+# System automatically:
+# - Breaks down task to fit context windows
+# - Maintains coherent analysis across files
+# - Aggregates results intelligently
+```
 
-### High-Level Architecture
-The system consists of four core components working together to process, execute, and manage tasks:
+### 2. Interactive Data Processing
+```python
+# Process and analyze experimental data
+result = interpreter.execute("""
+    Analyze peak patterns in XRD data:
+    1. Load detector outputs
+    2. Identify anomalous patterns
+    3. Generate visualization
+""")
 
-1. **Compiler**
-   - Translates natural language to XML/AST
-   - Handles task structure transformation and template validation
+# System provides:
+# - Dynamic error recovery
+# - Resource-aware execution
+# - Context-sensitive results
+```
 
-2. **Evaluator**
-   - Provides unified task execution – processing AST nodes, managing recovery, and tracking resources
-   - Uses standard task return statuses (`COMPLETE`, `CONTINUATION`, `FAILED`) 
+### 3. Code Generation and Validation
+```python
+# Generate and validate complex implementations
+result = interpreter.execute("""
+    Implement a distributed cache with:
+    1. LRU eviction
+    2. Consistency guarantees
+    3. Failure recovery
+""")
 
-3. **Task System**
-   - Coordinates task execution via Handlers
-   - Manages task templates, matching, and XML processing
-   - Delegates context handling to the unified Evaluator
+# System ensures:
+# - Coherent multi-file implementation
+# - Automated testing and validation
+# - Intelligent error correction
+```
 
-4. **Memory System**
-   - Maintains task-related context (via a global file metadata index)
-   - Supports associative matching for context generation
+## Core Architecture
 
-### Key Constraints
+### Intelligent Task Processing
+```mermaid
+graph TD
+    NL[Natural Language Task] --> Compiler
+    Compiler --> AST[Task Structure]
+    AST --> Evaluator
+    
+    subgraph "Execution Environment"
+        Evaluator -->|Execute| LLM
+        Evaluator -->|Recover| Compiler
+        Evaluator -->|Query| Memory
+    end
+    
+    subgraph "Memory System"
+        LongTerm[Long Term Store]
+        Working[Working Memory]
+        LongTerm -->|Associative Match| Working
+    end
+```
 
-#### Resource Constraints
-- Fixed context window size
-- Limited turn counts
-- Synchronous operation only
-- File access via Handler tools only
+The system translates natural language into structured task workflows while managing:
+- Resource constraints
+- Error recovery
+- Context flow
+- Task composition
 
-#### Operational Constraints  
-- One Handler per task execution
-- Immutable Handler configuration
-- No persistent state maintenance
-- Template immutability during execution
+### Smart Context Management
 
-## Components
+```xml
+<!-- Example: Sequential analysis with context management -->
+<task type="sequential">
+    <description>Analyze experimental data</description>
+    <context_management>
+        <inherit_context>subset</inherit_context>
+        <accumulate_data>true</accumulate_data>
+        <accumulation_format>notes_only</accumulation_format>
+    </context_management>
+    <steps>
+        <task>
+            <description>Load and validate raw data</description>
+        </task>
+        <task>
+            <description>Identify key patterns</description>
+        </task>
+        <task>
+            <description>Generate insights report</description>
+        </task>
+    </steps>
+</task>
+```
 
-### Component Relationships
-1. Compiler ↔ Task System
-   - Task parsing coordination
-   - Schema validation
-   - Template utilization
+## Key Concepts
 
-2. Evaluator ↔ Compiler
-   - AST execution feedback
-   - Reparse requests
-   - Resource usage updates
+### 1. Environment Model
+The system uses a Lispy-inspired environment model for clean task composition:
 
-3. Task System ↔ Evaluator
-   - Execution coordination
-   - Resource allocation
-   - State management
+```typescript
+interface Environment {
+    // Lexical scope for variable bindings
+    bindings: Map<string, any>
+    
+    // Working memory for task execution
+    context: Map<string, any>
+    
+    // Parent environment reference
+    outer: Environment | null
+    
+    // Create child environment with new bindings
+    extend(bindings: Map<string, any>): Environment
+}
+```
 
-4. Task System ↔ Memory System
+Benefits:
+- Clear separation of bindings and context
+- Predictable variable resolution
+- Clean task isolation
+- Efficient memory usage
+
+### 2. Associative Memory
+Intelligent context management through associative matching:
+
+```typescript
+interface MemorySystem {
+    // Find relevant context for current task
+    getRelevantContextFor(input: ContextQuery): Promise<Context>
+    
+    // Access global metadata index
+    getGlobalIndex(): Promise<GlobalIndex>
+    
+    // Result structure with context and matches
+    interface Context {
+        content: string        // Relevant context
+        matches: FileMatch[]   // Matching files
+    }
+}
+```
+
+Features:
+- Smart context selection
+- Efficient metadata indexing
+- Resource-aware retrieval
+- Automatic relevance matching
+
+### 3. First-Class Functions
+Tasks as composable, first-class procedures:
+
+```xml
+<!-- Example: Reusable data processing function -->
+<task type="function">
+    <name>process_experimental_data</name>
+    <parameters>
+        <param name="raw_data" type="DataSet"/>
+        <param name="config" type="ProcessingConfig"/>
+    </parameters>
+    <returns type="ProcessedData"/>
+    <body>
+        <task type="sequential">
+            <step>
+                <description>Validate input format</description>
+            </step>
+            <step>
+                <description>Apply processing pipeline</description>
+            </step>
+            <step>
+                <description>Generate quality metrics</description>
+            </step>
+        </task>
+    </body>
+</task>
+```
+
+Capabilities:
+- Parameter binding
+- Return value handling
+- Composition operators
+- Higher-order operations
+
+## Error Recovery
+
+The system implements two robust recovery strategies:
+
+### 1. Resource-Driven Decomposition
+When tasks exceed resource limits:
+- Automatic task breakdown
+- Smart subtask scheduling
+- Context preservation
+- Result aggregation
+
+### 2. Output Validation & Retry
+When tasks fail validation:
+- Structured error analysis
+- Alternative approach generation
+- Incremental refinement
+- Result verification
+
+## Advanced Features
+
+### Director-Evaluator Pattern
+```xml
+<!-- Example: Dynamic code review workflow -->
+<task type="director-evaluator">
+    <description>Review code changes</description>
+    <director>
+        <description>Analyze changes and suggest improvements</description>
+    </director>
+    <evaluator>
+        <description>Validate suggestions and check implementation</description>
+    </evaluator>
+</task>
+```
+
+### Composable Operators
+Built-in operators for task composition:
+- **Sequential**: Ordered execution with context flow
+- **Reduce**: Result aggregation with accumulation
+- **Map**: Parallel execution (coming soon)
+
+
+## Further Reading
+
+1. [Task Composition Guide](./docs/tasks.md)
+   - Function patterns
+   - Operator usage
+   - Composition examples
+
+2. [Error Recovery Patterns](./docs/errors.md)
+   - Recovery strategies
+   - Resource management
+   - Error handling patterns
+
+3. [Memory System Guide](./docs/memory.md)
    - Context management
-   - Metadata index access
-   - Associative matching support
+   - Associative matching
+   - Resource optimization
 
-### System-Wide Protocols
-- XML-based task definitions
-- Standard error propagation
-- Resource usage tracking
-- Context management
+4. [Environment Model](./docs/environment.md)
+   - Scoping rules
+   - Context inheritance
+   - Memory management
 
-### Supported Patterns
- - Dynamic Director-Evaluator Pattern: Uses continuation and dynamic evaluation.
- - Static Director-Evaluator Pattern: Pre-compiles the execution sequence—including script execution tasks—for predictable control flow. (See [Pattern:DirectorEvaluator:1.1](system/architecture/patterns/director-evaluator.md) for details.)
-
-## Development Sequence
-
-### Phase 1: Core Pipeline
-- Turn counter implementation
-- Context window management
-- Basic XML pipeline and validation
-- Initial AST construction
-- Basic evaluator functionality
-
-### Phase 2: Error Recovery
-- Error type implementation
-- Dynamic reparsing
-- Retry management
-- Basic error recovery
-- Environment preservation
-
-### Phase 3: Enhanced Functionality  
-- Advanced operators
-- Optimized context management
-- Enhanced recovery strategies
-- Performance improvements

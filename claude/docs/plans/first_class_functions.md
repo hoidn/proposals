@@ -1,54 +1,106 @@
-# Task System Architecture and Implementation Plan
+https://chatgpt.com/c/67a3df1a-104c-8005-91b1-3dce9bf68216
 
-## 1. Objectives and Integration with Existing Architecture
+# Integration Overview
 
-### Comprehensiveness
-The plan covers task organization (by type and subtype), task lookup and registration, first-class function calling with parameter and return-value support, and a new conditional primitive that enforces JSON output formatting. This is in line with the goals of Approaches 1, 2, and 3.
+## 2.1 Existing Components and Interfaces
 
-### Integration
-- **XML Task Definitions & AST**: The proposed changes work with the current XML schema (see operators.md and protocols.md) by adding an optional reference attribute to tasks.
-- **Environment & Evaluator**: The Evaluator (documented in misc/textonly.tex.md and system/architecture/overview.md) is modified to include a reference to the new TaskLibrary.
-- **Error Handling & Resource Management**: The new function-calling mechanism is designed to work with existing error categories (see errorspec.md) and does not alter the fundamental resource tracking managed by the Handler.
+### XML Task Definitions & AST
+Tasks are defined in XML with attributes such as type and (newly) optional ref and subtype. The Compiler translates these into an Abstract Syntax Tree (AST).
 
-### Other Criteria
-- The plan is backward compatible for MVP (by initially supporting inline tasks) and then evolves to use a full registry.
-- It separates concerns cleanly by moving task definitions out of the Evaluator's runtime environment into a dedicated library.
+### Evaluator
+The Evaluator executes the AST nodes, managing context and resource usage. It will now create and propagate a nested Environment (see Section 3.1) that carries both variable bindings and a reference to the global TaskLibrary.
 
-## 2. Proposed Architecture Modifications
+### Handler & Memory System
+Existing components (Handler, Memory, etc.) continue to manage resource tracking, file metadata, and context window management. The new design does not change these responsibilities.
 
-### A. Introduce a Separate TaskLibrary Component
+### Error Handling
+Errors (such as TASK_FAILURE and RESOURCE_EXHAUSTION) continue to be signaled using the same error types as before.
+
+## 2.2 New or Updated Interfaces
+
+### TaskLibrary Component
+A new in–memory registry that stores task definitions (both atomic and composite) organized by type and subtype. It is integrated into the global environment so that every nested environment can access the library.
+
+### FunctionCall AST Node
+A new AST node type that represents function (task) calls. It looks up task definitions in the TaskLibrary (via the environment chain) and creates a new child environment with parameter bindings for execution.
+
+### Nested Environment (Env) Model
+Inspired by Norvig's Lispy, every Environment object now supports an "outer" pointer and a find(var) method to perform lexical lookups. The global environment includes the TaskLibrary (and built–in variables) and is inherited by every child environment.
+
+### Conditional Primitive (cond)
+A new DSL primitive that enforces that task outputs are in JSON format and enables conditional execution based on structured output.
+
+## 3. Proposed Architecture Modifications
+
+### 3.1 Nested Environment Model Integration
+
+#### A. Environment Class Definition
+Introduce a Lispy–style Environment class to manage variable bindings and context with lexical scoping:
+
+```python
+class Env(dict):
+    """
+    An environment mapping variable names to values, with an optional outer environment.
+    Mimics Norvig's Lispy environment for lexical scoping.
+    """
+    def __init__(self, parms=(), args=(), outer=None):
+        super().__init__(zip(parms, args))
+        self.outer = outer  # Reference to parent environment
+
+    def find(self, var):
+        "Find the innermost environment in which 'var' appears."
+        if var in self:
+            return self
+        elif self.outer is not None:
+            return self.outer.find(var)
+        else:
+            raise NameError(f"Variable '{var}' not found.")
+```
+
+#### Integration Notes
+- The Evaluator creates a global environment (global_env) that includes standard built–in variables and, importantly, a reference to the TaskLibrary (e.g., global_env["taskLibrary"] = taskLibrary).
+- When a task is executed (or a function is called), the Evaluator creates a new child environment using Env(…, outer=parent_env), so that the TaskLibrary (and any other globals) remain accessible via the environment chain.
+
+#### B. Environment Interface in XML–Driven Execution
+The existing <inherit_context> XML attribute now directly maps to how a new environment is created:
+- inherit_context="full": Create a child environment with its outer pointer set to the parent.
+- inherit_context="none": Create an environment whose outer pointer is set to the global environment (or None).
+- inherit_context="subset": Optionally, create an environment with a filtered copy of parent bindings (details to be refined later).
+
+### 3.2 TaskLibrary Component
 
 #### Purpose
-Maintain an in-memory registry of task definitions (both atomic and composite) organized hierarchically by type and subtype. This decouples task metadata from the runtime environment.
+Maintain a global registry of task definitions so that tasks (whether defined inline or registered via a reference) can be looked up and reused. This decouples task metadata from runtime execution.
 
 #### Data Structure & Interface
 ```python
-# New data structure for task definitions
 class TaskDefinition:
     def __init__(self, name, type, subtype, metadata, ast_node):
-        self.name = name          # Unique identifier
-        self.type = type          # e.g., "atomic", "composite"
-        self.subtype = subtype    # e.g., "director", "evaluator", etc.
-        self.metadata = metadata  # Extra properties (e.g., parameter schema)
-        self.ast_node = ast_node  # Parsed representation (e.g., XML -> AST)
+        self.name = name            # Unique task identifier
+        self.type = type            # e.g., "atomic" or "composite"
+        self.subtype = subtype      # e.g., "director", "evaluator", etc.
+        self.metadata = metadata    # Parameter schemas, return specs, etc.
+        self.ast_node = ast_node    # Parsed AST for the task
 
-# TaskLibrary maintains a registry of tasks organized by type and subtype
 class TaskLibrary:
     def __init__(self):
+        # Organize tasks by type; each type maps to a dict of subtypes to tasks.
         self.tasks = {
             'atomic': {},
             'composite': {},
-            # ... add other task categories as needed
+            # Other task categories as needed.
         }
     
     def register_task(self, task_def: TaskDefinition):
-        """Registers a task in the appropriate category."""
-        if task_def.name in self.tasks.get(task_def.type, {}):
+        """Registers a new task definition. Raises an error if duplicate."""
+        type_dict = self.tasks.setdefault(task_def.type, {})
+        subtype_dict = type_dict.setdefault(task_def.subtype, {})
+        if task_def.name in subtype_dict:
             raise ValueError(f"Task {task_def.name} is already registered.")
-        self.tasks[task_def.type].setdefault(task_def.subtype, {})[task_def.name] = task_def
+        subtype_dict[task_def.name] = task_def
 
     def get_task(self, name: str) -> TaskDefinition:
-        """Lookup task by name across all types."""
+        """Looks up a task by name across all types and subtypes."""
         for type_group in self.tasks.values():
             for subtype_group in type_group.values():
                 if name in subtype_group:
@@ -56,68 +108,50 @@ class TaskLibrary:
         raise KeyError(f"Task {name} not found.")
 ```
 
-#### Integration
-```typescript
-// Extended Environment interface (TypeScript-like pseudocode)
-interface Environment {
-    variables: Map<string, any>;
-    parent?: Environment;
-    taskLibrary: TaskLibrary;  // New: reference to shared task registry
-}
-```
+#### Integration Notes
+- The global environment (see Section 3.1) stores the TaskLibrary (e.g., under the key "taskLibrary").
+- When a FunctionCall is executed, it uses env.find("taskLibrary") to retrieve the registry regardless of the current nested environment.
 
-### B. Unify Function Calling via a FunctionCall AST Node
+### 3.3 FunctionCall AST Node for DSL Function Calling
 
 #### Purpose
-Treat tasks as first-class functions that can be called with arguments and return results. Both atomic and composite tasks are uniformly callable.
+Enable tasks to be called like functions. Both atomic tasks and composite tasks are callable using a uniform interface that creates a new execution context.
 
-#### AST Node for Function Calls
+#### Implementation
 ```python
 class FunctionCall(ASTNode):
     def __init__(self, func_name, args):
-        self.func_name = func_name  # Name of the task/function to call
-        self.args = args            # List of ASTNodes representing arguments
+        self.func_name = func_name  # The name of the task/function to be invoked.
+        self.args = args            # A list of AST nodes representing arguments.
 
-    def eval(self, env: Environment):
-        # Lookup the task definition from the TaskLibrary
-        task_def = env.taskLibrary.get_task(self.func_name)
+    def eval(self, env: Env):
+        # Retrieve the TaskLibrary from the environment chain.
+        task_library = env.find("taskLibrary")["taskLibrary"]
+        task_def = task_library.get_task(self.func_name)
         
-        # Create a new environment for the function call
-        func_env = env.extend()  # Assuming extend() clones environment bindings
+        # Create a child environment that inherits from the current one.
+        # This child environment is used for executing the task.
+        func_env = Env(outer=env)
         
-        # Bind parameters (assuming task_def.metadata.parameters exists)
-        for param, arg_node in zip(task_def.metadata.get("parameters", []), self.args):
-            func_env.variables[param] = arg_node.eval(env)
+        # Bind parameters to arguments, assuming task_def.metadata defines a list of parameter names.
+        parameters = task_def.metadata.get("parameters", [])
+        for param, arg_node in zip(parameters, self.args):
+            func_env[param] = arg_node.eval(env)
         
-        # Evaluate the task's AST (could be atomic or composite)
+        # Evaluate the task's AST node using the new environment.
         result = task_def.ast_node.eval(func_env)
-        
-        # Process return values according to task_def.metadata.returns (if specified)
-        # (Return binding logic omitted for brevity)
-        
         return result
 ```
 
-#### Notes
-- This node is added to the AST type system (see components/task-system/spec/types.md)
-- It allows tasks to be composed (as in the director-evaluator pattern) and reused
+#### Key Points
+- The FunctionCall node looks up the task definition from the TaskLibrary.
+- It creates a new child environment (via the nested Env model) that automatically inherits global objects (like the TaskLibrary).
+- Parameter binding occurs by evaluating each argument in the caller's environment.
+- The task's AST is then executed in this fresh environment, ensuring proper lexical scoping.
 
-### C. Support for Task Loading and Reference Resolution
+### 3.4 XML Schema Extensions
+While the external XML syntax remains backward compatible, the following optional attributes are added for future–proofing and reference resolution:
 
-#### MVP vs. Future Phases
-
-**Phase 1 (MVP):**
-- Tasks are inlined in the AST when loaded from XML files
-- The Evaluator directly executes these inline definitions without needing reference resolution
-
-**Phase 2 (Transitional Hybrid):**
-- Introduce a ref attribute in the XML schema so that a task node may reference a pre-registered task in the TaskLibrary
-- The Evaluator, when encountering a `<task ref="taskName">` node, looks up the task definition
-
-**Phase 3 (Mature Implementation):**
-- Tasks (and composite procedures) become first-class functions that can be defined, passed as arguments, and stored
-
-#### XML Schema Update Example
 ```diff
 <xs:element name="task">
   <xs:complexType>
@@ -137,34 +171,37 @@ class FunctionCall(ASTNode):
 </xs:element>
 ```
 
-### D. Add a Conditional Primitive (cond) with JSON Output Enforcement
+#### Notes
+- The optional ref attribute enables a task node to reference a pre–registered task in the TaskLibrary.
+- The optional subtype attribute refines the task type (e.g., distinguishing director vs. evaluator in atomic tasks).
+
+### 3.5 Conditional Primitive (cond) with JSON Output Enforcement
 
 #### Purpose
-To allow tasks to conditionally execute based on their outputs, task results must be structured (e.g., in JSON). This primitive acts as a bridge between the DSL and Python types.
+Allow tasks to conditionally execute based on the structure of their outputs. In this design, tasks that are candidates for conditional execution must produce JSON–formatted output.
 
-#### Evaluator Function Sample
+#### Evaluator Helper Function Example
 ```python
 import json
 
-def eval_cond(condition_expr, env):
+def eval_cond(condition_expr, env: Env):
     """
-    Evaluate a condition against the last task output.
-    Expects env.last_output to be a JSON-formatted string.
+    Evaluates a condition against the last task output stored in env.last_output.
+    Raises TASK_FAILURE if the output is not valid JSON.
     """
     try:
-        output = json.loads(env.last_output)
+        output = json.loads(env.get("last_output", "{}"))
     except json.JSONDecodeError:
         raise Exception("TASK_FAILURE: Task output must be valid JSON for conditionals.")
     
-    # Evaluate the condition (details omitted)
-    # For example, using a simple Python eval with a safe environment
+    # Use Python's eval (with a safe namespace) to evaluate the condition.
     if eval(condition_expr, {"output": output}):
         return True
     else:
         return False
 ```
 
-#### DSL XML Example for cond
+#### DSL XML Example
 ```xml
 <cond>
     <case test="output.valid == true">
@@ -180,75 +217,81 @@ def eval_cond(condition_expr, env):
 </cond>
 ```
 
-### E. Data Structures and Interfaces to Alter or Declare
+#### Integration Notes
+- The evaluator uses the eval_cond helper to check conditions before selecting which task branch to execute.
+- This primitive bridges the DSL's control flow constructs with the need for structured (JSON) task output.
 
-#### Environment Interface
-- Add a taskLibrary field as shown above
-
-#### AST Types
-- Introduce a new FunctionCall node (see above)
-- Extend existing AST node types to optionally include a "ref" field for tasks
-
-#### XML Schema
-- Extend the `<task>` element to include optional attributes ref and subtype (see diff above)
-
-#### TaskDefinition
-- A new data structure (as shown above) that holds task metadata (including parameter and return specifications)
-
-#### TaskLibrary
-- A new component that maps task names to TaskDefinition instances (see sample above)
-
-#### Output Formatting
-- Enforce that tasks which are candidates for conditional execution must output JSON
-- May require updating task templates in the documentation to include an `<expected_output>` specification
-
-## 3. Transition Roadmap
+## 4. Phased Implementation Roadmap
 
 ### Phase 1: Minimal Implementation (MVP)
-- Inline Tasks: Continue to support inlined XML task definitions in the AST
-- Basic Function Calling: Implement the FunctionCall node
-- Conditional Primitive: Add support for the cond primitive
-- No Reference Resolution: Use inline definitions
+
+#### Inline Task Support
+- Continue to support in–lined XML task definitions; tasks are directly embedded in the AST.
+
+#### Basic Function Calling
+- Implement the FunctionCall node as described above. Use a temporary TaskLibrary built during compilation.
+
+#### Nested Environment Model
+- Replace the flat environment model with the nested Env class. Initialize the global environment with built–in variables and the TaskLibrary.
+
+#### Conditional Primitive
+- Add support for the cond primitive that requires task outputs to be JSON–formatted.
+
+#### XML Compatibility
+- No external changes are required; XML remains unchanged apart from optional attributes that future phases can use.
 
 ### Phase 2: Hybrid Model
-- Task Registration: Introduce the TaskLibrary component
-- XML References: Update XML schema for task references
-- Evaluator Changes: Implement task definition lookup
 
-### Phase 3: Mature First-Class Functions
-- Function Abstraction: Support parameterized, first-class task functions
-- Extended DSL: Add function definitions and calls syntax
-- Refactor Evaluator: Integrate new function-calling mechanism
+#### Task Registration
+- Introduce a persistent TaskLibrary component that registers tasks from XML files (using the ref attribute).
 
-## 4. Integration with Existing Components
+#### Reference Resolution
+- Update the Compiler so that when a task node has a ref attribute, the Evaluator retrieves the task definition from the TaskLibrary.
 
-### Evaluator
-- Modified to use FunctionCall nodes and consult TaskLibrary
+#### Environment Propagation
+- Verify that every new environment created during function calls properly inherits the global TaskLibrary and built–in variables.
 
-### Compiler
-- Updated to parse new XML attributes and generate corresponding AST nodes
+### Phase 3: Mature First–Class Functions
 
-### Error Handling
-- Task outputs validated for JSON formatting with cond
-- Invalid formats trigger standard TASK_FAILURE errors
+#### Full Function Abstraction
+- Support parameterized, first–class task functions including potential closure–like behavior.
 
-### Memory & Resource Management
-- New components don't interfere with resource tracking
-- Handler continues to manage all resource and turn-count management
+#### Extended DSL Syntax
+- Introduce syntax (possibly a Lisp–like dialect or extended XML) for function definitions and calls.
 
-### Documentation
-- Update relevant sections to reflect new mechanisms
+#### Evaluator Refactoring
+- Integrate the new function–calling mechanism throughout the system, including support for dynamic sub–task spawning and chaining.
 
-## 5. Summary and Justification
+#### Enhanced Conditional & Output Validation
+- Refine the conditional primitive to support richer JSON–based decision making and output validation.
 
-### Unified Approach
-The synthesis plan merges concrete implementation ideas across all three approaches, providing a comprehensive solution for task organization and function calling.
+## 5. Testing and Verification
 
-### Integration & Compatibility
-The plan preserves backward compatibility while providing a clear migration path through extensions to existing systems.
+### Environment Lookup
+Verify that a child environment (e.g., created during a FunctionCall) can successfully use env.find('taskLibrary') to access the global TaskLibrary.
+
+### FunctionCall Evaluation
+Test that a FunctionCall node correctly looks up the task definition, creates a new environment with parameter bindings, and returns the expected result.
+
+### Conditional Execution
+Execute tasks with a cond block and verify that non–JSON outputs trigger a TASK_FAILURE error and that valid JSON outputs correctly guide execution.
+
+### XML Schema and Reference Resolution
+Validate that tasks defined with the optional ref and subtype attributes are correctly resolved during evaluation without altering existing XML–based workflows.
+
+## 6. Advantages and Justification
+
+### Unified Environment Resolution
+The nested environment model simplifies variable and global object lookups by allowing child tasks to transparently access the TaskLibrary and built–ins.
+
+### Decoupling of Task Metadata
+With a dedicated TaskLibrary, task definitions are managed independently of runtime execution. This decoupling supports reuse, modularity, and a phased migration from inline tasks.
+
+### Seamless DSL Function Calling
+The new FunctionCall node allows tasks to be treated uniformly as callable procedures. Parameter binding and return–value handling are consistent with the new environment model.
+
+### Backward Compatibility
+External XML syntax remains unchanged (except for optional extensions), ensuring that existing workflows and error–handling semantics continue to function.
 
 ### Extensibility
-The phased roadmap ensures gradual feature support without overwhelming initial implementation.
-
-### Code Samples and Data Declarations
-Provided code samples illustrate key components while leaving implementation details flexible.
+The phased roadmap allows the system to start with a minimal, stable MVP and then evolve toward more complex features (such as closures, extended DSL syntax, and dynamic sub–task spawning) without disrupting the core execution model.

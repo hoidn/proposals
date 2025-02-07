@@ -220,6 +220,7 @@ Loose ends:
 - passing through questions
 - model temperature (and model selection in general -- how are we going to handle this?)
 - how would we approach multiple tries -> selection of the best candidate result? I'm thinking something like a many-to-one version of the director-evaluator pattern. Essentially: many tries in parallel (with sandboxing so that the instances don't interfere with one another) --> evaluation and selection of the 'best' outcome.
+- Bring the evaluator impl in line with Lispy's approach, such that it will be easier to later incorporate it for the DSL front end
 
 <brainstorming prompt>
 - need to impl function calling in the DSL.
@@ -234,3 +235,4 @@ Misc:
 - can llms be trained at half precision?
 - how does llm compute requirement scale in the size of the token dictionary?
 - what's the biggest trainable model?
+

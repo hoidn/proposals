@@ -104,15 +104,6 @@ Defines the resource management strategy for the task execution system focusing 
 // See [Type:ResourceMetrics:1.0] for the complete interface
 ```
 
-### Environment Management
-```typescript
-interface Environment {
-    bindings: Record<string, any>;     // Variable scope
-    context: Record<string, any>;       // Working memory
-    extend(names: string[], values: any[]): Environment;
-}
-```
-
 ### Handler Configuration
 ```typescript
 interface HandlerConfig {
