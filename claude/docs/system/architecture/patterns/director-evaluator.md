@@ -26,11 +26,15 @@ This pattern follows a three-phase flow:
        - The **bash script** (or external callback mechanism) to execute, and
        - The **target** string that describes the aspects of the output requiring evaluation.
    - The Evaluator uses this information—with associative matching—to select an appropriate evaluation task template.
+   - Only the latest evaluator output is retained; after the Evaluator completes its feedback step, the environment contains solely last_evaluator_output while all other temporary data is cleared. This significantly simplifies the feedback loop.
 
 3. **Child Task (Evaluator):**
    - Is dynamically spawned by the Evaluator when it detects a `CONTINUATION` status along with an `evaluation_request` in the Director's output.
    - Uses a `<context_management>` block with `inherit_context` set to `subset` and `accumulate_data` enabled to incorporate only the relevant context.
    - Executes the evaluation subtask—which may include invoking the specified bash script via the Handler or Evaluator—and feeds its results back to the parent task so that the Director may continue its sequence.
+
+### Environment Variable Management
+Environment variables are managed so that last_evaluator_output is the only persistent variable across continuations. Any new evaluation clears other data, thereby reducing context window usage.
 
 ### Example Workflow
 

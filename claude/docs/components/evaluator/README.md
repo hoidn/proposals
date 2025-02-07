@@ -228,6 +228,9 @@ interface TaskOutput {
 3. **Clearing**: Once the entire sequence finishes (success or error), the Evaluator discards the stored step outputs to reclaim resources.
 4. **Error Handling**: If a step fails, the last known `SequentialHistory` object is packaged with the error output, so that partial results can be surfaced if needed.
 
+### Script Execution and Feedback Flow
+When executing a script task, the evaluator captures stdout, stderr, and exitCode from the external command. These outputs are then formatted into an EvaluationResult and stored in last_evaluator_output. Upon continuation, all other environment variables are cleared to isolate this single piece of feedback.
+
 ### Static Pattern Execution
 The Evaluator now supports a static Director-Evaluator variant. In this mode, after the Director task generates the initial output, a script execution task (of type "script") is automatically invoked. The Evaluator captures the script's output—including stdout, stderr, and exit code—and feeds it into the subsequent evaluation step, ensuring a predictable, pre-compiled control flow.
 

@@ -86,12 +86,21 @@ The Task System enforces resource limits via a per‑Handler turn counter and co
 ### Error Detection Mechanisms
 - Resource limit monitoring, progress tracking, output and XML structure validation, and input validation.
 
+### Environment Management
+
+#### Output Slot Management
+The design now leverages last_evaluator_output as the single persistent feedback variable. The function prepareContinuationEnv(currentEnv) constructs a new environment retaining only last_evaluator_output, ensuring that all other keys are cleared on continuation.
+
+On continuation, the evaluator clears all environment variables except for last_evaluator_output. This reset is achieved via the prepareContinuationEnv helper, which copies only last_evaluator_output from the current environment.
+
 ### Script Execution Implementation
 The system now supports executing external scripts as part of a static director-evaluator workflow. When a task of type "script" is encountered, the Handler:
 - Detects the "script" task type.
 - Executes the specified external command (e.g. a bash script).
 - Captures the command's standard output, error output, and exit code.
 - Passes the script's output to the subsequent evaluator task.
+
+During script execution, the evaluator invokes the script task, captures its outputs (stdout, stderr, and exitCode), and then wraps these into an EvaluationResult. This result is stored in last_evaluator_output, which is later used by the Director upon resuming the sequence.
 
 This design ensures that the director's output flows seamlessly through the script execution step before final evaluation.
 
