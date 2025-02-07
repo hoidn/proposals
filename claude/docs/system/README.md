@@ -2,56 +2,6 @@
 
 This **LLM Interpreter** is a DSL that compiles to LLM 'executables'. It uses an associative matching scheme for context management and dynamic template selection, with structured XML task definitions forming a bridge between the LLM and the language's internal representation. 
 
-## Example Workflows
-
-### 1. Complex Document Analysis
-```python
-# Analyze a large codebase that exceeds context limits
-result = interpreter.execute("""
-    Review our Python codebase and:
-    1. Identify security vulnerabilities
-    2. Suggest performance improvements
-    3. Generate a detailed report
-""")
-
-# System automatically:
-# - Breaks down task to fit context windows
-# - Maintains coherent analysis across files
-# - Aggregates results intelligently
-```
-
-### 2. Interactive Data Processing
-```python
-# Process and analyze experimental data
-result = interpreter.execute("""
-    Analyze peak patterns in XRD data:
-    1. Load detector outputs
-    2. Identify anomalous patterns
-    3. Generate visualization
-""")
-
-# System provides:
-# - Dynamic error recovery
-# - Resource-aware execution
-# - Context-sensitive results
-```
-
-### 3. Code Generation and Validation
-```python
-# Generate and validate complex implementations
-result = interpreter.execute("""
-    Implement a distributed cache with:
-    1. LRU eviction
-    2. Consistency guarantees
-    3. Failure recovery
-""")
-
-# System ensures:
-# - Coherent multi-file implementation
-# - Automated testing and validation
-# - Intelligent error correction
-```
-
 ## Core Architecture
 
 ### Intelligent Task Processing
