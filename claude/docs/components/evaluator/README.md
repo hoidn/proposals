@@ -158,7 +158,7 @@ The Evaluator maintains two distinct types of context when both inheritance and 
 1. **Inherited Context**: The parent task's context that is passed down unchanged
 2. **Accumulated Data**: The step-by-step outputs collected during sequential execution
 
-When both `inheritContext` and `accumulateData` are true, these contexts remain separate internally but can be combined during task execution. The Evaluator:
+Under the new protocol, tasks use <inherit_context>none</inherit_context> and <accumulate_data>false</accumulate_data> to ensure that no prior environment variables are carried over except last_evaluator_output. When contexts are needed, the Evaluator:
 
 1. Maintains the parent's inherited context unchanged throughout execution
 2. Separately tracks accumulated outputs from previous steps

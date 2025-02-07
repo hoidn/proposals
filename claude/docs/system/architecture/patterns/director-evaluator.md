@@ -89,40 +89,11 @@ In addition to the dynamic pattern described above, a static variant is availabl
 
 ### XML Template Example
 ```xml
-<task type="sequential">
-    <description>Static Director-Evaluator Pipeline</description>
-    <context_management>
-        <inherit_context>none</inherit_context>
-        <accumulate_data>true</accumulate_data>
-        <accumulation_format>notes_only</accumulation_format>
-    </context_management>
-    <steps>
-        <!-- Director Task -->
-        <task>
-            <description>Generate Initial Output</description>
-        </task>
-        <!-- Target Script Execution -->
-        <task type="script">
-            <description>Run Target Script</description>
-            <inputs>
-                <input name="director_output">
-                    <task>
-                        <description>Pass director output to script</description>
-                    </task>
-                </input>
-            </inputs>
-        </task>
-        <!-- Evaluator Task -->
-        <task>
-            <description>Evaluate Script Output</description>
-            <inputs>
-                <input name="script_output">
-                    <task>
-                        <description>Process output from target script</description>
-                    </task>
-                </input>
-            </inputs>
-        </task>
-    </steps>
+<task type="director">
+    <output_slot>last_evaluator_output</output_slot>
+</task>
+
+<task type="evaluator">
+    <input_source>last_evaluator_output</input_source>
 </task>
 ```
