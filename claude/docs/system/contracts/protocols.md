@@ -36,7 +36,7 @@ The task template schema defines the structure for XML task template files and m
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="accumulate_data" type="xs:boolean" minOccurs="0"/>
+              <xs:element name="accumulate_data" type="xs:boolean" default="false"/>
               <xs:element name="accumulation_format" minOccurs="0">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
