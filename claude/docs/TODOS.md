@@ -222,6 +222,8 @@ Loose ends:
 - how would we approach multiple tries -> selection of the best candidate result? I'm thinking something like a many-to-one version of the director-evaluator pattern. Essentially: many tries in parallel (with sandboxing so that the instances don't interfere with one another) --> evaluation and selection of the 'best' outcome.
 - Bring the evaluator impl in line with Lispy's approach, such that it will be easier to later incorporate it for the DSL front end
 
+- there should be a standard way for prompts to return lists and for the list to be extracted / bound to a variable by the evaluator, bc, this will be a very common pattern.
+
 <brainstorming prompt>
 - need to impl function calling in the DSL.
 - what data structure should we use to represent the task library in-memory? should that be part of the Evaluator Environment, or should it be separate? How should tasks be organized by type in the environment (e.g. should assoc matching tasks be separate from the rest?). Is it redundant to have both a subtype hierarchy for different atomic task types AND an in-memory hierarchy? (I don't think so, but the mapping between these two things will have to be worked out)

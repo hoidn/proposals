@@ -3,7 +3,10 @@
 
 ## High-Level Objective
 
-- Implement a simplified Director-Evaluator flow that only retains the latest evaluator output, reducing context window usage and simplifying error recovery.
+- Implement a simplified Director-Evaluator flow that only retains the latest evaluator output, reducing context window usage and simplifying error recovery, respecting the <high-level plan>
+
+<high-level plan>
+
 
 ## Mid-Level Objective
 
