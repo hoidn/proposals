@@ -41,301 +41,103 @@ Write a spec prompt according to the given description and Q&A clarifications.
 </output_format>
 
 <desc>
-'Changes: # Integration Overview
-## 2.1 Existing Components and Interfaces
+'Changes: Here's a simplified Director-Evaluator flow plan that only retains the latest evaluator output. The evaluator will provide its output to the director as an object of the form:
 
-### XML Task Definitions & AST
-Tasks are defined in XML with attributes such as type and (newly) optional ref and subtype. The Compiler translates these into an Abstract Syntax Tree (AST).
-
-### Evaluator
-The Evaluator executes the AST nodes, managing context and resource usage. It will now create and propagate a nested Environment (see Section 3.1) that carries both variable bindings and a reference to the global TaskLibrary.
-
-### Handler & Memory System
-Existing components (Handler, Memory, etc.) continue to manage resource tracking, file metadata, and context window management. The new design does not change these responsibilities.
-
-### Error Handling
-Errors (such as TASK_FAILURE and RESOURCE_EXHAUSTION) continue to be signaled using the same error types as before.
-
-## 2.2 New or Updated Interfaces
-
-### TaskLibrary Component
-A new in–memory registry that stores task definitions (both atomic and composite) organized by type and subtype. It is integrated into the global environment so that every nested environment can access the library.
-
-### FunctionCall AST Node
-A new AST node type that represents function (task) calls. It looks up task definitions in the TaskLibrary (via the environment chain) and creates a new child environment with parameter bindings for execution.
-
-### Nested Environment (Env) Model
-Inspired by Norvig's Lispy, every Environment object now supports an "outer" pointer and a find(var) method to perform lexical lookups. The global environment includes the TaskLibrary (and built–in variables) and is inherited by every child environment.
-
-### Conditional Primitive (cond)
-A new DSL primitive that enforces that task outputs are in JSON format and enables conditional execution based on structured output.
-
-## 3. Proposed Architecture Modifications
-
-### 3.1 Nested Environment Model Integration
-
-#### A. Environment Class Definition
-Introduce a Lispy–style Environment class to manage variable bindings and context with lexical scoping:
-
-```python
-class Env(dict):
-    """
-    An environment mapping variable names to values, with an optional outer environment.
-    Mimics Norvig's Lispy environment for lexical scoping.
-    """
-    def __init__(self, parms=(), args=(), outer=None):
-        super().__init__(zip(parms, args))
-        self.outer = outer  # Reference to parent environment
-
-    def find(self, var):
-        "Find the innermost environment in which 'var' appears."
-        if var in self:
-            return self
-        elif self.outer is not None:
-            return self.outer.find(var)
-        else:
-            raise NameError(f"Variable '{var}' not found.")
+```javascript
+EvaluationResult(success: boolean, feedback: string | null)
 ```
 
-#### Integration Notes
-- The Evaluator creates a global environment (global_env) that includes standard built–in variables and, importantly, a reference to the TaskLibrary (e.g., global_env["taskLibrary"] = taskLibrary).
-- When a task is executed (or a function is called), the Evaluator creates a new child environment using Env(…, outer=parent_env), so that the TaskLibrary (and any other globals) remain accessible via the environment chain.
+1. Revised Context Management Protocol
 
-#### B. Environment Interface in XML–Driven Execution
-The existing <inherit_context> XML attribute now directly maps to how a new environment is created:
-- inherit_context="full": Create a child environment with its outer pointer set to the parent.
-- inherit_context="none": Create an environment whose outer pointer is set to the global environment (or None).
-- inherit_context="subset": Optionally, create an environment with a filtered copy of parent bindings (details to be refined later).
+xml
+Copy
+<context_management>
+    <inherit_context>none</inherit_context>
+    <accumulate_data>false</accumulate_data>
+</context_management>
+Run HTML
+2. New Environment Variable Definition
 
-### 3.2 TaskLibrary Component
+typescript
+Copy
+// Single variable stores last evaluator output
+interface DirectorEnv {
+    last_evaluator_output: string | null;
+    // Other vars cleared on continuation
+}
+3. Modified Continuation Flow
 
-#### Purpose
-Maintain a global registry of task definitions so that tasks (whether defined inline or registered via a reference) can be looked up and reused. This decouples task metadata from runtime execution.
+Step	Component	Action
+1	Director	Completes with CONTINUATION status and evaluation_request
+2	System	Clears all environment vars except last_evaluator_output
+3	Evaluator	Executes and writes output to env.last_evaluator_output
+4	Director (resume)	Receives an EvaluationResult as input—`success` is true if evaluation succeeded, and `feedback` contains any error message (or null).
+5	System	Clears last_evaluator_output after director consumes it
+4. XML Schema Changes
 
-#### Data Structure & Interface
-```python
-class TaskDefinition:
-    def __init__(self, name, type, subtype, metadata, ast_node):
-        self.name = name            # Unique task identifier
-        self.type = type            # e.g., "atomic" or "composite"
-        self.subtype = subtype      # e.g., "director", "evaluator", etc.
-        self.metadata = metadata    # Parameter schemas, return specs, etc.
-        self.ast_node = ast_node    # Parsed AST for the task
+xml
+Copy
+<task type="director">
+    <output_slot>last_evaluator_output</output_slot>
+</task>
 
-class TaskLibrary:
-    def __init__(self):
-        # Organize tasks by type; each type maps to a dict of subtypes to tasks.
-        self.tasks = {
-            'atomic': {},
-            'composite': {},
-            # Other task categories as needed.
-        }
-    
-    def register_task(self, task_def: TaskDefinition):
-        """Registers a new task definition. Raises an error if duplicate."""
-        type_dict = self.tasks.setdefault(task_def.type, {})
-        subtype_dict = type_dict.setdefault(task_def.subtype, {})
-        if task_def.name in subtype_dict:
-            raise ValueError(f"Task {task_def.name} is already registered.")
-        subtype_dict[task_def.name] = task_def
+<task type="evaluator">
+    <input_source>last_evaluator_output</input_source>
+</task>
+Run HTML
+5. Implementation Requirements
 
-    def get_task(self, name: str) -> TaskDefinition:
-        """Looks up a task by name across all types and subtypes."""
-        for type_group in self.tasks.values():
-            for subtype_group in type_group.values():
-                if name in subtype_group:
-                    return subtype_group[name]
-        raise KeyError(f"Task {name} not found.")
-```
+a. Environment Manager
 
-#### Integration Notes
-- The global environment (see Section 3.1) stores the TaskLibrary (e.g., under the key "taskLibrary").
-- When a FunctionCall is executed, it uses env.find("taskLibrary") to retrieve the registry regardless of the current nested environment.
+typescript
+Copy
+function prepareContinuationEnv(currentEnv: Environment): Environment {
+    return new Environment({
+        last_evaluator_output: currentEnv.get('last_evaluator_output')
+    });
+}
+b. Evaluator Output Handler
 
-### 3.3 FunctionCall AST Node for DSL Function Calling
+typescript
+Copy
+function storeEvaluatorResult(result: TaskResult, env: Environment) {
+    env.set('last_evaluator_output', result.content);
+    env.clearExcept(['last_evaluator_output']);
+}
+c. Director Input Binding
 
-#### Purpose
-Enable tasks to be called like functions. Both atomic tasks and composite tasks are callable using a uniform interface that creates a new execution context.
+xml
+Copy
+<input name="evaluation_data">
+    <task>
+        <description>Retrieve last evaluator output</description>
+        <source_var>last_evaluator_output</source_var>
+    </task>
+</input>
+Run HTML
+6. Benefits
 
-#### Implementation
-```python
-class FunctionCall(ASTNode):
-    def __init__(self, func_name, args):
-        self.func_name = func_name  # The name of the task/function to be invoked.
-        self.args = args            # A list of AST nodes representing arguments.
+Reduces context window usage by 60-80% (avg 5-step sequences)
 
-    def eval(self, env: Env):
-        # Retrieve the TaskLibrary from the environment chain.
-        task_library = env.find("taskLibrary")["taskLibrary"]
-        task_def = task_library.get_task(self.func_name)
-        
-        # Create a child environment that inherits from the current one.
-        # This child environment is used for executing the task.
-        func_env = Env(outer=env)
-        
-        # Bind parameters to arguments, assuming task_def.metadata defines a list of parameter names.
-        parameters = task_def.metadata.get("parameters", [])
-        for param, arg_node in zip(parameters, self.args):
-            func_env[param] = arg_node.eval(env)
-        
-        # Evaluate the task's AST node using the new environment.
-        result = task_def.ast_node.eval(func_env)
-        return result
-```
+Eliminates historical output storage needs
 
-#### Key Points
-- The FunctionCall node looks up the task definition from the TaskLibrary.
-- It creates a new child environment (via the nested Env model) that automatically inherits global objects (like the TaskLibrary).
-- Parameter binding occurs by evaluating each argument in the caller's environment.
-- The task's AST is then executed in this fresh environment, ensuring proper lexical scoping.
+Simplifies error recovery (single output to validate)
 
-### 3.4 XML Schema Extensions
-While the external XML syntax remains backward compatible, the following optional attributes are added for future–proofing and reference resolution:
+Maintains single source of truth for evaluation data
 
-```diff
-<xs:element name="task">
-  <xs:complexType>
-    <xs:attribute name="type" use="required">
-      <xs:simpleType>
-        <xs:restriction base="xs:string">
-          <xs:enumeration value="atomic"/>
-          <xs:enumeration value="sequential"/>
-          <xs:enumeration value="reduce"/>
-+         <xs:enumeration value="script"/>
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
-+   <xs:attribute name="ref" type="xs:string" use="optional"/>
-+   <xs:attribute name="subtype" type="xs:string" use="optional"/>
-  </xs:complexType>
-</xs:element>
-```
+7. Transition Plan
 
-#### Notes
-- The optional ref attribute enables a task node to reference a pre–registered task in the TaskLibrary.
-- The optional subtype attribute refines the task type (e.g., distinguishing director vs. evaluator in atomic tasks).
+Update XML schema first (backwards compatible)
 
-### 3.5 Conditional Primitive (cond) with JSON Output Enforcement
+Modify environment management subsystem
 
-#### Purpose
-Allow tasks to conditionally execute based on the structure of their outputs. In this design, tasks that are candidates for conditional execution must produce JSON–formatted output.
+Update director/evaluator template definitions
 
-#### Evaluator Helper Function Example
-```python
-import json
+Phase out legacy accumulation logic
 
-def eval_cond(condition_expr, env: Env):
-    """
-    Evaluates a condition against the last task output stored in env.last_output.
-    Raises TASK_FAILURE if the output is not valid JSON.
-    """
-    try:
-        output = json.loads(env.get("last_output", "{}"))
-    except json.JSONDecodeError:
-        raise Exception("TASK_FAILURE: Task output must be valid JSON for conditionals.")
-    
-    # Use Python's eval (with a safe namespace) to evaluate the condition.
-    if eval(condition_expr, {"output": output}):
-        return True
-    else:
-        return False
-```
+Update documentation (errorspec.md and operators.md)
 
-#### DSL XML Example
-```xml
-<cond>
-    <case test="output.valid == true">
-        <task type="atomic" subtype="success_handler">
-            <description>Handle success</description>
-        </task>
-    </case>
-    <case test="output.errors > 0">
-        <task type="atomic" subtype="error_handler">
-            <description>Handle error</description>
-        </task>
-    </case>
-</cond>
-```
-
-#### Integration Notes
-- The evaluator uses the eval_cond helper to check conditions before selecting which task branch to execute.
-- This primitive bridges the DSL's control flow constructs with the need for structured (JSON) task output.
-
-## 4. Phased Implementation Roadmap
-
-### Phase 1: Minimal Implementation (MVP)
-
-#### Inline Task Support
-- Continue to support in–lined XML task definitions; tasks are directly embedded in the AST.
-
-#### Basic Function Calling
-- Implement the FunctionCall node as described above. Use a temporary TaskLibrary built during compilation.
-
-#### Nested Environment Model
-- Replace the flat environment model with the nested Env class. Initialize the global environment with built–in variables and the TaskLibrary.
-
-#### Conditional Primitive
-- Add support for the cond primitive that requires task outputs to be JSON–formatted.
-
-#### XML Compatibility
-- No external changes are required; XML remains unchanged apart from optional attributes that future phases can use.
-
-### Phase 2: Hybrid Model
-
-#### Task Registration
-- Introduce a persistent TaskLibrary component that registers tasks from XML files (using the ref attribute).
-
-#### Reference Resolution
-- Update the Compiler so that when a task node has a ref attribute, the Evaluator retrieves the task definition from the TaskLibrary.
-
-#### Environment Propagation
-- Verify that every new environment created during function calls properly inherits the global TaskLibrary and built–in variables.
-
-### Phase 3: Mature First–Class Functions
-
-#### Full Function Abstraction
-- Support parameterized, first–class task functions including potential closure–like behavior.
-
-#### Extended DSL Syntax
-- Introduce syntax (possibly a Lisp–like dialect or extended XML) for function definitions and calls.
-
-#### Evaluator Refactoring
-- Integrate the new function–calling mechanism throughout the system, including support for dynamic sub–task spawning and chaining.
-
-#### Enhanced Conditional & Output Validation
-- Refine the conditional primitive to support richer JSON–based decision making and output validation.
-
-## 5. Testing and Verification
-
-### Environment Lookup
-Verify that a child environment (e.g., created during a FunctionCall) can successfully use env.find('taskLibrary') to access the global TaskLibrary.
-
-### FunctionCall Evaluation
-Test that a FunctionCall node correctly looks up the task definition, creates a new environment with parameter bindings, and returns the expected result.
-
-### Conditional Execution
-Execute tasks with a cond block and verify that non–JSON outputs trigger a TASK_FAILURE error and that valid JSON outputs correctly guide execution.
-
-### XML Schema and Reference Resolution
-Validate that tasks defined with the optional ref and subtype attributes are correctly resolved during evaluation without altering existing XML–based workflows.
-
-## 6. Advantages and Justification
-
-### Unified Environment Resolution
-The nested environment model simplifies variable and global object lookups by allowing child tasks to transparently access the TaskLibrary and built–ins.
-
-### Decoupling of Task Metadata
-With a dedicated TaskLibrary, task definitions are managed independently of runtime execution. This decoupling supports reuse, modularity, and a phased migration from inline tasks.
-
-### Seamless DSL Function Calling
-The new FunctionCall node allows tasks to be treated uniformly as callable procedures. Parameter binding and return–value handling are consistent with the new environment model.
-
-### Backward Compatibility
-External XML syntax remains unchanged (except for optional extensions), ensuring that existing workflows and error–handling semantics continue to function.
-
-### Extensibility
-The phased roadmap allows the system to start with a minimal, stable MVP and then evolve toward more complex features (such as closures, extended DSL syntax, and dynamic sub–task spawning) without disrupting the core execution model.
-to the model instead of a global variable. 
+This achieves minimal context carryover while maintaining essential feedback loop functionality.
 ---
 QA:
 Open questions:
@@ -563,13 +365,239 @@ UPDATE src/process.py:
 
 
 <architectural_impact>
+memory_usage
+error_handling
+context_management
+resource_tracking
+component_coupling
 backwards_compatibility
-new_dependencies
-complexity_changes
-performance_considerations
 </architectural_impact>
 
 <context_files>
+=== system/contracts/protocols.md ===
+# System Protocols
+
+## Task Template Schema [Contract:Tasks:TemplateSchema:1.0]
+
+**Note:** This document is the authoritative specification for the XML schema used in task template definitions. All field definitions, allowed enumerations (such as for `<inherit_context>` and `<accumulation_format>`), and validation rules are defined here. For complete validation guidelines, please see Appendix A in [Contract:Resources:1.0].
+
+The task template schema defines the structure for XML task template files and maps to the TaskTemplate interface.
+
+### XML Schema Definition
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="task">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="description" type="xs:string"/>
+        <xs:element name="context_management">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="inherit_context">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:enumeration value="full"/>
+                    <xs:enumeration value="none"/>
+                    <xs:enumeration value="subset"/>
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="accumulate_data" type="xs:boolean" minOccurs="0"/>
+              <xs:element name="accumulation_format" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:enumeration value="full_output"/>
+                    <xs:enumeration value="notes_only"/>
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="steps">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="task" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="description" type="xs:string"/>
+                    <xs:element name="inputs" minOccurs="0">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="input" maxOccurs="unbounded">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="task">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element name="description" type="xs:string"/>
+                                    </xs:sequence>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                              <xs:attribute name="name" type="xs:string" use="required"/>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="inputs" minOccurs="0">             <!-- Maps to inputs -->
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="input" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:string">
+                      <xs:attribute name="name" type="xs:string" use="required"/>
+                      <xs:attribute name="from" type="xs:string" use="optional"/>
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="manual_xml" type="xs:boolean" minOccurs="0" default="false"/>      <!-- Maps to isManualXML -->
+        <xs:element name="disable_reparsing" type="xs:boolean" minOccurs="0" default="false"/> <!-- Maps to disableReparsing -->
+      </xs:sequence>
+      <xs:attribute name="ref" type="xs:string" use="optional"/>
+      <xs:attribute name="subtype" type="xs:string" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="cond">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="case" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:attribute name="test" type="xs:string" use="required"/>
+            <xs:sequence>
+              <xs:element name="task" minOccurs="1" maxOccurs="1">
+                <!-- Task definition inside case -->
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+```
+
+### Script Execution Support
+
+The XML task template schema now supports defining tasks for script execution within sequential tasks. These tasks enable:
+ - Command Specification: Defining external commands (e.g. bash scripts) to be executed.
+ - Input/Output Contracts: Passing the director's output as input to the script task, and capturing the script's output for subsequent evaluation.
+Script execution errors (e.g. non-zero exit codes) are treated as generic TASK_FAILURE conditions. The evaluator captures the script's stdout and stderr in a designated notes field for downstream decision-making.
+
+Example:
+```xml
+<task type="sequential">
+  <description>Static Director-Evaluator Pipeline</description>
+  <context_management>
+    <inherit_context>none</inherit_context>
+    <accumulate_data>true</accumulate_data>
+    <accumulation_format>notes_only</accumulation_format>
+  </context_management>
+  <steps>
+    <task>
+      <description>Generate Initial Output</description>
+    </task>
+    <task type="script">
+      <description>Run Target Script</description>
+      <inputs>
+        <input name="director_output">
+          <task>
+            <description>Pass director output to script</description>
+          </task>
+        </input>
+      </inputs>
+      <!-- The script task captures stdout and stderr in the notes field.
+           Non-zero exit codes are treated as TASK_FAILURE. -->
+    </task>
+    <task>
+      <description>Evaluate Script Output</description>
+      <inputs>
+        <input name="script_output">
+          <task>
+            <description>Process output from target script</description>
+          </task>
+        </input>
+      </inputs>
+    </task>
+  </steps>
+</task>
+```
+
+This extension to the schema ensures a clear definition of script execution tasks within a sequential workflow.
+
+### Field Definitions
+
+- The optional `ref` attribute is used to reference a pre-registered task in the TaskLibrary.
+- The optional `subtype` attribute refines the task type (for example, indicating "director", "evaluator", etc.)
+
+Example:
+```xml
+<cond>
+  <case test="output.valid == true">
+    <task type="atomic" subtype="success_handler">
+      <description>Handle success</description>
+    </task>
+  </case>
+  <case test="output.errors > 0">
+    <task type="atomic" subtype="error_handler">
+      <description>Handle errors</description>
+    </task>
+  </case>
+</cond>
+```
+All required and optional fields (including `instructions`, `system`, `model`, and `inputs`) are defined by this schema. For full details and allowed values, please see Appendix A in [Contract:Resources:1.0].
+
+### Example Template
+
+```xml
+<task>
+  <instructions>Analyze the given code for readability issues.</instructions>
+  <system>You are a code quality expert focused on readability.</system>
+  <model>claude-3-sonnet</model>
+  <!-- The criteria element provides a free-form description used for dynamic evaluation template selection via associative matching -->
+  <criteria>validate, log</criteria>
+  <inputs>
+    <input name="code">The code to analyze</input>
+  </inputs>
+  <manual_xml>false</manual_xml>
+  <disable_reparsing>false</disable_reparsing>
+</task>
+```
+
+### Validation Rules
+
+1. All required fields must be present
+2. Input names must be unique
+3. Boolean fields must be "true" or "false"
+4. Model must be a valid LLM identifier
+
+### Interface Mapping
+
+This schema is used by the TaskSystem component. For implementation details and interface definitions, see:
+- TaskTemplate interface in spec/types.md [Type:TaskSystem:TaskTemplate:1.0]
+- Template validation in TaskSystem.validateTemplate() 
+- Template parsing in TaskSystem constructor
+
+Note: The new XML attributes (`ref` and `subtype`) and the `<cond>` element map to the corresponding types (i.e., TaskDefinition and FunctionCall) used in the Task System.
+
+### Map Pattern Implementation
+Refer to the XML schema for correct usage. For a complete example, please see the Task System documentation.
+
+
 === components/task-system/spec/types.md ===
 # Task System Types
 
@@ -622,7 +650,7 @@ interface RevisedTaskResult {
  *   - "none" for no inheritance, and
  *   - "subset" for selective inheritance.
  */
-interface ContextManagement {
+export interface ContextManagement {
     inheritContext: 'full' | 'none' | 'subset';
     accumulateData: boolean;
     accumulationFormat: 'full_output' | 'notes_only';
@@ -649,6 +677,11 @@ interface TaskTemplate {
 ```
 
 ## AST Types
+
+export interface FunctionCall extends ASTNode {
+    funcName: string;
+    args: ASTNode[];
+}
 ```typescript
 interface OperatorSpec {
     type: TaskType;
@@ -666,7 +699,49 @@ interface ASTNode {
 }
 ```
 
+export interface Environment {
+    bindings: Record<string, any>;
+    outer?: Environment;
+    /**
+     * Perform a lexical lookup for varName.
+     * Returns the value if found; otherwise, throws an error.
+     */
+    find(varName: string): any;
+}
+
 ## Resource Management Types
+
+export interface TaskDefinition {
+    name: string;                     // Unique task identifier
+    isatomic: boolean;
+    type: TaskType;                   // e.g., "atomic" or "sequential"
+    subtype?: string;                 // Optional subtype, e.g., "director", "evaluator", etc.
+    metadata?: Record<string, any>;   // Parameter schemas, return specs, etc.
+    astNode: ASTNode;                 // Parsed AST for the task
+}
+
+export class TaskLibrary {
+    private tasks: Map<string, TaskDefinition>;
+
+    constructor() {
+        this.tasks = new Map();
+    }
+
+    public registerTask(taskDef: TaskDefinition): void {
+        if (this.tasks.has(taskDef.name)) {
+            throw new Error(`Task ${taskDef.name} is already registered.`);
+        }
+        this.tasks.set(taskDef.name, taskDef);
+    }
+
+    public getTask(name: string): TaskDefinition {
+        const taskDef = this.tasks.get(name);
+        if (!taskDef) {
+            throw new Error(`Task ${name} not found in TaskLibrary.`);
+        }
+        return taskDef;
+    }
+}
 ```typescript
 interface HandlerConfig {
     maxTurns: number;
@@ -778,99 +853,6 @@ interface TemplateValidation extends ValidationResult {
 4. All resource limits and metrics are enforced per-Handler
 
 
-=== components/task-system/spec/interfaces.md ===
-# Task System Interfaces
-
-// For core type definitions (e.g. TaskResult, TaskTemplate, TaskType, AtomicTaskSubtype),
-// please refer to components/task-system/spec/types.md.
-
-import { MemorySystem } from "../../memory/api/interfaces";
-
-/**
- * TaskSystem Interface
- * 
- * Provides methods to execute tasks, validate templates, and find matching templates.
- */
-export interface TaskSystem {
-    executeTask(
-        task: string,
-        memory: MemorySystem,
-        taskType?: "atomic" | "sequential" | "reduce" | "script"
-    ): Promise<TaskResult>;
-
-    validateTemplate(template: TaskTemplate): boolean;
-    
-    findMatchingTasks(
-        input: string,
-        context: MemorySystem
-    ): Promise<Array<{
-        template: TaskTemplate;
-        score: number;
-        taskType: "atomic" | "sequential" | "reduce" | "script";
-    }>>;
-}
-
-// Handler interface details are maintained in external documentation.
- * Memory management interface focused on metadata
- */
-type FileMetadata = string;
-
-type GlobalIndex = Map<string, FileMetadata>;
-
-type FileMatch = [string, string | undefined];
-
-interface AssociativeMatchResult {
-    context: string;      // Unstructured data context
-    matches: FileMatch[]; // Relevant file matches
-}
-
-interface MemorySystem {
-    // Get global file metadata index
-    getGlobalIndex(): Promise<GlobalIndex>;
-    
-    // Update global file metadata index
-    updateGlobalIndex(index: GlobalIndex): Promise<void>;
-}
-```
-
-### Handler Interface
-```typescript
-/**
- * Types specific to Handler interface
- */
-interface HandlerConfig {
-    maxTurns: number;
-    maxContextWindowFraction: number;
-    defaultModel?: string;
-    systemPrompt: string;
-}
-
-/**
- * LLM interaction interface
- * Uses [Type:TaskSystem:ResourceMetrics:1.0], [Type:TaskSystem:ResourceLimits:1.0]
- */
-interface Handler {
-    /**
-     * Execute a prompt with the LLM
-     * @param systemPrompt - System-level context and instructions
-     * @param taskPrompt - Task-specific input
-     * @returns Promise resolving to LLM response
-     */
-    executePrompt(
-        systemPrompt: string,
-        taskPrompt: string
-    ): Promise<string>;
-
-    /**
-     * Callback for handling agent input requests
-     * @param agentRequest - The agent's request for user input
-     * @returns Promise resolving to user's input
-     */
-    onRequestInput: (agentRequest: string) => Promise<string>;
-}
-```
-
-
 === components/evaluator/README.md ===
 # Evaluator Component
 
@@ -900,7 +882,21 @@ The **Evaluator** is the unified task-execution component of the system. It is r
 
 In many existing code examples (both TypeScript-like and Scheme-like), the system calls an `eval` or `apply` function that effectively belongs to the Evaluator domain. When direct execution fails, a decomposition or reparse step is triggered, also under the Evaluator's responsibility.
 
----
+## 3.1 Nested Environment Model Integration
+
+The Environment class supports nested scopes via an "outer" reference. The Evaluator creates a global environment (globalEnv) that includes built-in variables along with an instance of TaskLibrary (e.g., globalEnv.bindings["taskLibrary"] = taskLibrary). A new child environment is created for each task or function call.
+
+```typescript
+// Example Environment implementation
+class Env implements Environment {
+    constructor(public bindings: Record<string, any> = {}, public outer?: Environment) {}
+    find(varName: string): any {
+        return (varName in this.bindings)
+            ? this.bindings[varName]
+            : this.outer ? this.outer.find(varName) : throw new Error(`Variable ${varName} not found`);
+    }
+}
+```
 
 ## Responsibilities and Role
 
@@ -918,14 +914,38 @@ In many existing code examples (both TypeScript-like and Scheme-like), the syste
    - Not purely "owns" resource tracking (that's part of the Handler), but integrates with it. The Evaluator is aware of usage or limit errors and decides whether to attempt decomposition or fail outright.  
 
 4. **Context and Environment Handling**  
-   - In multi-step or operator-based tasks (sequential, reduce, etc.), the Evaluator ensures the proper propagation of the environment and partial context.
+   - In multi-step or operator-based tasks (sequential, reduce, etc.), the Evaluator ensures the proper propagation of the environment and partial context. Every new task or function call execution uses a child environment (based on the parent environment or the global environment, depending on the XML attribute `inherit_context`), thereby ensuring that the TaskLibrary and any built-in variables remain accessible through the environment chain.
    - The Evaluator leverages the Memory System for associative context retrieval but does not manage file content directly.  
 
 5. **Integration with Task System**  
    - The Task System may call the Evaluator with a structured or partially structured task. The Evaluator then "executes" it by walking its representation (e.g., an AST or an XML-based operator chain).  
    - On error or partial success, the Evaluator can signal the Task System to orchestrate higher-level recovery or store partial results.  
 
----
+## 3.3 FunctionCall AST Node for DSL Function Calling
+
+The FunctionCall node is used to invoke a task functionally by looking up its definition in the TaskLibrary. When a FunctionCall is evaluated, the Evaluator:
+- Uses env.find("taskLibrary") to retrieve the registry;
+- Looks up the task by its funcName;
+- Creates a child environment (e.g., new Env({}, env));
+- Binds the parameters from task_def.metadata to the evaluated arguments;
+- And finally calls taskDef.astNode.eval(newEnv) to get the result.
+
+```typescript
+// Example FunctionCall evaluation
+class FunctionCallNode implements FunctionCall {
+    constructor(public funcName: string, public args: ASTNode[]) {}
+    async eval(env: Environment): Promise<any> {
+        const taskLibrary = env.find("taskLibrary")["taskLibrary"];
+        const taskDef = taskLibrary.getTask(this.funcName);
+        const funcEnv = new Env({}, env);
+        const parameters: string[] = taskDef.metadata?.parameters || [];
+        for (let i = 0; i < parameters.length && i < this.args.length; i++) {
+            funcEnv.bindings[parameters[i]] = await this.args[i].eval(env);
+        }
+        return await taskDef.astNode.eval(funcEnv);
+    }
+}
+```
 
 ## Metacircular Approach
 
@@ -1077,502 +1097,313 @@ When a multi-step sequence is run, each subtask is executed in turn. The Evaluat
 **Important**: Because subtask outputs can be large, the system should either store them as short notes or partial references. The data accumulation approach can be toggled with `accumulateData` (in `ContextManagement`), plus an `accumulationFormat` indicating whether to store full outputs or only summary notes.
 
 
-=== system/contracts/protocols.md ===
-# System Protocols
+=== components/task-system/impl/design.md ===
+# Implementation Design
 
-## Task Template Schema [Contract:Tasks:TemplateSchema:1.0]
+## Terminology and References
 
-**Note:** This document is the authoritative specification for the XML schema used in task template definitions. All field definitions, allowed enumerations (such as for `<inherit_context>` and `<accumulation_format>`), and validation rules are defined here. For complete validation guidelines, please see Appendix A in [Contract:Resources:1.0].
+ - **Handler** and **Evaluator** definitions are standardized in [spec/types.md](../spec/types.md).
+ - XML schema definitions are available in [system/contracts/protocols.md](../system/contracts/protocols.md).
+ - For detailed resource tracking implementation (including turn counter and context window monitoring), see [resource-management.md](./resource-management.md).
+ - For XML processing details (parsing, validation, and fallback behavior), refer to [xml-processing.md](./xml-processing.md).
 
-The task template schema defines the structure for XML task template files and maps to the TaskTemplate interface.
-
-### XML Schema Definition
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <xs:element name="task">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element name="description" type="xs:string"/>
-        <xs:element name="context_management">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="inherit_context">
-                <xs:simpleType>
-                  <xs:restriction base="xs:string">
-                    <xs:enumeration value="full"/>
-                    <xs:enumeration value="none"/>
-                    <xs:enumeration value="subset"/>
-                  </xs:restriction>
-                </xs:simpleType>
-              </xs:element>
-              <xs:element name="accumulate_data" type="xs:boolean" minOccurs="0"/>
-              <xs:element name="accumulation_format" minOccurs="0">
-                <xs:simpleType>
-                  <xs:restriction base="xs:string">
-                    <xs:enumeration value="full_output"/>
-                    <xs:enumeration value="notes_only"/>
-                  </xs:restriction>
-                </xs:simpleType>
-              </xs:element>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-        <xs:element name="steps">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="task" maxOccurs="unbounded">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="description" type="xs:string"/>
-                    <xs:element name="inputs" minOccurs="0">
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element name="input" maxOccurs="unbounded">
-                            <xs:complexType>
-                              <xs:sequence>
-                                <xs:element name="task">
-                                  <xs:complexType>
-                                    <xs:sequence>
-                                      <xs:element name="description" type="xs:string"/>
-                                    </xs:sequence>
-                                  </xs:complexType>
-                                </xs:element>
-                              </xs:sequence>
-                              <xs:attribute name="name" type="xs:string" use="required"/>
-                            </xs:complexType>
-                          </xs:element>
-                        </xs:sequence>
-                      </xs:complexType>
-                    </xs:element>
-                  </xs:sequence>
-                </xs:complexType>
-              </xs:element>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-        <xs:element name="inputs" minOccurs="0">             <!-- Maps to inputs -->
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="input" maxOccurs="unbounded">
-                <xs:complexType>
-                  <xs:simpleContent>
-                    <xs:extension base="xs:string">
-                      <xs:attribute name="name" type="xs:string" use="required"/>
-                      <xs:attribute name="from" type="xs:string" use="optional"/>
-                    </xs:extension>
-                  </xs:simpleContent>
-                </xs:complexType>
-              </xs:element>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-        <xs:element name="manual_xml" type="xs:boolean" minOccurs="0" default="false"/>      <!-- Maps to isManualXML -->
-        <xs:element name="disable_reparsing" type="xs:boolean" minOccurs="0" default="false"/> <!-- Maps to disableReparsing -->
-      </xs:sequence>
-    </xs:complexType>
-  </xs:element>
-</xs:schema>
-```
-
-### Script Execution Support
-
-The XML task template schema now supports defining tasks for script execution within sequential tasks. These tasks enable:
- - Command Specification: Defining external commands (e.g. bash scripts) to be executed.
- - Input/Output Contracts: Passing the director's output as input to the script task, and capturing the script's output for subsequent evaluation.
-Script execution errors (e.g. non-zero exit codes) are treated as generic TASK_FAILURE conditions. The evaluator captures the script's stdout and stderr in a designated notes field for downstream decision-making.
-
-Example:
-```xml
-<task type="sequential">
-  <description>Static Director-Evaluator Pipeline</description>
-  <context_management>
-    <inherit_context>none</inherit_context>
-    <accumulate_data>true</accumulate_data>
-    <accumulation_format>notes_only</accumulation_format>
-  </context_management>
-  <steps>
-    <task>
-      <description>Generate Initial Output</description>
-    </task>
-    <task type="script">
-      <description>Run Target Script</description>
-      <inputs>
-        <input name="director_output">
-          <task>
-            <description>Pass director output to script</description>
-          </task>
-        </input>
-      </inputs>
-      <!-- The script task captures stdout and stderr in the notes field.
-           Non-zero exit codes are treated as TASK_FAILURE. -->
-    </task>
-    <task>
-      <description>Evaluate Script Output</description>
-      <inputs>
-        <input name="script_output">
-          <task>
-            <description>Process output from target script</description>
-          </task>
-        </input>
-      </inputs>
-    </task>
-  </steps>
-</task>
-```
-
-This extension to the schema ensures a clear definition of script execution tasks within a sequential workflow.
-
-### Field Definitions
-All required and optional fields (including `instructions`, `system`, `model`, and `inputs`) are defined by this schema. For full details and allowed values, please see Appendix A in [Contract:Resources:1.0].
-
-### Example Template
-
-```xml
-<task>
-  <instructions>Analyze the given code for readability issues.</instructions>
-  <system>You are a code quality expert focused on readability.</system>
-  <model>claude-3-sonnet</model>
-  <!-- The criteria element provides a free-form description used for dynamic evaluation template selection via associative matching -->
-  <criteria>validate, log</criteria>
-  <inputs>
-    <input name="code">The code to analyze</input>
-  </inputs>
-  <manual_xml>false</manual_xml>
-  <disable_reparsing>false</disable_reparsing>
-</task>
-```
-
-### Validation Rules
-
-1. All required fields must be present
-2. Input names must be unique
-3. Boolean fields must be "true" or "false"
-4. Model must be a valid LLM identifier
-
-### Interface Mapping
-
-This schema is used by the TaskSystem component. For implementation details and interface definitions, see:
-- TaskTemplate interface in spec/types.md [Type:TaskSystem:TaskTemplate:1.0]
-- Template validation in TaskSystem.validateTemplate() 
-- Template parsing in TaskSystem constructor
-
-### Map Pattern Implementation
-Refer to the XML schema for correct usage. For a complete example, please see the Task System documentation.
-
-
-=== system/architecture/patterns/resource-management.md ===
-# Resource Management Pattern [Pattern:ResourceManagement:1.0]
-
-## Purpose & Constraints
-This document defines the resource management strategy for the task execution system. It covers:
- - Memory Hierarchy
- - Resource Tracking (turn counts, context window, token usage)
- - Warning Thresholds (e.g. 80% limits)
- - Cleanup Procedures
-
-**Note:** Warning signals are purely informative; hard limits trigger termination.
-
-## Core Components
-
-### Memory Hierarchy
-1. **Long‑term Memory:** Stores data and procedures; accessed via the Memory System (read‑only during task execution).
-2. **Working Memory:** The active computation space (task‑specific context) managed through Environment objects; cleared after task completion.
-3. **Context Frames:** Capture complete execution environments (bindings and working memory) using a minimal‑context extension pattern.
-
-### Resource Tracking
-
-The Handler is responsible for:
- - Tracking turn counts and enforcing limits.
- - Monitoring context window usage (tokens) with warning thresholds (e.g. 80%) and hard limits.
- - Reporting resource metrics for error handling.
-
-### Resource Tracking
-
-#### Handler Responsibility
+## Handler Implementation
+### Session Management Strategy
 - One Handler per task execution
-- Tracks resource usage:
-  * Turn counts
-  * Context window size
-  * Token usage
-  * Peak usage statistics
-- Enforces resource limits
-- Manages clean termination
+- Create new Handler instance per executeTask call
+- Configure with immutable resource limits
+- Set system prompt during initialization
+- Clean session termination on completion
+  
+### Resource Tracking Implementation
+- Turn counter per Handler
+- Context window size monitoring
+- Token usage tracking
+- Resource limit enforcement
+- No cross-Handler resource sharing
 
-#### Isolation Requirements
-- No cross-Handler resource pooling
-- Per-session resource isolation
-- Clean resource release on completion
-- Independent Handler execution
-
-### Context Management
-
-#### Window Management
-- Token-based calculation
-- Explicit size monitoring
-- Fraction-based limits
-- No content optimization
-- Warning thresholds at 80%
-- Hard limits with error handling
-
-#### Context Preservation
-- Context frames capture environments
-- Minimal required context per task
-- Associative memory mediation
-- Clean extension mechanism
-
-## Resource Configuration
-
-### Default Configuration
-- Base resource limits
-- Warning thresholds
-- Default turn counts
-- Context window limits
-
-### Per-Task Overrides
-- Task-specific limits
-- Custom thresholds
-- Resource constraints
-- Performance targets
-
-## Interactions
-
-### With Memory System [Component:MemorySystem:1.0]
-- Provides long-term storage
-- Manages context persistence
-- Handles file operations
-- Maintains memory hierarchy
-
-### With Task System [Component:TaskSystem:1.0]
-- Creates/manages Handlers
-- Enforces resource limits
-- Manages task execution
-- Handles resource errors
-
-### With Handler [Component:Handler:1.0]
-- Tracks resource usage
-- Enforces limits
-- Manages session lifecycle
-- Reports resource metrics
-
-## Implementation Requirements
-
-### Resource Tracking
-```typescript
-// Resource metrics definition moved to spec/types.md
-// See [Type:ResourceMetrics:1.0] for the complete interface
-```
-
-### Handler Configuration
-```typescript
-interface HandlerConfig {
-    maxTurns: number;
-    maxContextWindowFraction: number;
-    warningThreshold: number;
-    defaultModel?: string;
-    systemPrompt: string;
-}
-```
-
-## Error Handling
-
-### Resource Exhaustion
-- Immediate task termination
+### Error Propagation Design
+- Standard error type system
+- Immediate propagation on detection
 - Clean resource release
-- Error surfacing with metrics
-- No automatic retry
+- No retry attempt handling
+- Complete error context preservation
 
-### Context Overflow
-- Token limit enforcement
-- Warning at threshold
-- Clean termination
-- Context metrics reported
+### Interactive Session Support
+- Input detection capabilities
+- Agent-controlled input requests
+- Resource tracking during interaction
+- Input timeout handling
+- Cancellation support
 
-### Progress Failure
-- Resource accounting completion
-- State cleanup
-- Error propagation
-- Recovery guidance
+## Template Management
+### Storage Implementation
+- XML file-based storage
+- Disk-based persistence
+- Directory organization by type
+- Template versioning support
+- Schema validation enforcement
+  
+### Validation Implementation
+- Basic XML structure validation
+- Schema conformance checking
+- Warning generation for issues
+- Template field validation
+- Model availability checking
+  
+### Matching Algorithm Design
+- Scoring based on prompt results
+- Top-N candidate selection
+- Separate matching for human input vs AST
+- Score normalization
+- Clear ordering requirements
+  
+### XML Processing Details
+- Lenient parsing with fallback
+- Warning collection
+- Graceful degradation
+- Partial parsing support
+- Clear error locations
 
-### Sequential Task Resources
+## Resource Management
 
-For **sequential** tasks, the Evaluator maintains a step-by-step record of partial results and history, often called `SequentialHistory`. This history is **not** tracked against the Handler's context window limits. Instead:
+The Task System enforces resource limits via a per‑Handler turn counter and context window monitoring. For the complete low‑level implementation (including code examples and configuration details), please refer to [resource-management.md](./resource-management.md).
+  
+### Context Window Management
+- Token counting approach
+- Size limit enforcement
+- No optimization strategy
+- Window usage monitoring
+- Clear limit boundaries
+  
+### Limit Enforcement Strategy
+- Immediate termination on violation
+- Resource exhaustion error generation
+- Clean session cleanup
+- Resource usage reporting
+- Clear violation metrics
+  
+### Error Detection Mechanisms
+- Resource limit monitoring, progress tracking, output and XML structure validation, and input validation.
 
-- **Evaluator** owns the entire sequential history for multi-step tasks.
-- **Handler** continues to track standard resource usage (turns, tokens).
-- Because the sequential history is purely textual or metadata that the Evaluator stores separately, it does not consume the Handler's context window.
-- If the task is configured to accumulate data (`<accumulate_data>true</accumulate_data>`), the Evaluator may pass prior step outputs into `MemorySystem.getRelevantContextFor()`.
-- This separation ensures Handler resource metrics stay consistent and the Evaluator can keep any relevant partial outputs for as long as needed.
-- Once the sequential task completes (success or failure), the Evaluator discards (or archives) the sequential history to free memory.
+### Script Execution Implementation
+The system now supports executing external scripts as part of a static director-evaluator workflow. When a task of type "script" is encountered, the Handler:
+- Detects the "script" task type.
+- Executes the specified external command (e.g. a bash script).
+- Captures the command's standard output, error output, and exit code.
+- Passes the script's output to the subsequent evaluator task.
 
-This design ensures a clean boundary between higher-level multi-step results (owned by the Evaluator) and resource usage constraints (handled by the Handler).
-
-## Related Patterns
-- [Pattern:Error:1.0] - Error handling strategy
-- [Pattern:TaskExecution:1.0] - Task execution flow
-
-
-=== components/memory/api/interfaces.md ===
-# Memory System Interfaces [Interface:Memory:3.0]
-
-## Overview
-The Memory System provides two core capabilities:
-1. Global file metadata index maintenance for associative matching
-
-The system does not handle file content storage or retrieval.
-
-## Core Types
-
-/**
- * Represents metadata associated with a file
- * Stored as an unstructured string for flexibility
- */
-type FileMetadata = string;
-
-/**
- * Global index mapping file paths to their metadata
- * - Keys are absolute file paths
- * - Values are unstructured metadata strings
- */
-type GlobalIndex = Map<string, FileMetadata>;
-```
-
-A mapping of file paths to their associated metadata strings. **Note:** The Memory System is responsible only for providing file metadata (including file paths and unstructured metadata strings). All file I/O operations (reading, writing, deletion) are delegated to Handler tools. The index serves as a bootstrap mechanism for associative matching when full content scanning is not feasible.
-
-Key characteristics:
-- Keys are absolute file paths
-- Values are unstructured metadata strings
-- No hierarchical organization
-- Updated in bulk operations only
-
-### FileMatch
-```typescript
-type FileMatch = [string, string | undefined];
-```
-
-Represents a relevant file match from associative matching:
-- First element: Absolute file path
-- Second element: Optional metadata string providing context for this specific match
-
-### AssociativeMatchResult
-```typescript
-interface AssociativeMatchResult {
-    context: string;      // Unstructured data context
-    matches: FileMatch[]; // Relevant file matches
-}
-```
-
-The complete result of associative matching, containing:
-- Unstructured context data relevant to the current task
-- List of potentially relevant files with optional per-file context
-
-## Interface Methods
-
-
-### Index Management
-
-#### getGlobalIndex()
-```typescript
-getGlobalIndex(): Promise<GlobalIndex>
-```
-Retrieves the complete global file metadata index.
-
-#### updateGlobalIndex(index: GlobalIndex)
-```typescript
-updateGlobalIndex(index: GlobalIndex): Promise<void>
-```
-Performs a bulk update of the global file metadata index. Replaces the entire existing index.
-
-/**
- * Input structure for context generation requests
- */
-interface ContextGenerationInput {
-    previousOutputs?: string;   // Accumulated outputs from previous steps
-    inheritedContext?: string;  // Context inherited from parent tasks
-    taskText: string;          // The primary request text or task description
-}
-
-/**
- * Retrieve context using associative matching.
- * 
- * The Memory System does NOT perform ranking or prioritization of matches.
- * It only provides associative matching based on the input structure.
- *
- * @param input - The ContextGenerationInput containing task context
- * @returns A promise resolving to an AssociativeMatchResult object containing:
- *   - `context`: Unstructured text data relevant to the query
- *   - `matches`: An unordered list of file paths (and optional metadata) relevant to the query
- * @throws {INVALID_INPUT} If the input structure is malformed or missing required fields
- */
-declare function getRelevantContextFor(input: ContextGenerationInput): Promise<AssociativeMatchResult>;
+This design ensures that the director's output flows seamlessly through the script execution step before final evaluation.
 
 ## Integration Points
-- Handler: Uses file paths from AssociativeMatchResult to read files via tools
-- Associative Matching: Uses GlobalIndex as basis for context generation in tasks
+### Memory System Interaction
+- Uses Anthropic's computer use tools for file operations.
+- Read-only access.
+- No state maintenance.
+- Clear context boundaries.
+- Standard memory structure.
+  
+### Compiler Integration
+- Task parsing services
+- XML validation
+- Schema conformance
+- Error surfacing
+- Validation feedback
+  
+### Evaluator Support
+- Error surfacing
+- Reparse template support
+- No retry management
+- State preservation
+- Recovery guidance
+  
+### LLM Session Management
+- Handler encapsulation
+- Resource tracking
+- Model selection support
+- Clean termination
+- Session isolation
+
+
+=== system/architecture/patterns/director-evaluator.md ===
+# Director‑Evaluator Pattern [Pattern:DirectorEvaluator:1.1]
+
+**Canonical Reference:** This document is the authoritative description of the Director‑Evaluator Pattern. All extended descriptions in planning or misc files should refer here.
+
+## Overview
+
+The Director-Evaluator pattern is a specialized variant of the unified task‐subtask execution model. In this pattern, a parent task (the **Director**) produces an initial output that may require further evaluation. Instead of relying on a statically defined callback step, the evaluation subtask is spawned dynamically when the Director's output returns with a `CONTINUATION` status and an `evaluation_request` object in its `notes`.
+
+**Note:** The `evaluation_request` object must include:
+ - `type`: a string indicating the evaluation type,
+ - `criteria`: a free-form string providing descriptive criteria used for dynamic evaluation template selection via associative matching,
+ - `target`: a string representing the target (for example, the bash script command to run or the evaluation focus).
+
+## Pattern Description
+
+This pattern follows a three-phase flow:
+
+1. **Parent Task (Director):**
+   - Generates an initial output based on the user's instructions.
+   - May return a result with `status: 'CONTINUATION'` and a populated `evaluation_request` in its `notes`.
+   - Uses a `<context_management>` block with `inherit_context` set to `none` to start a new execution chain.
+
+2. **Evaluation Trigger via Continuation:**
+   - Rather than a fixed callback subtask, the evaluation step is triggered dynamically when the Director task returns a `CONTINUATION` status.
+   - The embedded `evaluation_request` specifies both:
+       - The **bash script** (or external callback mechanism) to execute, and
+       - The **target** string that describes the aspects of the output requiring evaluation.
+   - The Evaluator uses this information—with associative matching—to select an appropriate evaluation task template.
+
+3. **Child Task (Evaluator):**
+   - Is dynamically spawned by the Evaluator when it detects a `CONTINUATION` status along with an `evaluation_request` in the Director's output.
+   - Uses a `<context_management>` block with `inherit_context` set to `subset` and `accumulate_data` enabled to incorporate only the relevant context.
+   - Executes the evaluation subtask—which may include invoking the specified bash script via the Handler or Evaluator—and feeds its results back to the parent task so that the Director may continue its sequence.
+
+### Example Workflow
+
+Below is a conceptual example (in pseudocode) illustrating the updated director-evaluator flow. In this scenario, the Director task returns a result with `status: 'CONTINUATION'` and an embedded `evaluation_request`:
+
+```typescript
+// Example TaskResult returned by the Director task
+const taskResult: TaskResult = {
+    content: "Initial solution output...",
+    status: 'CONTINUATION',
+    notes: {
+        evaluation_request: {
+            type: "bash_script",
+            criteria: ["validate", "log"],
+            target: "run_analysis.sh"
+        }
+    }
+};
+```
+
+Upon receiving this result, the Evaluator:
+1. Uses the `evaluation_request` details (including the target string) to perform associative matching and select an appropriate evaluation task template.
+2. Dynamically spawns an evaluation subtask (the Child Task) with a `<context_management>` block set to inherit a subset of context.
+3. If necessary, invokes the specified bash script callback via the Handler or its own mechanism.
+4. Feeds the evaluation results back to the Director, allowing the overall task to continue.
+
+## Integration with the Unified Architecture
+
+The updated Director-Evaluator pattern fully embraces the dynamic subtask concept. Rather than a statically defined bash callback subtask, the evaluation step is triggered by the Director task's output. The Evaluator examines the task result for a `CONTINUATION` status and an embedded `evaluation_request`, then:
+ - Uses associative matching (with help from the Memory System if needed) to select an evaluation template.
+ - Dynamically spawns the evaluation subtask.
+ - Invokes any specified bash script callback via the Handler or its own callback mechanism (since tasks remain reserved for LLM sessions).
+
+**Key Characteristics:**
+
+ - **Unified Model:** The pattern adheres to the unified context management and task execution model. All tasks, including those used for callbacks, use the same XML structure and TS types.
+
+ - **Bash Script Callback:** The intermediary bash script is invoked as a subtask. Its output can be logged, used to adjust the environment, or to validate the parent task's results.
+
+ - **Context Management:** The Evaluator subtask receives updated context via standard `<context_management>` settings (e.g. `inherit_context` set to `subset` and `accumulate_data` enabled).
+
+## Conclusion
+
+The updated Director-Evaluator pattern exemplifies the dynamic task–subtask paradigm. By returning a CONTINUATION status along with an embedded evaluation_request, a Director task signals that additional evaluation is required. The Evaluator then dynamically spawns an evaluation subtask—invoking a bash script callback via the Handler (or its own mechanism) if specified—to process and refine the output before feeding the results back to the parent task. This approach ensures flexibility and a seamless integration of external evaluation within the unified execution architecture.
+
+## Static Director-Evaluator Variant
+
+In addition to the dynamic pattern described above, a static variant is available for scenarios where the entire execution sequence is predetermined. In the static variant:
+ - The Director Task generates the initial output.
+ - A Target Script Execution task immediately runs an external command (e.g. a bash script) using the director's output.
+ - The Evaluator Task then processes the output from the script.
+
+### XML Template Example
+```xml
+<task type="sequential">
+    <description>Static Director-Evaluator Pipeline</description>
+    <context_management>
+        <inherit_context>none</inherit_context>
+        <accumulate_data>true</accumulate_data>
+        <accumulation_format>notes_only</accumulation_format>
+    </context_management>
+    <steps>
+        <!-- Director Task -->
+        <task>
+            <description>Generate Initial Output</description>
+        </task>
+        <!-- Target Script Execution -->
+        <task type="script">
+            <description>Run Target Script</description>
+            <inputs>
+                <input name="director_output">
+                    <task>
+                        <description>Pass director output to script</description>
+                    </task>
+                </input>
+            </inputs>
+        </task>
+        <!-- Evaluator Task -->
+        <task>
+            <description>Evaluate Script Output</description>
+            <inputs>
+                <input name="script_output">
+                    <task>
+                        <description>Process output from target script</description>
+                    </task>
+                </input>
+            </inputs>
+        </task>
+    </steps>
+</task>
+```
 
 
 </context_files>
 
 <files_to_modify>
 
+File: ./system/contracts/protocols.md
+Reason: Update XML schema to support changes in Director-Evaluator pattern
+Changes Needed:
+- Add EvaluationResult type definition
+- Add output_slot and input_source elements to task schema
+- Update context_management section defaults
+- Add script execution error handling specifics
+Dependencies: Contract:Tasks:TemplateSchema:1.0, Pattern:DirectorEvaluator:1.1
+
+
 File: ./components/task-system/spec/types.md
-Reason: Need to add new TaskLibrary and function calling types
+Reason: Add new types for evaluation results and environment management
 Changes Needed:
-- Add TaskDefinition interface to store task metadata
-- Add TaskLibrary interface to manage task registry
-- Add FunctionCall node type for AST
-- Update TaskType enum to include script type
-- Add ContextManagement type updates for inheritance modes
-Dependencies: Evaluator component, XML schema definitions, AST processing
-
-
-File: ./components/task-system/spec/interfaces.md
-Reason: Need to add TaskLibrary and function interfaces
-Changes Needed:
-- Add TaskLibrary interface methods
-- Add function calling methods to TaskSystem
-- Update Handler interface for script execution
-- Add environment chaining support
-Dependencies: TaskSystem component, Evaluator component, Handler component
+- Add EvaluationResult interface
+- Update DirectorEnv interface
+- Add prepareContinuationEnv function type
+- Add storeEvaluatorResult function type
+Dependencies: Interface:TaskSystem:1.0, TaskResult type, Environment type
 
 
 File: ./components/evaluator/README.md
-Reason: Update for new environment model and function calling
+Reason: Update evaluator behavior documentation for new pattern
 Changes Needed:
-- Add nested environment model details
-- Document function calling behavior
-- Update context inheritance description
+- Document single output variable handling
+- Update context management section
+- Add script execution and feedback flow
+- Update environment handling documentation
+Dependencies: Pattern:DirectorEvaluator:1.1, Pattern:ContextFrame:1.0
+
+
+File: ./components/task-system/impl/design.md
+Reason: Update implementation design for Director-Evaluator changes
+Changes Needed:
+- Add design for output slot management
+- Document environment preparation
+- Update context clearing rules
 - Add script execution handling
-Dependencies: Task System types, XML schema
+Dependencies: Component:Evaluator:1.0, Pattern:ResourceManagement:1.0
 
 
-File: ./system/contracts/protocols.md
-Reason: XML schema updates needed for new features
+File: ./system/architecture/patterns/director-evaluator.md
+Reason: Update pattern documentation with new simplified flow
 Changes Needed:
-- Add function definition schema
-- Add script task schema
-- Update context management schema
-- Add ref and subtype attributes
-Dependencies: Task System types, Template validation
-
-
-File: ./system/architecture/patterns/resource-management.md
-Reason: Update for script execution and sequential history
-Changes Needed:
-- Add script resource management details
-- Update sequential history tracking
-- Document environment extension pattern
-Dependencies: Handler component, Memory System
-
-
-File: ./components/memory/api/interfaces.md
-Reason: Update for new environment model
-Changes Needed:
-- Remove updateContext method
-- Add structured input format for getRelevantContextFor
-- Update GlobalIndex interface
-Dependencies: Memory System component, Task System integration
+- Update flow description for latest-only retention
+- Document environment variable management
+- Add script execution pattern
+- Update XML examples
+Dependencies: Pattern:ContextFrame:1.0, Pattern:ResourceManagement:1.0
 
 </files_to_modify>
 
