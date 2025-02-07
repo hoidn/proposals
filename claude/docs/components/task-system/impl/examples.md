@@ -1,5 +1,7 @@
 # Task System Implementation Examples
 
+> **Note:** For a detailed description of the Director‑Evaluator pattern, refer to [system/architecture/patterns/director-evaluator.md](../system/architecture/patterns/director-evaluator.md).
+
 ## Basic Task Execution
 ```typescript
 // Initialize TaskSystem

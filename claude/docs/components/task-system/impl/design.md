@@ -1,5 +1,12 @@
 # Implementation Design
 
+## Terminology and References
+
+ - **Handler** and **Evaluator** definitions are standardized in [spec/types.md](../spec/types.md).
+ - XML schema definitions are available in [system/contracts/protocols.md](../system/contracts/protocols.md).
+ - For detailed resource tracking implementation (including turn counter and context window monitoring), see [resource-management.md](./resource-management.md).
+ - For XML processing details (parsing, validation, and fallback behavior), refer to [xml-processing.md](./xml-processing.md).
+
 ## Handler Implementation
 ### Session Management Strategy
 - One Handler per task execution

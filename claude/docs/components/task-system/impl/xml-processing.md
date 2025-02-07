@@ -1,5 +1,7 @@
 # XML Processing Implementation
 
+> **Overview and References:** This document focuses on the Task System's XML processing implementation. For the complete XML schema definition and template guidelines, please refer to [system/contracts/protocols.md](../system/contracts/protocols.md).
+
 ## Schema Validation
 
 ### Core Schema Requirements

@@ -1,5 +1,7 @@
 # Resource Management Implementation
 
+> **Further Reading:** For an architectural overview of resource management principles, see [system/architecture/patterns/resource-management.md](../system/architecture/patterns/resource-management.md).
+
 ## Core Principles
 - No resource usage prediction
 - No task decomposition optimization
