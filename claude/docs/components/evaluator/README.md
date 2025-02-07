@@ -60,6 +60,7 @@ class Env implements Environment {
 4. **Context and Environment Handling**  
    - In multi-step or operator-based tasks (sequential, reduce, etc.), the Evaluator ensures the proper propagation of the environment and partial context. Every new task or function call execution uses a child environment (based on the parent environment or the global environment, depending on the XML attribute `inherit_context`), thereby ensuring that the TaskLibrary and any built-in variables remain accessible through the environment chain.
    - The Evaluator leverages the Memory System for associative context retrieval but does not manage file content directly.  
+   - Note: The Evaluator now writes its output exclusively to the environment variable last_evaluator_output—this value is a serialized EvaluationResult (with fields success and optional feedback).
 
 5. **Integration with Task System**  
    - The Task System may call the Evaluator with a structured or partially structured task. The Evaluator then "executes" it by walking its representation (e.g., an AST or an XML-based operator chain).  
