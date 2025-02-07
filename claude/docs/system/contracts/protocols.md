@@ -11,10 +11,19 @@ The task template schema defines the structure for XML task template files and m
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:complexType name="EvaluationResult">
+    <xs:sequence>
+      <xs:element name="success" type="xs:boolean"/>
+      <xs:element name="feedback" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:element name="task">
     <xs:complexType>
       <xs:sequence>
         <xs:element name="description" type="xs:string"/>
+        <xs:element name="output_slot" type="xs:string" minOccurs="0"/>
+        <xs:element name="input_source" type="xs:string" minOccurs="0"/>
         <xs:element name="context_management">
           <xs:complexType>
             <xs:sequence>

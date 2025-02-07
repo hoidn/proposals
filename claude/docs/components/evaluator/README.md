@@ -238,4 +238,17 @@ When a multi-step sequence is run, each subtask is executed in turn. The Evaluat
 3. Moves on to the second subtask, incrementing `currentStep`. If it fails, the Evaluator includes `outputs[0]` data in the final error's notes, to assist debugging or partial re-usage.
 4. If steps continue successfully, the final result merges all step outputs or final subtask output as the overall `TaskResult`.
 
+The evaluator now produces an EvaluationResult (with success and optional feedback) for each task. Only the last evaluator output is stored in the environment variable last_evaluator_output; all other variables are cleared on continuation.
+
+Example task definitions:
+```xml
+<task type="director">
+    <output_slot>last_evaluator_output</output_slot>
+</task>
+
+<task type="evaluator">
+    <input_source>last_evaluator_output</input_source>
+</task>
+```
+
 **Important**: Because subtask outputs can be large, the system should either store them as short notes or partial references. The data accumulation approach can be toggled with `accumulateData` (in `ContextManagement`), plus an `accumulationFormat` indicating whether to store full outputs or only summary notes.

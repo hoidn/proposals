@@ -98,6 +98,16 @@ interface ASTNode {
 }
 ```
 
+export interface EvaluationResult {
+    success: boolean;
+    feedback?: string;
+}
+
+export interface DirectorEnv extends Environment {
+    last_evaluator_output: string | null;
+    // Other variables are cleared on continuation
+}
+
 export interface Environment {
     bindings: Record<string, any>;
     outer?: Environment;
@@ -106,6 +116,17 @@ export interface Environment {
      * Returns the value if found; otherwise, throws an error.
      */
     find(varName: string): any;
+}
+
+function prepareContinuationEnv(currentEnv: Environment): Environment {
+    return new Environment({
+        last_evaluator_output: currentEnv.get('last_evaluator_output')
+    });
+}
+
+function storeEvaluatorResult(result: TaskResult, env: Environment): void {
+    env.set('last_evaluator_output', result.content);
+    env.clearExcept(['last_evaluator_output']);
 }
 
 ## Resource Management Types
