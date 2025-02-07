@@ -91,6 +91,24 @@ The task template schema defines the structure for XML task template files and m
         <xs:element name="manual_xml" type="xs:boolean" minOccurs="0" default="false"/>      <!-- Maps to isManualXML -->
         <xs:element name="disable_reparsing" type="xs:boolean" minOccurs="0" default="false"/> <!-- Maps to disableReparsing -->
       </xs:sequence>
+      <xs:attribute name="ref" type="xs:string" use="optional"/>
+      <xs:attribute name="subtype" type="xs:string" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="cond">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="case" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:attribute name="test" type="xs:string" use="required"/>
+            <xs:sequence>
+              <xs:element name="task" minOccurs="1" maxOccurs="1">
+                <!-- Task definition inside case -->
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
     </xs:complexType>
   </xs:element>
 </xs:schema>
@@ -145,6 +163,25 @@ Example:
 This extension to the schema ensures a clear definition of script execution tasks within a sequential workflow.
 
 ### Field Definitions
+
+- The optional `ref` attribute is used to reference a pre-registered task in the TaskLibrary.
+- The optional `subtype` attribute refines the task type (for example, indicating "director", "evaluator", etc.)
+
+Example:
+```xml
+<cond>
+  <case test="output.valid == true">
+    <task type="atomic" subtype="success_handler">
+      <description>Handle success</description>
+    </task>
+  </case>
+  <case test="output.errors > 0">
+    <task type="atomic" subtype="error_handler">
+      <description>Handle errors</description>
+    </task>
+  </case>
+</cond>
+```
 All required and optional fields (including `instructions`, `system`, `model`, and `inputs`) are defined by this schema. For full details and allowed values, please see Appendix A in [Contract:Resources:1.0].
 
 ### Example Template
@@ -177,6 +214,8 @@ This schema is used by the TaskSystem component. For implementation details and 
 - TaskTemplate interface in spec/types.md [Type:TaskSystem:TaskTemplate:1.0]
 - Template validation in TaskSystem.validateTemplate() 
 - Template parsing in TaskSystem constructor
+
+Note: The new XML attributes (`ref` and `subtype`) and the `<cond>` element map to the corresponding types (i.e., TaskDefinition and FunctionCall) used in the Task System.
 
 ### Map Pattern Implementation
 Refer to the XML schema for correct usage. For a complete example, please see the Task System documentation.

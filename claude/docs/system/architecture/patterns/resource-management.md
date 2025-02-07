@@ -52,6 +52,10 @@ The Handler is responsible for:
 - Hard limits with error handling
 
 #### Context Preservation
+
+- The nested Environment model ensures that each child task gets its own context.
+- Proper chaining of environments prevents context leakage.
+- InheritedContext and any built-in objects (like TaskLibrary) persist unchanged in the chain.
 - Context frames capture environments
 - Minimal required context per task
 - Associative memory mediation
@@ -70,6 +74,21 @@ The Handler is responsible for:
 - Custom thresholds
 - Resource constraints
 - Performance targets
+
+## Script Execution Resource Management
+
+- Script tasks (type="script") are executed by the Handler.
+- The Handler captures stdout, stderr, and exitCode for script tasks.
+- A non-zero exitCode is treated as a TASK_FAILURE error.
+
+Example interface:
+```typescript
+interface ScriptTaskResult {
+    stdout: string;
+    stderr: string;
+    exitCode: number;
+}
+```
 
 ## Interactions
 
@@ -138,6 +157,23 @@ For **sequential** tasks, the Evaluator maintains a step-by-step record of parti
 - **Handler** continues to track standard resource usage (turns, tokens).
 - Because the sequential history is purely textual or metadata that the Evaluator stores separately, it does not consume the Handler's context window.
 - If the task is configured to accumulate data (`<accumulate_data>true</accumulate_data>`), the Evaluator may pass prior step outputs into `MemorySystem.getRelevantContextFor()`.
+- The Evaluator maintains a SequentialHistory for sequential (type="sequential") tasks.
+- The SequentialHistory (holding step outputs and metadata) is not counted against the Handler’s context window limits.
+- Accumulated outputs are retained for the entire sequential task execution loop and then discarded (or archived) once the sequence completes.
+
+Example interface:
+```typescript
+interface SequentialHistory {
+    outputs: TaskOutput[];
+    metadata: { startTime: Date; currentStep: number; resourceUsage: ResourceMetrics; };
+}
+interface TaskOutput {
+    stepId: string;
+    output: string;
+    notes: string;
+    timestamp: Date;
+}
+```
 - This separation ensures Handler resource metrics stay consistent and the Evaluator can keep any relevant partial outputs for as long as needed.
 - Once the sequential task completes (success or failure), the Evaluator discards (or archives) the sequential history to free memory.
 

@@ -60,7 +60,7 @@ The complete result of associative matching, containing:
 ```typescript
 getGlobalIndex(): Promise<GlobalIndex>
 ```
-Retrieves the complete global file metadata index.
+Retrieves the complete global file metadata index. The GlobalIndex should now support the needs of the TaskLibrary and nested environment model. Any changes to the GlobalIndex structure must allow associative matching in the context of nested task environments. Keys remain absolute file paths and values remain unstructured metadata but remain useful for task context extraction.
 
 #### updateGlobalIndex(index: GlobalIndex)
 ```typescript
@@ -68,14 +68,6 @@ updateGlobalIndex(index: GlobalIndex): Promise<void>
 ```
 Performs a bulk update of the global file metadata index. Replaces the entire existing index.
 
-/**
- * Input structure for context generation requests
- */
-interface ContextGenerationInput {
-    previousOutputs?: string;   // Accumulated outputs from previous steps
-    inheritedContext?: string;  // Context inherited from parent tasks
-    taskText: string;          // The primary request text or task description
-}
 
 /**
  * Retrieve context using associative matching.
