@@ -26,7 +26,21 @@ The **Evaluator** is the unified task-execution component of the system. It is r
 
 In many existing code examples (both TypeScript-like and Scheme-like), the system calls an `eval` or `apply` function that effectively belongs to the Evaluator domain. When direct execution fails, a decomposition or reparse step is triggered, also under the Evaluator's responsibility.
 
----
+## 3.1 Nested Environment Model Integration
+
+The Environment class supports nested scopes via an "outer" reference. The Evaluator creates a global environment (globalEnv) that includes built-in variables along with an instance of TaskLibrary (e.g., globalEnv.bindings["taskLibrary"] = taskLibrary). A new child environment is created for each task or function call.
+
+```typescript
+// Example Environment implementation
+class Env implements Environment {
+    constructor(public bindings: Record<string, any> = {}, public outer?: Environment) {}
+    find(varName: string): any {
+        return (varName in this.bindings)
+            ? this.bindings[varName]
+            : this.outer ? this.outer.find(varName) : throw new Error(`Variable ${varName} not found`);
+    }
+}
+```
 
 ## Responsibilities and Role
 
@@ -44,14 +58,38 @@ In many existing code examples (both TypeScript-like and Scheme-like), the syste
    - Not purely "owns" resource tracking (that's part of the Handler), but integrates with it. The Evaluator is aware of usage or limit errors and decides whether to attempt decomposition or fail outright.  
 
 4. **Context and Environment Handling**  
-   - In multi-step or operator-based tasks (sequential, reduce, etc.), the Evaluator ensures the proper propagation of the environment and partial context.
+   - In multi-step or operator-based tasks (sequential, reduce, etc.), the Evaluator ensures the proper propagation of the environment and partial context. Every new task or function call execution uses a child environment (based on the parent environment or the global environment, depending on the XML attribute `inherit_context`), thereby ensuring that the TaskLibrary and any built-in variables remain accessible through the environment chain.
    - The Evaluator leverages the Memory System for associative context retrieval but does not manage file content directly.  
 
 5. **Integration with Task System**  
    - The Task System may call the Evaluator with a structured or partially structured task. The Evaluator then "executes" it by walking its representation (e.g., an AST or an XML-based operator chain).  
    - On error or partial success, the Evaluator can signal the Task System to orchestrate higher-level recovery or store partial results.  
 
----
+## 3.3 FunctionCall AST Node for DSL Function Calling
+
+The FunctionCall node is used to invoke a task functionally by looking up its definition in the TaskLibrary. When a FunctionCall is evaluated, the Evaluator:
+- Uses env.find("taskLibrary") to retrieve the registry;
+- Looks up the task by its funcName;
+- Creates a child environment (e.g., new Env({}, env));
+- Binds the parameters from task_def.metadata to the evaluated arguments;
+- And finally calls taskDef.astNode.eval(newEnv) to get the result.
+
+```typescript
+// Example FunctionCall evaluation
+class FunctionCallNode implements FunctionCall {
+    constructor(public funcName: string, public args: ASTNode[]) {}
+    async eval(env: Environment): Promise<any> {
+        const taskLibrary = env.find("taskLibrary")["taskLibrary"];
+        const taskDef = taskLibrary.getTask(this.funcName);
+        const funcEnv = new Env({}, env);
+        const parameters: string[] = taskDef.metadata?.parameters || [];
+        for (let i = 0; i < parameters.length && i < this.args.length; i++) {
+            funcEnv.bindings[parameters[i]] = await this.args[i].eval(env);
+        }
+        return await taskDef.astNode.eval(funcEnv);
+    }
+}
+```
 
 ## Metacircular Approach
 

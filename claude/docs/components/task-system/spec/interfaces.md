@@ -27,6 +27,17 @@ export interface TaskSystem {
         score: number;
         taskType: "atomic" | "sequential" | "reduce" | "script";
     }>>;
+    registerTask(taskDef: TaskDefinition): void;
+    executeFunctionCall(funcCall: FunctionCall, env: Environment): Promise<any>;
+export interface Environment {
+    bindings: Record<string, any>;
+    outer?: Environment;
+    /**
+     * Perform a lexical lookup for varName.
+     * Returns the value if found; otherwise, throws an error.
+     */
+    find(varName: string): any;
+    executeScriptTask(scriptTask: ScriptTask, env: Environment): Promise<ScriptTaskResult>;
 }
 
 // Handler interface details are maintained in external documentation.
