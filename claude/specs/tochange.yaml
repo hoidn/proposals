@@ -1,0 +1,100 @@
+Files_Requiring_Updates:
+  - path: ./components/task-system/spec/types.md
+    reason: Need to add new TaskLibrary and function calling types
+    spec_of_changes:
+      - Add TaskDefinition interface to store task metadata
+      - Add TaskLibrary interface to manage task registry
+      - Add FunctionCall node type for AST
+      - Update TaskType enum to include script type
+      - Add ContextManagement type updates for inheritance modes
+    dependencies:
+      - Evaluator component
+      - XML schema definitions
+      - AST processing
+  
+  - path: ./components/task-system/spec/interfaces.md
+    reason: Need to add TaskLibrary and function interfaces
+    spec_of_changes:
+      - Add TaskLibrary interface methods
+      - Add function calling methods to TaskSystem
+      - Update Handler interface for script execution
+      - Add environment chaining support
+    dependencies:
+      - TaskSystem component
+      - Evaluator component
+      - Handler component
+
+  - path: ./components/evaluator/README.md
+    reason: Update for new environment model and function calling
+    spec_of_changes:
+      - Add nested environment model details
+      - Document function calling behavior
+      - Update context inheritance description
+      - Add script execution handling
+    dependencies:
+      - Task System types
+      - XML schema
+
+  - path: ./system/contracts/protocols.md
+    reason: XML schema updates needed for new features
+    spec_of_changes:
+      - Add function definition schema
+      - Add script task schema
+      - Update context management schema
+      - Add ref and subtype attributes
+    dependencies:
+      - Task System types
+      - Template validation
+
+  - path: ./system/architecture/patterns/resource-management.md
+    reason: Update for script execution and sequential history
+    spec_of_changes:
+      - Add script resource management details
+      - Update sequential history tracking
+      - Document environment extension pattern
+    dependencies:
+      - Handler component
+      - Memory System
+
+  - path: ./components/memory/api/interfaces.md
+    reason: Update for new environment model 
+    spec_of_changes:
+      - Remove updateContext method
+      - Add structured input format for getRelevantContextFor
+      - Update GlobalIndex interface
+    dependencies:
+      - Memory System component
+      - Task System integration
+
+Architectural_Impact_Assessment:
+  backwards_compatibility:
+    - XML schema changes are backwards compatible via optional attributes
+    - Error handling remains unchanged
+    - Memory interface changes are breaking but planned
+  
+  new_dependencies: 
+    - Task Library requires persistent storage
+    - Function calling requires environment chaining
+    - Script execution requires Handler integration
+  
+  complexity_changes:
+    - More complex environment model with chaining
+    - Additional task types to manage
+    - New validation requirements for task definitions
+    - Script execution adds external process management
+  
+  performance_considerations:
+    - Environment chaining depth should be monitored
+    - Script execution timing needs limits
+    - Task Library lookup performance important
+    - Sequential history size needs limits
+
+Questions_For_Clarification:
+  - What is the persistence model for the TaskLibrary - in-memory only or disk backed?
+  - Should script execution have separate resource limits from LLM tasks?
+  - How should environment chain depth be limited to prevent stack overflow?
+  - What validation should be done on script task inputs/outputs?
+  - Should TaskLibrary support versioning of task definitions?
+  - What's the cleanup protocol for sequential history in error cases?
+  - How should script execution timeouts be handled?
+  - Should there be a limit on the number of registered tasks?
