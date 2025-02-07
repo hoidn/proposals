@@ -1,32 +1,20 @@
 # Resource Management Pattern [Pattern:ResourceManagement:1.0]
 
 ## Purpose & Constraints
-Defines the resource management strategy for the task execution system focusing on:
-- Memory hierarchy management
-- Resource allocation and tracking
-- Context preservation and isolation
-- Limit enforcement
+This document defines the resource management strategy for the task execution system. It covers:
+ - Memory Hierarchy
+ - Resource Tracking (turn counts, context window, token usage)
+ - Warning Thresholds (e.g. 80% limits)
+ - Cleanup Procedures
+
+**Note:** Warning signals are purely informative; hard limits trigger termination.
 
 ## Core Components
 
 ### Memory Hierarchy
-1. Long-term Memory
-   - Stores data and procedures
-   - Accessed via associative memory system
-   - Read-only during task execution
-   - Managed by Memory System component
-
-2. Working Memory
-   - Active computation space
-   - Task-specific context
-   - Managed through Environment objects
-   - Cleared after task completion
-
-3. Context Frames
-   - Capture complete execution environments
-   - Include variable bindings and working memory
-   - Extended through Environment.extend()
-   - Minimal context principle applied
+1. **Long‑term Memory:** Stores data and procedures; accessed via the Memory System (read‑only during task execution).
+2. **Working Memory:** The active computation space (task‑specific context) managed through Environment objects; cleared after task completion.
+3. **Context Frames:** Capture complete execution environments (bindings and working memory) using a minimal‑context extension pattern.
 
 ### Resource Tracking
 
