@@ -223,6 +223,10 @@ Loose ends:
 - Bring the evaluator impl in line with Lispy's approach, such that it will be easier to later incorporate it for the DSL front end
 
 - there should be a standard way for prompts to return lists and for the list to be extracted / bound to a variable by the evaluator, bc, this will be a very common pattern.
+- in director-evaluator, all evaluator outputs should be saved (even though only the most recent one is pased to the director)
+- review associative matching state, make it higher priority
+- the dsl should have a 'python' operation
+- try the IDL method again
 
 <brainstorming prompt>
 - need to impl function calling in the DSL.
