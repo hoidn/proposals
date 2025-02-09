@@ -65,6 +65,32 @@
 - Partial parsing support
 - Clear error locations
 
+## Task/Template Matching
+
+The Task System uses a heuristic, associative matching process for atomic tasks. In this approach:
+
+- **Heuristic Matching:** User-defined associative matching tasks compare a task's free-form description against available atomic task templates. There is no fixed metric; each matching task computes a similarity score based on fixed input/output conventions.
+- **Disable Context Option:** An optional "disable context" flag can be set in the task's `ContextGenerationInput` to omit inherited context entirely. This ensures that only the explicit task description and any previous outputs inform the matching process.
+- **Highest-Scoring Candidate:** The system evaluates all candidates and selects the template with the highest score. Composite tasks are built by sequencing multiple atomic task templates rather than by direct template matching.
+
+For further details on context handling and related design decisions, see [ADR 002 - Context Management](../../system/architecture/decisions/002-context-management.md) and [ADR 005 - Context Handling](../../system/architecture/decisions/005-context-handling.md).
+
+#### Matching Call Chain
+
+```mermaid
+flowchart TD
+    A[User provides task description]
+    B[Construct ContextGenerationInput]
+    C{Disable Context?}
+    C -- Yes --> D[Omit inheritedContext]
+    C -- No --> E[Include parent context]
+    D & E --> F[Call MemorySystem.getRelevantContextFor]
+    F --> G[Receive AssociativeMatchResult]
+    G --> H[Compute similarity scores for each candidate]
+    H --> I[Select highest-scoring atomic task template]
+    I --> J[Return template for execution]
+```
+
 ## Resource Management
 
 The Task System enforces resource limits via a per‑Handler turn counter and context window monitoring. For the complete low‑level implementation (including code examples and configuration details), please refer to [resource-management.md](./resource-management.md).

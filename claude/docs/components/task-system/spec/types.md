@@ -16,8 +16,13 @@ export interface TaskResult {
      * Optional free-form description used for dynamic evaluation template selection.
      */
     criteria?: string;
+    /**
+     * Additional notes from task execution. May include extra metadata,
+     * such as an optional success score (e.g., `successScore?: number`) for future adaptive template matching.
+     */
     notes: {
         dataUsage: string;
+        successScore?: number;
         [key: string]: any;
     };
 }
@@ -64,6 +69,10 @@ interface ContextGenerationInput {
     taskText: string;          // The primary task description or request
 }
 
+/**
+ * Note: Only atomic tasks have their own templates.
+ * Composite tasks are constructed by combining multiple atomic task templates.
+ */
 interface TaskTemplate {
     readonly taskPrompt: string;      // Maps to <instructions> in schema
     readonly systemPrompt: string;    // Maps to <system> in schema
