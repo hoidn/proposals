@@ -228,6 +228,7 @@ Loose ends:
 - think about something like conversation -> json -> map spec prompts. basically representing the patterns that i'm already using, in the DSL
 - think about using evaluators in more ways than just director-evaluator (such as for selecting the best of N)
 - is evaluator feedback redundant with 'notes' feedback?
+- make sure that there's a way for tasks to send recommendations to the associative matching jobs (both ctx and template) for child tasks (prob using the 'notes' section)
 
 <brainstorming prompt>
 - need to impl function calling in the DSL.
