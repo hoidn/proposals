@@ -89,6 +89,26 @@ The Task System is responsible for managing LLM task execution, including:
   - Each match includes numeric score and template
   - Templates ordered by descending score
 
+**Additional Matching Details:**
+- **Heuristic Matching:** The matching is performed heuristically using user-defined associative matching tasks. These tasks compute similarity scores based on fixed input/output conventions without a fixed system-wide metric.
+- **Disable Context Flag:** Atomic tasks have an optional "disable context" flag available in their ContextGenerationInput. When enabled, inherited context is omitted from the matching process.
+- **Optional Success Score:** Task execution results may include an optional success score in the `notes` field. This score is used for future adaptive template matching (although adaptive behavior is not part of the MVP).
+
+#### Matching Behavior Summary
+
+```mermaid
+flowchart TD
+    A[User Input: Task Description]
+    B[Create ContextGenerationInput]
+    C{Disable Context Flag?}
+    C -- Yes --> D[Omit inherited context]
+    C -- No --> E[Include inherited context]
+    D & E --> F[Invoke Associative Matching Task]
+    F --> G[Compute Similarity Scores]
+    G --> H[Select Highest-Scoring Atomic Template]
+    H --> I[Return Selected Template]
+```
+
 ### Specialized Task Types
 
 #### Reparse Tasks

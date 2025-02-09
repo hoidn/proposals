@@ -19,6 +19,18 @@ export interface TaskSystem {
 
     validateTemplate(template: TaskTemplate): boolean;
     
+    /**
+     * findMatchingTasks
+     *
+     * Finds matching templates based on a provided input string.
+     *
+     * Note: Matching applies *only* to atomic task templates. The function evaluates the input
+     * against atomic task templates using a heuristic scoring mechanism.
+     * 
+     * @param input - The natural language task description.
+     * @param context - The MemorySystem instance providing context data.
+     * @returns An array of matching candidates with their associated scores.
+     */
     findMatchingTasks(
         input: string,
         context: MemorySystem
@@ -60,6 +72,28 @@ interface MemorySystem {
     
     // Update global file metadata index
     updateGlobalIndex(index: GlobalIndex): Promise<void>;
+}
+```
+
+### Example Definitions
+
+**ContextGenerationInput Example:**
+```json
+{
+    "taskText": "Analyze experimental data",
+    "inheritedContext": "Optional inherited context from previous tasks (if not disabled)",
+    "previousOutputs": "Optional string summarizing prior outputs"
+}
+```
+
+**AssociativeMatchResult Example:**
+```json
+{
+    "context": "Relevant retrieved context information",
+    "matches": [
+        ["fileA.txt", "metadata details"],
+        ["fileB.txt", null]
+    ]
 }
 ```
 
