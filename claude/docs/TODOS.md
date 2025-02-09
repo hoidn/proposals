@@ -17,12 +17,6 @@
    - Update dependent interfaces to unify environment usage
    - Ensure references to "Memory:2.0" vs "Memory:3.0" are consistent across docs
 
-2. Version Number Alignment
-   - Verify all cross-references use correct versions
-   - Update any outdated references to [Interface:Memory:2.0 or 3.0]
-   - Ensure consistent version numbering across documentation
-
-   - Confirm final chosen memory interface version is used everywhere
 
 ## Resource and File Management ⚠️ BLOCKING
 
@@ -116,14 +110,15 @@
 ### Interface and Implementation Documentation
 Priority: High
 Dependencies: Interface Consolidation
-- [ ] Update Task System specs to [Interface:Memory:2.0 or 3.0]
+- [ ] Update Task System specs to [Interface:Memory:2.0]
 - [ ] Update API documentation
 - [ ] Update component READMEs
 - [ ] Document subtask usage (map, reduce, sequential) with context
 - [ ] Provide best practices for partial output vs. re-parse
-- [ ] Align final references to single Memory interface version
 - [ ] Add context management practices
 - [ ] Document subtask patterns
+- [ ] Update documentation to include the new "disable context" option for atomic tasks
+- [ ] Document that task results' `notes` field may include an optional success score for future adaptive matching
 
 ### Implementation Documentation
 Priority: Medium

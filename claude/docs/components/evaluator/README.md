@@ -45,6 +45,39 @@ class Env implements Environment {
 ## Responsibilities and Role
 
 1. **AST Execution Controller**  
+
+## Context and Template Matching
+
+Before executing tasks, the Evaluator ensures that all placeholder substitutions (e.g., `{{variable_name}}`) are completed, so that work is performed on fully resolved inputs. Associative matching tasks follow this substitution rule, operating on the final, substituted task description.
+
+Furthermore, the Evaluator extracts an optional success score from the task result's `notes` field. This score, if present, is intended to support future adaptive matching and error-handling strategies.
+
+For more details on context handling and the disable context option implemented for atomic tasks, see [ADR 002 - Context Management](../../system/architecture/decisions/002-context-management.md) and [ADR 005 - Context Handling](../../system/architecture/decisions/005-context-handling.md).
+
+#### Evaluator Coordination Diagram
+
+```mermaid
+flowchart TD
+    A[Task Submission]
+    B[Placeholder Substitution Completed]
+    C[Prepare ContextGenerationInput]
+    D[Invoke MemorySystem.getRelevantContextFor]
+    E[Receive AssociativeMatchResult]
+    F[Compute Matching Scores]
+    G[Select Highest-Scoring Template]
+    H[Extract Optional Success Score from Notes]
+    I[Pass Template for Execution]
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    G --> H
+    H --> I
+```
+
+1. **AST Execution Controller**  
    - Orchestrates the step-by-step or operator-by-operator execution of tasks represented as an AST.
    - Calls out to the Handler for LLM-specific interactions and resource tracking (e.g. turn counts, context window checks).
    - Interacts with the Compiler when re-parsing or decomposition is required.
