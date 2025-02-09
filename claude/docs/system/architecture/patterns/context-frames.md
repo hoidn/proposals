@@ -27,6 +27,39 @@ flowchart TD
     E --> F
 ```
 
+```mermaid
+flowchart TD
+    A[Atomic Task Begins] --> B[Check "Disable Context" Flag]
+    B -- Yes --> C[Omit inheritedContext in ContextGenerationInput]
+    B -- No --> D[Include parent context]
+    C --> E[Pass to MemorySystem.getRelevantContextFor]
+    D --> E
+    E --> F[Heuristic Matching & Candidate Scoring]
+    F --> G[Select Highest-scoring Template]
+```
+
+## Formal Definitions
+
+Example ContextGenerationInput:
+```json
+{
+  "taskText": "analyze experimental data",
+  "inheritedContext": "context string if available",
+  "previousOutputs": "summarized outputs if any"
+}
+```
+
+Example AssociativeMatchResult:
+```json
+{
+  "context": "retrieved relevant context",
+  "matches": [
+    ["fileA.txt", "metadata info"],
+    ["fileB.txt", null]
+  ]
+}
+```
+
 See also:
 - [ADR:002-context-management]
 - [ADR:005-context-handling]
