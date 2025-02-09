@@ -9,6 +9,24 @@ The system needs clear policies for how context inheritance and accumulation wor
 
 ## Key Clarifications
 
+## Additional Clarifications
+
+- **Placeholder Substitution:** All placeholder substitutions (e.g., `{{variable_name}}`) are completed before task execution. This ensures that even associative matching tasks operate on fully resolved input strings.
+- **Success Score in Notes:** Task results may now include an optional success score in the `notes` field. This score will eventually be aggregated to support future adaptive template matching.
+- **Automatic Retry on Matching Failure:** In the event that an associative matching task fails—such as when insufficient or partial context is retrieved—the system will automatically trigger a retry rather than immediately propagating an error.
+
+#### Flow Diagram: Placeholder Substitution, Matching, and Automatic Retry
+
+```mermaid
+flowchart TD
+    A[Input Task Text] --> B[Placeholder Substitution]
+    B --> C[Associative Matching Attempt]
+    C --> D{Matching Successful?}
+    D -- Yes --> E[Proceed with Execution]
+    D -- No --> F[Automatic Retry Triggered]
+    F --> C
+```
+
 ### 1. Input Structure for Associative Matching
 **Surprise:** The input to getRelevantContextFor() has a specific XML structure with three potential fields:
 - Previous outputs (if applicable)
