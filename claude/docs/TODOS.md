@@ -222,6 +222,12 @@ Loose ends:
 - review associative matching state, make it higher priority
 - the dsl should have a 'python' operation
 - try the IDL method again
+- add a read-only files field to the spec prompt format
+- revisit map
+- switch to json outputs 
+- think about something like conversation -> json -> map spec prompts. basically representing the patterns that i'm already using, in the DSL
+- think about using evaluators in more ways than just director-evaluator (such as for selecting the best of N)
+- is evaluator feedback redundant with 'notes' feedback?
 
 <brainstorming prompt>
 - need to impl function calling in the DSL.
