@@ -237,3 +237,35 @@ Misc:
 - how does llm compute requirement scale in the size of the token dictionary?
 - what's the biggest trainable model?
 
+
+more open questions:
+Partial-Results Policy for Failing Operators
+
+Ambiguity: Should a failing operator discard all intermediate results (treating the operator as an “all‑or‑nothing” unit) or preserve partial outputs (for example, in a dedicated “partialResults” field) so that higher‑level tasks can decide how to handle incomplete work?
+Impact: This decision affects recovery strategies, error reporting, and the design of multi‑step (e.g. sequential) tasks.
+Context-Generation Failure Error Taxonomy
+
+Ambiguity: There is a question about whether the tools used for file operations should provide only read‑access (with file content managed externally) or if write and delete operations should be included from the start.
+Impact: The answer determines the complexity of the Handler’s interface and the overall approach to file and metadata management.
+Memory System Interface Versioning and Boundaries
+
+Ambiguity: Some parts of the documentation refer to “Memory System 2.0” while others mention “Memory System 3.0.” Also, it isn’t entirely clear how to separate file metadata (which the Memory System manages) from actual file content operations (delegated to Handler tools).
+Impact: Inconsistent version references or unclear boundaries could lead to integration problems between the Task System, Memory System, and Handler components.
+Director‑Evaluator Pattern Details
+
+Ambiguity: Although the pattern is described in both dynamic and static variants, questions remain about how exactly the Evaluator should spawn subtasks, how output (especially when a task returns a “CONTINUATION” status) is passed back to the Director, and under what conditions a bash script should be invoked versus relying solely on LLM re‑parsing.
+Impact: These details affect the control flow, context passing (especially regarding last_evaluator_output), and error recovery in multi‑step tasks.
+Subtask Spawning Mechanism
+
+Ambiguity: The method for dynamically generating subtasks (outside of the Director‑Evaluator pattern) isn’t fully defined. For example, if a task’s notes indicate that additional processing is needed, it is not entirely clear how the Evaluator should create and bind a new subtask dynamically.
+Impact: This influences the design of the DSL, the AST, and the overall control flow during complex task execution.
+Mapping Between XML and AST Structures
+
+Ambiguity: The XML schema for task templates is well defined, yet the correspondence between XML elements/attributes (such as <inherit_context>, <accumulate_data>, etc.) and the resulting AST or environment structure isn’t fully formalized.
+Impact: This ambiguity may lead to mismatches between how tasks are specified and how they’re executed or decomposed by the Evaluator.
+DSL Function Definition and Subtask/Tool Distinction
+
+Ambiguity: There is discussion about supporting function definition/call primitives (e.g., for a Lisp‑like DSL) and also about distinguishing between subtasks (LLM-to‑LLM interactions) and tool calls (e.g. for file editing or shell execution). The boundary between these two types of operations is not clearly drawn.
+Impact: The answer affects both the syntax of the DSL and the runtime behavior of task execution, especially if different recovery or binding mechanisms are needed for each.
+Handling of Accumulated Data and Output Formatting
+
