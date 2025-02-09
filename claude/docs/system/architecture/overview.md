@@ -2,6 +2,29 @@
 
 ## Problem Statement and Goals
 
+### Atomic Task Matching
+
+The system uses a uniform, heuristic approach for template matching:
+
+- Only atomic tasks have templates; composite tasks are created by combining atomic tasks
+- Template matching is performed heuristically by user-defined associative matching tasks with fixed I/O signatures
+- Matching logic is uniform for MVP (no operator-specific differences or versioning)
+- System always selects the highest-scoring candidate template
+- Optional "disable context" flag allows tasks to run without inherited context
+- Task results may include optional success score in "notes" field for future adaptive scoring
+
+```mermaid
+flowchart TD
+    A[User Input] --> B[Create ContextGenerationInput]
+    B --> C{Context Disabled?}
+    C -->|No| D[Include inheritedContext]
+    C -->|Yes| E[Omit inheritedContext]
+    D --> F[Call getRelevantContextFor]
+    E --> F
+    F --> G[Score Candidates]
+    G --> H[Select Highest Score]
+```
+
 This document provides a high‑level overview of the system architecture. Detailed technical discussions have been moved into canonical files in the sub‑folders:
 
 - **Patterns:** Core patterns such as Director‑Evaluator, Error Handling, and Resource Management (see files under `system/architecture/patterns/`).

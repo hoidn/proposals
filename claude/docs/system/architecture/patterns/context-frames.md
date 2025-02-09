@@ -7,6 +7,30 @@
 
 ## Context Frame Operations
 
+### Context Inheritance Modes
+
+The system supports three context inheritance modes:
+- **full**: Complete inheritance of parent context
+- **subset**: Selective inheritance of specific context elements
+- **none/disable**: No context inheritance (new for atomic tasks/associative matching)
+
+When the "disable context" flag is active, the inherited context is completely omitted from the ContextGenerationInput.
+
+```mermaid
+flowchart TD
+    A[Task Start] --> B{Context Mode?}
+    B -->|Full| C[Use Parent Context]
+    B -->|Subset| D[Use Selected Context]
+    B -->|None| E[No Inherited Context]
+    C --> F[Execute Task]
+    D --> F
+    E --> F
+```
+
+See also:
+- [ADR:002-context-management]
+- [ADR:005-context-handling]
+
 ### Frame Creation and Extension
 ```typescript
 interface ContextFrame {
