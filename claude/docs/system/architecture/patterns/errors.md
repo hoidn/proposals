@@ -48,6 +48,19 @@ See [Component:Evaluator:1.0] for recovery planning.
 See [Protocol:Tasks:Reparse:1.0] for execution details.
 [TBD: Execution requirements]
 
+- **Associative Matching Failures:** If an associative matching task encounters an error—such as insufficient context or partial output—it will automatically trigger a retry. These errors will include any partial output and, if available, an optional success score (recorded in the task's `notes` field) to support future adaptive behavior.
+
+#### Error Recovery Flow for Associative Matching
+
+```mermaid
+flowchart TD
+    A[Associative Matching Task Initiated] --> B{Error Detected?}
+    B -- Yes --> C[Trigger Automatic Retry]
+    C --> D[Capture Partial Output & Success Score]
+    D --> E[Reattempt Associative Matching]
+    B -- No --> F[Proceed with Normal Execution]
+```
+
 ### 3.4 Validation Phase
 [TBD: Validation requirements]
 

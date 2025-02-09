@@ -27,10 +27,15 @@ The system needs to manage task execution context efficiently while supporting c
 - Maintains clear separation between warnings and hard limits
 
 ### 4. Memory Operation Error Handling
-- Memory operations that fail should be retried
+- Memory operations that fail should be retried (Note: A dedicated "disable context" flag is available for atomic and associative matching tasks to omit inherited context.)
 - If retry fails, surface an informative error
 - Provides simple but robust error handling strategy
 - Gives operations a chance to recover without complex logic
+
+### 5. Disable Context Option for Atomic and Associative Matching Tasks
+- **Decision:** Atomic tasks—and by extension, associative matching tasks—may disable context entirely via a dedicated flag. When this flag is enabled, no inherited context will be passed to the task, ensuring that only its explicit inputs are used for matching.
+- **Rationale:** This option provides finer control for tasks where inherited context might be unnecessary or detrimental to accurate matching.
+- **Cross‑References:** See also [Context Frames](../patterns/context-frames.md) for a discussion on available context inheritance modes.
 
 ## Consequences
 - Positive:
