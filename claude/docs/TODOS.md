@@ -229,6 +229,16 @@ Loose ends:
 - think about using evaluators in more ways than just director-evaluator (such as for selecting the best of N)
 - is evaluator feedback redundant with 'notes' feedback?
 - make sure that there's a way for tasks to send recommendations to the associative matching jobs (both ctx and template) for child tasks (prob using the 'notes' section)
+- for mvp, context matching should work at the file granularity. 
+- maybe extract that old convo where i got a good spec prompt out of claude
+- review 'subset' context pattern
+- think through the relationship between code impl and writing the tests, and then handing off the path of test file to evaluator or tool call
+- use pydantic and structured output
+- functions can be composite expressions. the docs need to be clear that template - function isn't 1:1
+- maybe promote Evaluator to an operator type bc it might be used for control flow (right now, there's too much blending / confusion between the concepts of task and operator)
+- specify that sequential operations should return lists of json (or json consisting of a list of dicts or something)
+- think about how to set up benchmarking and how the self-referenntial aspect of allowing the system to modify itself will look at the DSL expression level
+- think about how 'shell' nodes will fit into the picture. this has been partially addressed with the director-evaluator pattern, but need to be less ad hoc about it
 
 <brainstorming prompt>
 - need to impl function calling in the DSL.
