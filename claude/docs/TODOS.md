@@ -239,6 +239,7 @@ Loose ends:
 - specify that sequential operations should return lists of json (or json consisting of a list of dicts or something)
 - think about how to set up benchmarking and how the self-referenntial aspect of allowing the system to modify itself will look at the DSL expression level
 - think about how 'shell' nodes will fit into the picture. this has been partially addressed with the director-evaluator pattern, but need to be less ad hoc about it
+- add component-wise xml tags to documentation / impl files to make later self-improvement easier
 
 <brainstorming prompt>
 - need to impl function calling in the DSL.
