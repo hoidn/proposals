@@ -199,6 +199,21 @@ optional 'execute this script' field that always gets run if it's present
 - let's have the director evaluator pattern be a special case of a task-subtask
 - 'genetic' behavior, such as multiplle tries and selecting the best one
 
+misc issues:
+this is wrong:
+---
+// Memory System returns unranked matches
+const matches = await memorySystem.getRelevantContextFor(input);
+
+// Task System performs ranking and selection
+const scoredTemplates = matches.map(match => ({
+    template: findTemplateForMatch(match),
+    score: computeScore(match, input)
+}));
+
+const bestTemplate = scoredTemplates.sort((a, b) => b.score - a.score)[0];
+---
+the system should return a single 'best' match so there is no need for keeping track of or comparing scores.
 
 Loose ends:
 - need to specify how bash commands will be called in between the director and evaluation steps of the director-evaluator pattern.
@@ -286,4 +301,5 @@ DSL Function Definition and Subtask/Tool Distinction
 Ambiguity: There is discussion about supporting function definition/call primitives (e.g., for a Lisp‑like DSL) and also about distinguishing between subtasks (LLM-to‑LLM interactions) and tool calls (e.g. for file editing or shell execution). The boundary between these two types of operations is not clearly drawn.
 Impact: The answer affects both the syntax of the DSL and the runtime behavior of task execution, especially if different recovery or binding mechanisms are needed for each.
 Handling of Accumulated Data and Output Formatting
+
 

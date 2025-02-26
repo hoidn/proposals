@@ -4,14 +4,54 @@
 Proposed
 
 ## Context
-The Director-Evaluator pattern is a foundational component of our architecture that allows tasks to generate output, have it evaluated (potentially through external tools or scripts), and receive feedback for further refinement. Currently, the documentation describes both static and dynamic variants of this pattern, but lacks clear specification for how feedback flows between components, how errors are handled, and how the environment is maintained across multiple iterations.
+The Director-Evaluator pattern is a foundational component of our architecture that allows tasks to generate output, have it evaluated, and receive feedback for further refinement. Current documentation describes both static and dynamic variants but lacks clear specification for the feedback flow between components, especially regarding data passing and iteration control.
 
 ## Decision
-We will standardize the Evaluator-to-Director feedback flow using a structured JSON format stored in the `last_evaluator_output` environment variable, with unified handling for both static and dynamic pattern variants.
+We will implement a unified Director-Evaluator pattern with direct result passing between components, minimizing environment usage and providing flexible iteration control through a dedicated task type.
 
 ## Specification
 
-### 1. Feedback Data Structure
+### 1. Unified Task Type
+
+We will introduce a dedicated task type for the Director-Evaluator pattern:
+
+```xml
+<task type="director_evaluator_loop">
+  <description>{{task_description}}</description>
+  <max_iterations>5</max_iterations>
+  <director>
+    <!-- Director task definition -->
+    <description>Generate solution for {{original_prompt}}</description>
+    <inputs>
+      <input name="original_prompt" from="user_query"/>
+      <input name="feedback" from="evaluation_feedback"/>
+      <input name="iteration" from="current_iteration"/>
+    </inputs>
+  </director>
+  <evaluator>
+    <!-- Evaluator task definition -->
+    <description>Evaluate solution against {{original_prompt}}</description>
+    <inputs>
+      <input name="director_output" from="director_result"/>
+      <input name="original_prompt" from="user_query"/>
+    </inputs>
+  </evaluator>
+  <script_execution>
+    <!-- Optional script execution -->
+    <command>{{script_path}}</command>
+    <timeout>300</timeout>
+    <inputs>
+      <input name="script_input" from="director_result"/>
+    </inputs>
+  </script_execution>
+  <termination_condition>
+    <!-- Optional early termination -->
+    <condition>evaluation.success === true</condition>
+  </termination_condition>
+</task>
+```
+
+### 2. Feedback Data Structure
 
 All evaluator-to-director feedback will use this JSON structure:
 
@@ -33,234 +73,199 @@ interface EvaluationResult {
 }
 ```
 
-### 2. Environment Management
+### 3. Execution Flow
 
-The environment will maintain continuity across director-evaluator cycles:
+The TaskSystem will manage the iteration flow directly:
 
 ```typescript
-// After evaluator completes:
-function storeEvaluatorOutput(evaluationResult: EvaluationResult, env: Environment): void {
-    // Serialize result to JSON
-    env.set('last_evaluator_output', JSON.stringify(evaluationResult));
+async function executeDirectorEvaluatorLoop(task, inputs, context) {
+  const maxIterations = task.maxIterations || 5;
+  const results = [];
+  
+  let directorOutput = null;
+  let evaluationResult: EvaluationResult = { success: false, feedback: "" };
+  
+  for (let iteration = 0; iteration < maxIterations; iteration++) {
+    // Execute director with current state
+    directorOutput = await executeTask(
+      task.director,
+      {
+        ...inputs,
+        current_iteration: iteration,
+        evaluation_feedback: evaluationResult.feedback,
+        previous_results: results.length > 0 ? results : undefined
+      },
+      context
+    );
     
-    // Clear all other variables from the environment except last_evaluator_output
-    env.clearExcept(['last_evaluator_output']);
-}
-
-// When director accesses evaluator output:
-function getLastEvaluation(env: Environment): EvaluationResult | null {
-    const rawOutput = env.get('last_evaluator_output');
-    if (!rawOutput) return null;
+    // Store the director's result
+    results.push({ iteration, output: directorOutput, evaluation: null });
     
-    try {
-        return JSON.parse(rawOutput) as EvaluationResult;
-    } catch (error) {
-        throw createTaskFailure(
-            'context_parsing_failure', 
-            'Failed to parse evaluator output JSON',
-            { rawOutput: rawOutput.substring(0, 100) + '...' }
-        );
+    // Check if we should run a script
+    if (task.script_execution) {
+      const scriptResult = await executeScript(task.script_execution, directorOutput);
+      
+      // Add script result to be passed to evaluator
+      scriptOutput = {
+        stdout: scriptResult.stdout,
+        stderr: scriptResult.stderr,
+        exitCode: scriptResult.exitCode
+      };
     }
+    
+    // Execute evaluator
+    evaluationResult = await executeTask(
+      task.evaluator,
+      {
+        ...inputs,
+        director_result: directorOutput,
+        script_output: scriptOutput
+      },
+      context
+    );
+    
+    // Store the evaluation
+    results[results.length - 1].evaluation = evaluationResult;
+    
+    // Check termination condition
+    if (evaluationResult.success || 
+        (task.termination_condition && evaluateCondition(task.termination_condition, evaluationResult))) {
+      break;
+    }
+  }
+  
+  // Return the final result and history
+  return {
+    final_output: directorOutput,
+    final_evaluation: evaluationResult,
+    success: evaluationResult.success,
+    iterations_completed: results.length,
+    iteration_history: results
+  };
 }
 ```
 
-### 3. Error Handling
+### 4. Error Handling
 
-We distinguish between two types of feedback:
+Two types of feedback remain as before:
 
-1. **Negative Evaluations** (normal flow):
-   - Evaluator runs successfully but reports director's output as problematic
-   - Uses `success: false` with explanatory feedback
-   - Director receives this as normal feedback, not as an error
+1. **Negative Evaluations**: Normal flow where evaluator indicates improvement needed (`success: false`)
 
-2. **Evaluator Errors** (exceptional flow):
-   - Evaluator itself fails to run or process output
-   - Follows standard error taxonomy with `reason` field
-   - Bubbles up to calling context rather than returning to director
+2. **Evaluator Errors**: Exceptional flow where evaluator itself fails, following standard error taxonomy
 
-### 4. Director Template Parameters
+### 5. Iteration Control
 
-The director template should include these parameters to maintain state across iterations:
+Iteration control is explicit and configurable:
 
-```xml
-<task type="atomic" subtype="director">
-    <description>Generate solution for {{original_prompt}}</description>
-    <inputs>
-        <input name="original_prompt" from="user_query"/>
-        <input name="iteration" from="current_iteration"/>
-        <input name="max_iterations" from="max_attempts"/>
-        <input name="last_evaluation" from="last_evaluator_output"/>
-        <input name="previous_output" from="last_director_output"/>
-    </inputs>
-    <output_slot>last_director_output</output_slot>
-</task>
-```
+1. **Maximum Iterations**: Set via `<max_iterations>` element
+2. **Early Termination**: Via `<termination_condition>` element 
+3. **Success-Based Termination**: Automatically stops when `evaluationResult.success === true`
+4. **Iteration History**: Maintained and returned as part of the final result
 
-### 5. Unified XML Representation
+### 6. Parameter Passing
 
-We will unify the static and dynamic pattern variants with a single, flexible XML representation:
+Data is passed directly between tasks rather than through environment variables:
 
-```xml
-<!-- Static variant with predetermined execution flow -->
-<task type="sequential">
-    <description>{{task_description}}</description>
-    <context_management>
-        <inherit_context>none</inherit_context>
-        <accumulate_data>true</accumulate_data>
-        <accumulation_format>notes_only</accumulation_format>
-        <fresh_context>enabled</fresh_context>
-    </context_management>
-    <steps>
-        <task type="atomic" subtype="director">
-            <description>Generate solution for {{original_prompt}}</description>
-            <inputs>
-                <input name="original_prompt" from="user_query"/>
-                <input name="iteration" from="current_iteration"/>
-                <input name="last_evaluation" from="last_evaluator_output"/>
-            </inputs>
-            <output_slot>last_director_output</output_slot>
-        </task>
-        
-        <!-- Optional script execution step -->
-        <task type="script">
-            <description>Execute verification script</description>
-            <inputs>
-                <input name="script_input" from="last_director_output"/>
-            </inputs>
-            <script>
-                <command>{{script_path}}</command>
-                <timeout>300</timeout>
-            </script>
-            <output_slot>script_result</output_slot>
-        </task>
-        
-        <task type="atomic" subtype="evaluator">
-            <description>Evaluate output</description>
-            <inputs>
-                <input name="director_output" from="last_director_output"/>
-                <input name="script_result" from="script_result"/>
-                <input name="original_prompt" from="user_query"/>
-            </inputs>
-            <output_slot>last_evaluator_output</output_slot>
-        </task>
-    </steps>
-</task>
-
-<!-- Dynamic variant - director decides when to request evaluation -->
-<task type="atomic" subtype="director">
-    <description>Generate solution for {{original_prompt}}</description>
-    <inputs>
-        <input name="original_prompt" from="user_query"/>
-        <input name="iteration" from="current_iteration"/>
-        <input name="last_evaluation" from="last_evaluator_output"/>
-    </inputs>
-    <continuation_policy>request_evaluation</continuation_policy>
-    <output_slot>last_director_output</output_slot>
-</task>
-```
-
-### 6. Continuation Flow
-
-The dynamic variant uses the following flow:
-
-1. Director executes and returns a result with:
-   ```json
-   {
-       "content": "Generated solution...",
-       "status": "CONTINUATION",
-       "notes": {
-           "evaluation_request": {
-               "type": "validation",
-               "criteria": "Verify formatting and completeness",
-               "target": "solution.py"
-           }
-       }
-   }
-   ```
-
-2. The evaluator is dynamically spawned with appropriate inputs
-
-3. The evaluator produces an EvaluationResult that's stored in last_evaluator_output
-
-4. Control returns to the director with the evaluation feedback
-
-### 7. Iteration Configuration
-
-The number of iterations should be configurable and eventually exposed in the DSL. The director should have access to:
-
-- Current iteration count
-- Maximum allowed iterations
-- Previous iterations' outputs and evaluations
+1. **Input Parameters**: Explicitly declared in each component's `<inputs>` section
+2. **Result Passing**: The TaskSystem handles passing results between director and evaluator
+3. **Iteration State**: Managed by the loop executor, not stored in environment
+4. **Context**: Used only for lexical variables, not for inter-task communication
 
 ## Alternatives Considered
 
-1. **Plain Text Feedback**: Rejected in favor of structured JSON for type safety and extensibility
+1. **Environment-Based State**: Rejected in favor of direct passing to keep the environment focused on lexical variables rather than general state
 
-2. **Separate Static and Dynamic Implementations**: Rejected to reduce duplication and complexity
+2. **Separate Static/Dynamic Variants**: Rejected in favor of a unified representation that supports both use cases
 
-3. **Context Inheritance for State**: Rejected in favor of explicit template parameters for transparency and predictability
+3. **Ad-hoc Iteration Control**: Rejected in favor of explicit iteration control with maximum limits and termination conditions
 
 ## Consequences
 
 ### Positive
-- Clear, structured feedback flow between components
-- Unified handling for both static and dynamic variants
-- Support for multiple iteration cycles
-- Clean environment management
-- Explicit error handling
+- Unified representation for both static and dynamic patterns
+- Clear, direct data flow between components
+- Proper separation of concerns (TaskSystem manages iteration)
+- Explicit iteration control and history tracking
+- Environment used properly for lexical scope only
 
 ### Negative
-- More verbose XML templates
-- Requires JSON parsing/serialization
-- Potential failure points in JSON handling
+- More complex TaskSystem implementation
+- New task type required
+- Migration effort for existing implementations
 
 ## Implementation Guidelines
 
-1. Update the Evaluator to:
-   - Use the EvaluationResult structure
-   - Properly serialize to JSON
-   - Clear environment variables except last_evaluator_output
+1. Add the new `director_evaluator_loop` task type to the XML schema
 
-2. Update the Director to:
-   - Expect and parse JSON structure from last_evaluator_output
-   - Handle potential parsing failures
-   - Include original prompt context for the evaluator
+2. Implement the loop execution logic in the TaskSystem
 
-3. Add validation for the CONTINUATION/evaluation_request pattern
+3. Update the Evaluator and Director components to:
+   - Use the standardized EvaluationResult structure
+   - Accept direct inputs rather than environment access
+
+4. Add validation for the termination condition expression
 
 ## Example
 
-### Director Requesting Evaluation
+### Director-Evaluator Loop Task
+
+```xml
+<task type="director_evaluator_loop">
+  <description>Develop a sorting algorithm based on user requirements</description>
+  <max_iterations>3</max_iterations>
+  <director>
+    <description>Create or refine sorting algorithm based on feedback</description>
+    <inputs>
+      <input name="requirements" from="user_query"/>
+      <input name="feedback" from="evaluation_feedback"/>
+      <input name="iteration" from="current_iteration"/>
+    </inputs>
+  </director>
+  <script_execution>
+    <command>python -m test_sorting_algorithm.py</command>
+    <timeout>30</timeout>
+    <inputs>
+      <input name="script_input" from="director_result"/>
+    </inputs>
+  </script_execution>
+  <evaluator>
+    <description>Evaluate sorting algorithm implementation</description>
+    <inputs>
+      <input name="algorithm" from="director_result"/>
+      <input name="requirements" from="user_query"/>
+      <input name="test_results" from="script_output"/>
+    </inputs>
+  </evaluator>
+  <termination_condition>
+    <condition>evaluation.success === true || (evaluation.scriptOutput?.exitCode === 0 && iteration >= 2)</condition>
+  </termination_condition>
+</task>
+```
+
+### Director Output (First Iteration)
 
 ```typescript
 return {
-    content: "function calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}",
-    status: "CONTINUATION",
-    notes: {
-        evaluation_request: {
-            type: "code_validation",
-            criteria: "Check for correctness, style, and edge cases",
-            target: "calculateTotal.js"
-        }
-    }
+  content: "def bubble_sort(arr):\n    n = len(arr)\n    for i in range(n):\n        for j in range(0, n-i-1):\n            if arr[j] > arr[j+1]:\n                arr[j], arr[j+1] = arr[j+1], arr[j]\n    return arr",
+  notes: {
+    explanation: "Implemented a simple bubble sort algorithm as requested"
+  }
 };
 ```
 
-### Evaluator Response
+### Evaluator Output (First Iteration)
 
 ```typescript
-const evaluationResult: EvaluationResult = {
-    success: false,
-    feedback: "Function doesn't handle empty arrays correctly and will return NaN if item.price is missing.",
-    details: {
-        violations: [
-            "No empty array check",
-            "Missing null/undefined handling for item.price"
-        ],
-        suggestions: [
-            "Add a check for empty array at the beginning",
-            "Use optional chaining: item?.price || 0"
-        ]
+return {
+  success: false,
+  feedback: "The bubble sort implementation is correct but inefficient for large datasets. Consider adding an early exit optimization when no swaps occur in a pass.",
+  details: {
+    violations: ["Missing early exit optimization"],
+    scriptOutput: {
+      stdout: "All test cases passed but performance tests show O(n²) time in all cases",
+      stderr: "",
+      exitCode: 0
     }
+  }
 };
 ```
