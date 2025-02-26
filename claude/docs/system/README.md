@@ -233,18 +233,18 @@ if (result.status === "FAILED") {
 ## References & Documentation Map
 
 ### Architecture
-- [Overview](./system/architecture/overview.md)
-- [Patterns](./system/architecture/patterns/)
-- [Decisions (ADRs)](./system/architecture/decisions/)
+- [Overview](./architecture/overview.md)
+- [Patterns](./architecture/patterns/)
+- [Decisions (ADRs)](./architecture/decisions/)
 
 ### Contracts
-- [Interfaces](./system/contracts/interfaces.md)
-- [Resources](./system/contracts/resources.md)
-- [Protocols (XML Schema)](./system/contracts/protocols.md)
+- [Interfaces](./contracts/interfaces.md)
+- [Resources](./contracts/resources.md)
+- [Protocols (XML Schema)](./contracts/protocols.md)
 
 ### Components
-- [Task System](./components/task-system/README.md)
-- [Evaluator](./components/evaluator/README.md)
-- [Memory System](./components/memory/README.md)
-- [Compiler](./components/compiler/README.md)
+- [Task System](../components/task-system/README.md)
+- [Evaluator](../components/evaluator/README.md)
+- [Memory System](../components/memory/README.md)
+- [Compiler](../components/compiler/README.md)
 - Handler Tools
