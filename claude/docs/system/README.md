@@ -82,8 +82,8 @@ A user's request can be viewed as a "program," with subtasks akin to function ca
 - **DSL** is more expressive and compositional, letting you nest or map tasks in functional style.
 - Both representations ultimately feed into the Evaluator, which orchestrates subtask calls.
 
-### Lexical Environment
-Each DSL expression or XML subtask runs in an environment that may inherit context from its parent. This is how partial results or knowledge can be passed along.
+### Lexical Environment and context management
+Each DSL expression or XML subtask runs in an environment that may inherit context window data from its parent, in addition to lexically bound variables. 
 
 ## Architecture Overview
 
