@@ -4,7 +4,11 @@
 
 ## Overview
 
-The Director-Evaluator pattern is a specialized variant of the unified task‐subtask execution model. In this pattern, a parent task (the **Director**) produces an initial output that may require further evaluation. Instead of relying on a statically defined callback step, the evaluation subtask is spawned dynamically when the Director's output returns with a `CONTINUATION` status and an `evaluation_request` object in its `notes`.
+The Director-Evaluator pattern is a specialized variant of the unified task‐subtask execution model, implemented in two ways:
+
+1. **Dynamic Variant**: A parent task (the **Director**) produces an initial output that may require evaluation. When the Director's output returns with a `CONTINUATION` status and an `evaluation_request` object in its `notes`, the evaluation subtask is spawned dynamically.
+
+2. **Static Variant**: A predefined task structure of type `director_evaluator_loop` that explicitly defines the Director, Evaluator, and optional script execution steps with clear iteration control.
 
 **Note:** The `evaluation_request` object must include:
  - `type`: a string indicating the evaluation type,
