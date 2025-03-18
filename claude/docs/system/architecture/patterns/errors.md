@@ -126,8 +126,10 @@ The system maintains a standardized approach for preserving partial results when
 
 #### Storage Format Control
 The format of preserved partial results depends on the task's `accumulation_format` setting:
-- `notes_only`: Only summary information is preserved from each step
+- `notes_only`: Only summary information is preserved from each step (default for all operator types)
 - `full_output`: Complete output (with reasonable size limits)
+
+Each operator type has specific default settings for context management. For sequential tasks, the default `accumulation_format` is `notes_only`. These defaults apply when the `context_management` block is omitted. When present, explicit settings override the defaults, following the hybrid configuration approach.
 
 #### Size Management
 To prevent memory issues:
