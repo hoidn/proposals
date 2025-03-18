@@ -112,10 +112,24 @@ A powerful approach for iterative refinement:
 
 This can be done with either a static (predefined) or dynamic (continuation-based) approach.
 
-### 2. Context Management (Three-Dimensional)
-- **inherit_context**: "full," "none," or "subset" from the parent.
-- **accumulate_data**: Collect partial outputs from prior steps.
-- **fresh_context**: Whether to fetch new context from Memory.
+### 2. Context Management (Three-Dimensional Model)
+The system uses a standardized three-dimensional context management model that controls:
+- **inherit_context**: Controls parent context inheritance with values "full" (complete inheritance), "none" (no inheritance), or "subset" (selective inheritance based on relevance).
+- **accumulate_data**: Controls whether outputs from prior steps are accumulated (true/false).
+- **accumulation_format**: When accumulating data, specifies whether to include "notes_only" or "full_output".
+- **fresh_context**: Controls whether new context is fetched via associative matching ("enabled"/"disabled").
+
+This model is configured via a standardized XML structure:
+```xml
+<context_management>
+    <inherit_context>full|none|subset</inherit_context>
+    <accumulate_data>true|false</accumulate_data>
+    <accumulation_format>notes_only|full_output</accumulation_format>
+    <fresh_context>enabled|disabled</fresh_context>
+</context_management>
+```
+
+Each operator type has sensible defaults while allowing explicit overrides through template XML.
 
 ### 3. Subtask Spawning
 The system can create new subtasks if a task returns `status: "CONTINUATION"` along with a subtask request in notes.

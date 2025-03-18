@@ -44,14 +44,36 @@ Execute a series of tasks with explicit dependencies. Maintains execution order 
 
 ### Context Management Modes
 
-In the updated model, the `<inherit_context>` element is now an enumeration with allowed values:
- - **full** – the full parent context is passed unchanged,
- - **none** – no parent context is inherited,
- - **subset** – only a subset (as determined by task-specific rules) is inherited.
+The system uses a standardized three-dimensional context management model:
 
-The accumulation of step outputs remains controlled by the boolean `<accumulate_data>` element, and `<accumulation_format>` is restricted to either `notes_only` or `full_output`. **Note:** For the MVP, no partial results are preserved—if any subtask fails, intermediate outputs are discarded.
+1. **inherit_context**: An enumeration with allowed values:
+   - **full** – the full parent context is passed unchanged
+   - **none** – no parent context is inherited
+   - **subset** – only a subset (as determined by task-specific rules) is inherited
 
-For example, the above XML snippet indicates that no parent context is inherited while step outputs are accumulated in "notes-only" mode.
+2. **accumulate_data**: A boolean controlling whether outputs from prior steps are accumulated:
+   - **true** – previous step outputs are accumulated
+   - **false** – no accumulation of step outputs
+
+3. **accumulation_format**: When accumulating data, specifies the storage format:
+   - **notes_only** – only summary information is preserved
+   - **full_output** – complete step outputs are preserved
+
+4. **fresh_context**: Controls whether new context is generated via associative matching:
+   - **enabled** – fresh context is generated
+   - **disabled** – no fresh context is generated
+
+These dimensions are configured through a standardized XML structure:
+```xml
+<context_management>
+    <inherit_context>full|none|subset</inherit_context>
+    <accumulate_data>true|false</accumulate_data>
+    <accumulation_format>notes_only|full_output</accumulation_format>
+    <fresh_context>enabled|disabled</fresh_context>
+</context_management>
+```
+
+**Note:** For the MVP, no partial results are preserved—if any subtask fails, intermediate outputs are discarded.
 
 ### Execution Semantics
 - Tasks execute in specified order

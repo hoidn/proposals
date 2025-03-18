@@ -48,16 +48,20 @@ interface RevisedTaskResult {
 }
 
 /**
- * Defines context inheritance and accumulation policies for tasks.
- * The new model replaces a boolean inheritContext flag with an enumeration:
- *   - "full" for complete inheritance,
- *   - "none" for no inheritance, and
- *   - "subset" for selective inheritance.
+ * Defines context management settings using the standardized three-dimensional model.
+ * - inheritContext: Controls parent context inheritance
+ *   - "full" for complete inheritance
+ *   - "none" for no inheritance
+ *   - "subset" for selective inheritance
+ * - accumulateData: Controls whether outputs from prior steps are accumulated
+ * - accumulationFormat: Specifies storage format for accumulated data
+ * - freshContext: Controls whether new context is generated via associative matching
  */
 export interface ContextManagement {
     inheritContext: 'full' | 'none' | 'subset';
     accumulateData: boolean;
     accumulationFormat: 'full_output' | 'notes_only';
+    freshContext: 'enabled' | 'disabled';
 }
 
 /**

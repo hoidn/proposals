@@ -183,9 +183,10 @@ console.log('Retrieved context:', memoryResult.content);
 <task type="sequential">
     <description>Process and analyze data</description>
     <context_management>
-        <inherit_context>false</inherit_context>
+        <inherit_context>none</inherit_context>
         <accumulate_data>true</accumulate_data>
         <accumulation_format>notes_only</accumulation_format>
+        <fresh_context>enabled</fresh_context>
     </context_management>
     <steps>
         <task>

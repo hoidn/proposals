@@ -158,11 +158,17 @@ flowchart TD
 
 ## Context Management Delegation
 
-The Task System delegates **all context management** to the Evaluator. In other words:
+The Task System delegates **all context management** to the Evaluator according to the standardized three-dimensional model. In other words:
+
 1. The Task System's role is primarily to define task structure (sequential, map, reduce, etc.) and signal the Evaluator to execute steps.
-2. The Evaluator decides how and when to call `MemorySystem.getRelevantContextFor()`.
-3. The Handler remains focused on resource tracking (turns, tokens).
-4. No direct context accumulation logic occurs in the Task System itself.
+2. The Evaluator manages all three dimensions of context:
+   - **inherit_context**: Controls parent context inheritance ("full", "none", or "subset").
+   - **accumulate_data**: Controls accumulation of previous step outputs (true/false).
+   - **accumulation_format**: Specifies storage format for accumulated data ("notes_only" or "full_output").
+   - **fresh_context**: Controls whether new context is generated via associative matching ("enabled" or "disabled").
+3. The Evaluator decides how and when to call `MemorySystem.getRelevantContextFor()` based on these settings.
+4. The Handler remains focused on resource tracking (turns, tokens).
+5. No direct context accumulation logic occurs in the Task System itself.
 
 ## Error Handling
 

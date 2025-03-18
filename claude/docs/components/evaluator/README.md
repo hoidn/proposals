@@ -186,25 +186,23 @@ The Evaluator coordinates the execution of tasks—represented in AST or XML-bas
 
 ## Dual Context Tracking
 
-The Evaluator maintains two distinct types of context when both inheritance and accumulation are enabled:
+The Evaluator manages all three dimensions of the context management model:
 
-1. **Inherited Context**: The parent task's context that is passed down unchanged
-2. **Accumulated Data**: The step-by-step outputs collected during sequential execution
+1. **Inherited Context**: The parent task's context, controlled by `inherit_context` setting ("full", "none", or "subset").
+2. **Accumulated Data**: The step-by-step outputs collected during sequential execution, controlled by `accumulate_data` setting.
+3. **Fresh Context**: New context generated via associative matching, controlled by `fresh_context` setting.
 
-Under the new protocol, tasks use <inherit_context>none</inherit_context> and <accumulate_data>false</accumulate_data> to ensure that no prior environment variables are carried over except last_evaluator_output. When contexts are needed, the Evaluator:
+These dimensions are configured through the standardized context management XML structure:
+```xml
+<context_management>
+    <inherit_context>full|none|subset</inherit_context>
+    <accumulate_data>true|false</accumulate_data>
+    <accumulation_format>notes_only|full_output</accumulation_format>
+    <fresh_context>enabled|disabled</fresh_context>
+</context_management>
+```
 
-1. Maintains the parent's inherited context unchanged throughout execution
-2. Separately tracks accumulated outputs from previous steps
-3. Calls `getRelevantContextFor()` with both contexts when needed:
-   ```typescript
-   const contextInput: ContextGenerationInput = {
-       previousOutputs: accumulatedData,    // From sequential history
-       inheritedContext: parentContext,     // From parent task
-       taskText: currentTaskDescription     // Current step
-   };
-   const matchResult = await getRelevantContextFor(contextInput);
-   ```
-4. Uses the returned context and matches during prompt generation
+When contexts are needed, the Evaluator decides which dimensions to include based on these settings.
 
 ## Associative Matching Invocation
 

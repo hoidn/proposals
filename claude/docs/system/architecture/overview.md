@@ -236,11 +236,23 @@ The system maintains **explicit task history** for sequential operations. This d
    - Storage must remain resource-aware to avoid memory limit issues. If output is large, the evaluator can store a summarized version or notes-only.
 
 2. **Context Management**
-   - Context inheritance is separated from data accumulation.
-   - Three distinct modes of operation are recognized:
-     1. **Direct parent context inheritance**: The sub-task uses the same context as its parent, unchanged.
-     2. **History-aware associative matching**: The sub-task can optionally reference all previous step outputs as additional matching data.
-     3. **Standard associative matching**: The sub-task only uses the normal memory system and the known parent context, ignoring any step-by-step accumulations.
+   - The system uses a standardized three-dimensional context management model:
+     - **inherit_context**: Controls whether a subtask inherits "full" parent context, "none", or a "subset" based on relevance.
+     - **accumulate_data**: Controls whether outputs from prior steps are accumulated.
+     - **accumulation_format**: Specifies whether to store "notes_only" or "full_output" when accumulating data.
+     - **fresh_context**: Controls whether new context is generated via associative matching.
+   
+   - This model is configured through a standardized XML structure:
+   ```xml
+   <context_management>
+       <inherit_context>full|none|subset</inherit_context>
+       <accumulate_data>true|false</accumulate_data>
+       <accumulation_format>notes_only|full_output</accumulation_format>
+       <fresh_context>enabled|disabled</fresh_context>
+   </context_management>
+   ```
+   
+   - Each operator type has appropriate defaults, while allowing explicit overrides.
 
 3. **Partial Failures**
    - If a step fails, all previous step outputs remain available in the final (error) output.

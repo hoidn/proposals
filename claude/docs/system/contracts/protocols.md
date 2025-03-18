@@ -49,8 +49,8 @@ The task template schema defines the structure for XML task template files and m
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="accumulate_data" type="xs:boolean" default="false"/>
-              <xs:element name="accumulation_format" minOccurs="0">
+              <xs:element name="accumulate_data" type="xs:boolean"/>
+              <xs:element name="accumulation_format">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:enumeration value="full_output"/>
@@ -58,7 +58,7 @@ The task template schema defines the structure for XML task template files and m
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="fresh_context" minOccurs="0">
+              <xs:element name="fresh_context">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:enumeration value="enabled"/>
