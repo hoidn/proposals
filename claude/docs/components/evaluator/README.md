@@ -206,7 +206,7 @@ When contexts are needed, the Evaluator decides which dimensions to include base
 
 ## Associative Matching Invocation
 
-When executing a sequential task step with `<inherit_context>false</inherit_context>` **but** `<accumulate_data>true</accumulate_data>`, the Evaluator:
+When executing a sequential task step with `<inherit_context>none</inherit_context>` but `<accumulate_data>true</accumulate_data>` and `<fresh_context>enabled</fresh_context>`, the Evaluator:
 1. Calls `MemorySystem.getRelevantContextFor()` with prior steps' partial results
 2. Merges the returned `AssociativeMatchResult` into the next step's environment
 3. Maintains complete separation from the Handler's resource management
