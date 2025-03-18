@@ -25,28 +25,160 @@ This pattern is used by:
 
 ### 2.1 Resource Exhaustion
 Handled by [Protocol:Tasks:Reparse:1.0]
-[TBD: Complete category specification]
 
-### 2.2 Invalid Output Structure
+Resource exhaustion occurs when a task exceeds allocated system resources:
+- **Type**: 'RESOURCE_EXHAUSTION'
+- **Resources**: 'turns' | 'context' | 'output'
+- **Metrics**: Contains usage and limit values
+- **Recovery**: Attempt task decomposition
+
+### 2.2 Task Failure
 Related to [Contract:Tasks:TemplateSchema:1.0]
-[TBD: Complete category specification]
+
+Task failures now include a standardized `reason` field for more specific categorization:
+
+```typescript
+type TaskFailureReason = 
+  | 'context_retrieval_failure'    // Failure to retrieve context data
+  | 'context_matching_failure'     // Failure in associative matching algorithm 
+  | 'context_parsing_failure'      // Failure to parse or process retrieved context
+  | 'xml_validation_failure'       // Output doesn't conform to expected XML schema
+  | 'output_format_failure'        // Output doesn't meet format requirements
+  | 'execution_timeout'            // Task execution exceeded time limits
+  | 'execution_halted'             // Task execution was deliberately terminated
+  | 'subtask_failure'              // A subtask failed, causing parent task failure
+  | 'input_validation_failure'     // Input data didn't meet requirements
+  | 'unexpected_error';            // Catch-all for truly unexpected errors
+```
+
+Task failures also include a structured details object that may contain error-specific information such as:
+- partial_context: Any partial context that was retrieved before failure
+- context_metrics: Metrics related to context retrieval
+- violations: Specific validation rule violations
+- partialResults: Results from steps that completed before failure
+- failedStep: Index of the step that failed in a sequential task
 
 ### 2.3 Failure to Make Progress
-[TBD: Progress failure specification]
+Progress failures occur when a task cannot advance despite resources being available:
+- **Type**: 'TASK_FAILURE'
+- **Reason**: 'execution_halted'
+- **Indicators**: Multiple rounds with no state change
+- **Recovery**: Alternative approach or termination
+
+### 2.4 Partial Results Handling
+
+For Sequential Tasks:
+```typescript
+{
+  type: 'TASK_FAILURE',
+  reason: 'subtask_failure',
+  message: 'Sequential task "Process Dataset" failed at step 3',
+  details: {
+    failedStep: 2,
+    totalSteps: 5,
+    partialResults: [
+      { 
+        stepIndex: 0, 
+        output: "Data loaded successfully", 
+        notes: { recordCount: 1000 }
+      },
+      { 
+        stepIndex: 1, 
+        output: "Data transformed to required format"
+      }
+    ]
+  }
+}
+```
+
+For Reduce Tasks:
+```typescript
+{
+  type: 'TASK_FAILURE',
+  reason: 'subtask_failure',
+  message: 'Reduce task "Aggregate metrics" failed processing input 2',
+  details: {
+    failedInputIndex: 2,
+    totalInputs: 5,
+    processedInputs: [0, 1],
+    currentAccumulator: { totalCount: 1500, averageValue: 42.3 },
+    partialResults: [
+      { inputIndex: 0, result: "Processed metrics for server 1" },
+      { inputIndex: 1, result: "Processed metrics for server 2" }
+    ]
+  }
+}
+```
+
+### 2.5 Output Format Validation
+
+When a task specifies an output format using `<output_format type="json" schema="...">`, validation failures result in:
+
+```typescript
+{
+  type: 'TASK_FAILURE',
+  reason: 'output_format_failure',
+  message: 'Expected output of type "array" but got "object"',
+  details: {
+    expectedType: "array",
+    actualType: "object",
+    partialOutput: "..." // The original output
+  }
+}
+```
 
 ## 3. Recovery Process
 
 ### 3.1 Detection Phase
 See [Interface:Handler:ResourceMonitoring:1.0]
-[TBD: Detection requirements]
+
+Error detection now includes identifying:
+- Context retrieval failures
+- Context matching failures
+- Context parsing failures
+- Output format validation failures
+
+```typescript
+function handleTaskError(error: TaskError) {
+  if (error.type === 'RESOURCE_EXHAUSTION') {
+    // Handle resource exhaustion based on resource type
+    handleResourceExhaustion(error);
+  } else if (error.type === 'TASK_FAILURE') {
+    // Handle task failure based on reason
+    if (error.reason.startsWith('context_')) {
+      // Handle context-related failures
+      handleContextFailure(error);
+    } else if (error.reason === 'subtask_failure') {
+      // Handle subtask failures, potentially using partial results
+      handleSubtaskFailure(error);
+    } else if (error.reason === 'output_format_failure') {
+      // Handle output validation failures
+      handleOutputFormatFailure(error);
+    } else {
+      // Handle other failures
+      handleGeneralFailure(error);
+    }
+  }
+}
+```
 
 ### 3.2 Planning Phase
 See [Component:Evaluator:1.0] for recovery planning.
-[TBD: Planning requirements]
+
+Based on error type and reason, the following recovery strategies may be employed:
+- **Resource Exhaustion**: Task decomposition or simplification
+- **Context Failures**: Alternative context retrieval strategies
+- **Validation Errors**: Format correction or simplification
+- **Subtask Failures**: Partial result utilization or alternative approach
 
 ### 3.3 Execution Phase
 See [Protocol:Tasks:Reparse:1.0] for execution details.
-[TBD: Execution requirements]
+
+Recovery execution involves:
+- Preparing recovery context (including partial results if available)
+- Selecting appropriate recovery template
+- Executing recovery with appropriate resources
+- Monitoring recovery progress
 
 - **Associative Matching Failures:** If an associative matching task encounters an error—such as insufficient context or partial output—it will automatically trigger a retry. These errors will include any partial output and, if available, an optional success score (recorded in the task's `notes` field) to support future adaptive behavior.
 
@@ -62,14 +194,56 @@ flowchart TD
 ```
 
 ### 3.4 Validation Phase
-[TBD: Validation requirements]
+Recovery validation includes:
+- Verifying resource usage of recovery approach
+- Ensuring progress is made
+- Validating output structure and format
+- Limiting recovery depth to prevent infinite loops
 
 ## 4. Pattern Examples
 See components/task-system/impl/examples.md for concrete examples.
-[TBD: Additional examples]
+
+### Context Retrieval Failure Example
+```typescript
+// Memory System's file index is corrupted or unavailable
+const error = {
+  type: 'TASK_FAILURE',
+  reason: 'context_retrieval_failure',
+  message: 'Failed to access memory system index',
+  details: { error: 'Index corruption detected' }
+};
+
+// Recovery involves alternative context strategy
+const recovery = await evaluator.recoverFromContextFailure(error);
+```
+
+### Sequential Task Failure Example
+```typescript
+try {
+  const result = await taskSystem.executeTask(
+    "process data in multiple steps",
+    memorySystem
+  );
+} catch (error) {
+  if (error.type === 'TASK_FAILURE' && error.reason === 'subtask_failure') {
+    console.log(`Failed at step ${error.details.failedStep} of ${error.details.totalSteps}`);
+    
+    // Access partial results from completed steps
+    error.details.partialResults.forEach(result => {
+      console.log(`Step ${result.stepIndex} output: ${result.output}`);
+    });
+    
+    // Potentially use partial results for recovery
+    const recoveryResult = await evaluator.recoverWithPartialResults(error);
+  }
+}
+```
 
 ## 5. Known Limitations
-[TBD: Pattern limitations]
+- **Recovery Depth**: Limited to prevent infinite loops
+- **Partial Result Size**: May be truncated for very large outputs
+- **Stateful Recovery**: Not supported across sessions
+- **Complex Dependencies**: Recovery may not work for deeply nested failures
 
 ## 6. Related Patterns
 - [Pattern:ResourceManagement:1.0]
