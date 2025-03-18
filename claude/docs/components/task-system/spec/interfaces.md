@@ -41,6 +41,23 @@ export interface TaskSystem {
     }>>;
     registerTask(taskDef: TaskDefinition): void;
     executeFunctionCall(funcCall: FunctionCall, env: Environment): Promise<any>;
+    
+    /**
+     * Register a template in the TaskLibrary
+     * 
+     * @param template - The template to register
+     * @returns Promise resolving to registration result
+     */
+    registerTemplate(template: TemplateNode): Promise<void>;
+    
+    /**
+     * Execute a function call
+     * 
+     * @param call - The function call to execute
+     * @param env - The environment for argument evaluation
+     * @returns Promise resolving to the function result
+     */
+    executeCall(call: FunctionCallNode, env: Environment): Promise<TaskResult>;
 export interface Environment {
     bindings: Record<string, any>;
     outer?: Environment;
@@ -50,6 +67,14 @@ export interface Environment {
      */
     find(varName: string): any;
     executeScriptTask(scriptTask: ScriptTask, env: Environment): Promise<ScriptTaskResult>;
+    
+    /**
+     * Create a new child environment with additional bindings
+     * 
+     * @param bindings - New variable bindings to add
+     * @returns A new Environment with the added bindings
+     */
+    extend(bindings: Record<string, any>): Environment;
 }
 
 // Handler interface details are maintained in external documentation.
