@@ -37,19 +37,6 @@ The task template schema defines the structure for XML task template files and m
             <xs:attribute name="schema" type="xs:string" use="optional"/>
           </xs:complexType>
         </xs:element>
-        <xs:element name="output_format" minOccurs="0">
-          <xs:complexType>
-            <xs:attribute name="type" use="required">
-              <xs:simpleType>
-                <xs:restriction base="xs:string">
-                  <xs:enumeration value="json"/>
-                  <xs:enumeration value="text"/>
-                </xs:restriction>
-              </xs:simpleType>
-            </xs:attribute>
-            <xs:attribute name="schema" type="xs:string" use="optional"/>
-          </xs:complexType>
-        </xs:element>
         <xs:element name="context_management">
           <xs:complexType>
             <xs:sequence>

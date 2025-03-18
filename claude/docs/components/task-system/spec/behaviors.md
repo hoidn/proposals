@@ -65,6 +65,44 @@ The Task System is responsible for managing LLM task execution, including:
 - Generate warnings for malformed XML without blocking execution
 - Include 'data usage' section in task notes as specified by system prompt
 
+### Output Format Handling
+- Format declaration via `<output_format>` element with required `type` attribute
+- Supported format types:
+  * "json" - Structured JSON data
+  * "text" - Plain text (default)
+- Optional `schema` attribute for type validation:
+  * "object" - JSON object
+  * "array" or "[]" - JSON array
+  * "string[]" - Array of strings
+  * "number" - Numeric value
+  * "boolean" - Boolean value
+- Automatic JSON detection:
+  * Attempts to parse content as JSON when type="json"
+  * Adds parsed content to TaskResult as parsedContent property
+  * Falls back to original string content if parsing fails
+- Type validation process:
+  * Validates parsed content against schema attribute
+  * Generates error if type mismatch occurs
+  * Preserves original content in error details
+- Template return type validation:
+  * Function templates can specify return types via returns attribute
+  * Return types are validated against actual output
+  * Type mismatches generate validation errors
+
+Example error structure for output_format_failure:
+```typescript
+{
+  type: 'TASK_FAILURE',
+  reason: 'output_format_failure',
+  message: 'Expected output of type "array" but got "object"',
+  details: {
+    expectedType: "array",
+    actualType: "object",
+    partialOutput: "..." // The original output
+  }
+}
+```
+
 ### Task Template Matching
 
 #### Human Input Matching
