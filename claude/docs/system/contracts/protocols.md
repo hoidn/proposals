@@ -24,6 +24,19 @@ The task template schema defines the structure for XML task template files and m
         <xs:element name="description" type="xs:string"/>
         <xs:element name="output_slot" type="xs:string" minOccurs="0"/>
         <xs:element name="input_source" type="xs:string" minOccurs="0"/>
+        <xs:element name="output_format" minOccurs="0">
+          <xs:complexType>
+            <xs:attribute name="type" use="required">
+              <xs:simpleType>
+                <xs:restriction base="xs:string">
+                  <xs:enumeration value="json"/>
+                  <xs:enumeration value="text"/>
+                </xs:restriction>
+              </xs:simpleType>
+            </xs:attribute>
+            <xs:attribute name="schema" type="xs:string" use="optional"/>
+          </xs:complexType>
+        </xs:element>
         <xs:element name="context_management">
           <xs:complexType>
             <xs:sequence>
@@ -42,6 +55,14 @@ The task template schema defines the structure for XML task template files and m
                   <xs:restriction base="xs:string">
                     <xs:enumeration value="full_output"/>
                     <xs:enumeration value="notes_only"/>
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="fresh_context" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:enumeration value="enabled"/>
+                    <xs:enumeration value="disabled"/>
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
@@ -102,8 +123,39 @@ The task template schema defines the structure for XML task template files and m
       </xs:sequence>
       <xs:attribute name="ref" type="xs:string" use="optional"/>
       <xs:attribute name="subtype" type="xs:string" use="optional"/>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="atomic"/>
+            <xs:enumeration value="sequential"/>
+            <xs:enumeration value="reduce"/>
+            <xs:enumeration value="script"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
     </xs:complexType>
   </xs:element>
+  
+  <xs:element name="template">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="name" type="xs:string"/>
+        <xs:element name="params" type="xs:string"/>
+        <xs:element name="returns" type="xs:string" minOccurs="0"/>
+        <xs:element name="task" type="TaskType"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="call">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="template" type="xs:string"/>
+        <xs:element name="arg" type="xs:string" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
   <xs:element name="cond">
     <xs:complexType>
       <xs:sequence>
@@ -146,14 +198,8 @@ Example:
     <task type="script">
       <description>Run Target Script</description>
       <inputs>
-        <input name="director_output">
-          <task>
-            <description>Pass director output to script</description>
-          </task>
-        </input>
+        <input name="director_output" from="last_director_output"/>
       </inputs>
-      <!-- The script task captures stdout and stderr in the notes field.
-           Non-zero exit codes are treated as TASK_FAILURE. -->
     </task>
     <task>
       <description>Evaluate Script Output</description>
@@ -169,12 +215,56 @@ Example:
 </task>
 ```
 
-This extension to the schema ensures a clear definition of script execution tasks within a sequential workflow.
+### Function-Based Templates
+
+The XML schema now supports function-based templates with explicit parameter declarations:
+
+```xml
+<template name="analyze_data" params="dataset,config">
+  <task>
+    <description>Analyze {{dataset}} using {{config}}</description>
+  </task>
+</template>
+```
+
+And function calls with positional arguments:
+
+```xml
+<call template="analyze_data">
+  <arg>weather_data</arg>
+  <arg>standard_config</arg>
+</call>
+```
+
+This enforces strict scope boundaries - templates can only access explicitly passed parameters.
+
+### Output Format Specification
+
+Tasks can specify structured output format:
+
+```xml
+<task>
+  <description>List files in directory</description>
+  <output_format type="json" schema="string[]" />
+</task>
+```
+
+The `schema` attribute provides basic type information:
+- "object" - JSON object
+- "array" or "[]" - JSON array
+- "string[]" - Array of strings
+- "number" - Numeric value
+- "boolean" - Boolean value
+
+Output validation ensures the result matches the specified type.
 
 ### Field Definitions
 
 - The optional `ref` attribute is used to reference a pre-registered task in the TaskLibrary.
 - The optional `subtype` attribute refines the task type (for example, indicating "director", "evaluator", etc.)
+- The `output_format` element specifies structured output format and validation requirements.
+- The `template` element defines a function-like template with explicit parameters.
+- The `call` element invokes a function template with positional arguments.
 
 Example:
 ```xml
@@ -205,6 +295,7 @@ All required and optional fields (including `instructions`, `system`, `model`, a
   <inputs>
     <input name="code">The code to analyze</input>
   </inputs>
+  <output_format type="json" schema="object" />
   <manual_xml>false</manual_xml>
   <disable_reparsing>false</disable_reparsing>
 </task>
@@ -216,6 +307,50 @@ All required and optional fields (including `instructions`, `system`, `model`, a
 2. Input names must be unique
 3. Boolean fields must be "true" or "false"
 4. Model must be a valid LLM identifier
+5. Output schema must match basic type validation rules
+6. Template parameters must match call arguments
+
+### Error Response Schema
+
+```xml
+<xs:complexType name="TaskError">
+  <xs:choice>
+    <xs:element name="resource_exhaustion">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element name="resource" type="xs:string"/>
+          <xs:element name="message" type="xs:string"/>
+          <xs:element name="metrics" type="MetricsType" minOccurs="0"/>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:element>
+    <xs:element name="task_failure">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element name="reason" type="TaskFailureReason"/>
+          <xs:element name="message" type="xs:string"/>
+          <xs:element name="details" type="DetailsType" minOccurs="0"/>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:element>
+  </xs:choice>
+</xs:complexType>
+
+<xs:simpleType name="TaskFailureReason">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="context_retrieval_failure"/>
+    <xs:enumeration value="context_matching_failure"/>
+    <xs:enumeration value="context_parsing_failure"/>
+    <xs:enumeration value="xml_validation_failure"/>
+    <xs:enumeration value="output_format_failure"/>
+    <xs:enumeration value="execution_timeout"/>
+    <xs:enumeration value="execution_halted"/>
+    <xs:enumeration value="subtask_failure"/>
+    <xs:enumeration value="input_validation_failure"/>
+    <xs:enumeration value="unexpected_error"/>
+  </xs:restriction>
+</xs:simpleType>
+```
 
 ### Interface Mapping
 
