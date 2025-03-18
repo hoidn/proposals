@@ -296,13 +296,18 @@ The system maintains **explicit task history** for sequential operations. This d
    - Storage must remain resource-aware to avoid memory limit issues. If output is large, the evaluator can store a summarized version or notes-only.
 
 2. **Context Management**
-   - The system uses a standardized three-dimensional context management model:
+   - The system implements a hybrid configuration approach with operator-specific defaults and explicit overrides:
      - **inherit_context**: Controls whether a subtask inherits "full" parent context, "none", or a "subset" based on relevance.
      - **accumulate_data**: Controls whether outputs from prior steps are accumulated.
      - **accumulation_format**: Specifies whether to store "notes_only" or "full_output" when accumulating data.
      - **fresh_context**: Controls whether new context is generated via associative matching.
    
-   - This model is configured through a standardized XML structure:
+   - Default settings for sequential tasks:
+     | inherit_context | accumulate_data | accumulation_format | fresh_context |
+     |-----------------|-----------------|---------------------|---------------|
+     | full            | true            | notes_only          | enabled       |
+   
+   - These defaults can be overridden through an explicit XML structure:
    ```xml
    <context_management>
        <inherit_context>full|none|subset</inherit_context>
@@ -312,7 +317,9 @@ The system maintains **explicit task history** for sequential operations. This d
    </context_management>
    ```
    
-   - Each operator type has appropriate defaults, while allowing explicit overrides.
+   - When the context_management block is omitted, operator-specific defaults apply
+   - When present, explicit settings override the defaults
+   - This hybrid approach provides both consistency and flexibility
 
 3. **Partial Failures**
    - If a step fails, all previous step outputs remain available in the final (error) output.

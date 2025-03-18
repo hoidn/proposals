@@ -349,6 +349,31 @@ The `schema` attribute provides basic type information:
 
 Output validation ensures the result matches the specified type.
 
+### Context Management Configuration
+
+The `<context_management>` element controls how context is managed during task execution:
+
+```xml
+<context_management>
+    <inherit_context>full|none|subset</inherit_context>
+    <accumulate_data>true|false</accumulate_data>
+    <accumulation_format>notes_only|full_output</accumulation_format>
+    <fresh_context>enabled|disabled</fresh_context>
+</context_management>
+```
+
+Each operator type has specific default settings that apply when the `<context_management>` element is omitted:
+
+| Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
+|---------------|-----------------|-----------------|---------------------|---------------|
+| atomic        | full            | false           | notes_only          | enabled       |
+| sequential    | full            | true            | notes_only          | enabled       |
+| reduce        | none            | true            | notes_only          | enabled       |
+| script        | full            | false           | notes_only          | disabled      |
+| director_evaluator_loop | none  | true            | notes_only          | enabled       |
+
+When the `<context_management>` element is present, its settings override the operator defaults. Settings are merged during template loading, with explicit settings taking precedence over defaults.
+
 ### Field Definitions
 
 - The optional `ref` attribute is used to reference a pre-registered task in the TaskLibrary.

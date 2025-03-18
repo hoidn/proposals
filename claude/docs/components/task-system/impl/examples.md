@@ -362,13 +362,34 @@ try {
   }
 }
 
-<!-- Example: Sequential Task with Data Accumulation -->
+<!-- Example: Sequential Task with Default Context Management -->
+<task type="sequential">
+    <description>Process and analyze data</description>
+    <!-- No context_management block - using defaults:
+         inherit_context: full
+         accumulate_data: true
+         accumulation_format: notes_only
+         fresh_context: enabled -->
+    <steps>
+        <task>
+            <description>Load dataset</description>
+            <inputs>
+                <input name="data_file" from="csv_file_path"/>
+            </inputs>
+        </task>
+        <task>
+            <description>Filter invalid rows</description>
+        </task>
+    </steps>
+</task>
+
+<!-- Example: Sequential Task with Custom Context Management -->
 <task type="sequential">
     <description>Process and analyze data</description>
     <context_management>
         <inherit_context>none</inherit_context>
         <accumulate_data>true</accumulate_data>
-        <accumulation_format>notes_only</accumulation_format>
+        <accumulation_format>full_output</accumulation_format>
         <fresh_context>enabled</fresh_context>
     </context_management>
     <steps>

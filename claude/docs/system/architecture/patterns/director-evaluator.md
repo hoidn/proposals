@@ -155,11 +155,38 @@ Upon receiving this result, the Evaluator:
 
 ## Integration with the Unified Architecture
 
-The Director-Evaluator pattern fully embraces the dynamic subtask concept and integrates with the three-dimensional context management model:
+### Context Management Defaults
+
+The Director-Evaluator pattern has specific default context management settings:
+
+| Task Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
+|-----------|-----------------|-----------------|---------------------|---------------|
+| director_evaluator_loop | none | true | notes_only | enabled |
+| director (component) | full | false | notes_only | enabled |
+| evaluator (component) | full | false | notes_only | enabled |
+
+These defaults can be overridden through explicit configuration:
+
+```xml
+<task type="director_evaluator_loop">
+  <description>Iterative refinement process</description>
+  <context_management>
+    <inherit_context>subset</inherit_context>
+    <accumulate_data>true</accumulate_data>
+    <accumulation_format>full_output</accumulation_format>
+    <fresh_context>enabled</fresh_context>
+  </context_management>
+  <!-- other elements -->
+</task>
+```
+
+The Director-Evaluator pattern fully embraces the hybrid configuration approach and integrates with the three-dimensional context management model:
 
 - **Inherited Context**: The parent task's context, controlled by `inherit_context` setting.
 - **Accumulated Data**: The step-by-step outputs collected during sequential execution, controlled by `accumulate_data` setting.
 - **Fresh Context**: New context generated via associative matching, controlled by `fresh_context` setting.
+
+When the context_management block is omitted, the operator-specific defaults apply. When present, explicit settings override the defaults, providing both consistency and flexibility.
 
 ### Script Execution Integration
 

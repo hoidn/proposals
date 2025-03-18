@@ -7,12 +7,37 @@
 
 ## Context Frame Operations
 
+### Operator Default Settings
+
+Each operator type has specific default context management settings:
+
+| Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
+|---------------|-----------------|-----------------|---------------------|---------------|
+| atomic        | full            | false           | notes_only          | enabled       |
+| sequential    | full            | true            | notes_only          | enabled       |
+| reduce        | none            | true            | notes_only          | enabled       |
+| script        | full            | false           | notes_only          | disabled      |
+| director_evaluator_loop | none  | true            | notes_only          | enabled       |
+
+These defaults apply when no explicit context_management block is provided. When present, the explicit settings override the defaults:
+
+```xml
+<context_management>
+    <inherit_context>full|none|subset</inherit_context>
+    <accumulate_data>true|false</accumulate_data>
+    <accumulation_format>notes_only|full_output</accumulation_format>
+    <fresh_context>enabled|disabled</fresh_context>
+</context_management>
+```
+
+Settings are merged during template loading, with explicit settings taking precedence over defaults.
+
 ### Context Inheritance Modes
 
 The system supports three context inheritance modes:
 - **full**: Complete inheritance of parent context
 - **subset**: Selective inheritance of specific context elements
-- **none/disable**: No context inheritance (new for atomic tasks/associative matching)
+- **none**: No context inheritance
 
 When the "disable context" flag is active, the inherited context is completely omitted from the ContextGenerationInput.
 

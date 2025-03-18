@@ -42,7 +42,21 @@ Execute a series of tasks with explicit dependencies. Maintains execution order 
 </task>
 ```
 
-### Context Management Modes
+### Context Management
+
+#### Operator Default Settings
+
+Each operator type has specific default context management settings that apply when no explicit configuration is provided:
+
+| Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
+|---------------|-----------------|-----------------|---------------------|---------------|
+| atomic        | full            | false           | notes_only          | enabled       |
+| sequential    | full            | true            | notes_only          | enabled       |
+| reduce        | none            | true            | notes_only          | enabled       |
+| script        | full            | false           | notes_only          | disabled      |
+| director_evaluator_loop | none  | true            | notes_only          | enabled       |
+
+#### Context Management Dimensions
 
 The system uses a standardized three-dimensional context management model:
 
@@ -63,7 +77,10 @@ The system uses a standardized three-dimensional context management model:
    - **enabled** – fresh context is generated
    - **disabled** – no fresh context is generated
 
-These dimensions are configured through a standardized XML structure:
+#### Context Management Override
+
+These dimensions can be explicitly configured through a standardized XML structure:
+
 ```xml
 <context_management>
     <inherit_context>full|none|subset</inherit_context>
@@ -73,7 +90,11 @@ These dimensions are configured through a standardized XML structure:
 </context_management>
 ```
 
-**Note:** For the MVP, no partial results are preserved—if any subtask fails, intermediate outputs are discarded.
+When the `<context_management>` block is present, its settings override the operator defaults. When it's omitted, the operator-specific defaults apply. This hybrid approach provides both consistency and flexibility.
+
+Settings are merged during template loading, with explicit settings taking precedence over defaults. This ensures that task authors can rely on sensible defaults while still having the ability to customize context behavior when needed.
+
+**Note:** Partial results are now preserved when subtasks fail, with the format determined by the `accumulation_format` setting.
 
 ### Execution Semantics
 - Tasks execute in specified order

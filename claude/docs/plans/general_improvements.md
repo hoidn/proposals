@@ -2,20 +2,31 @@
 
 ## Key Inconsistencies and Gaps
 
-### 1. Context Management Ambiguity
+### 1. Context Management Ambiguity - RESOLVED
 
-#### Current Issues
-- Unclear distinction between how `inherit_context` and `accumulate_data` interact in reduce operations
-- Inconsistent handling of dual-context tracking across different operators
-- Ambiguous mapping between XML schema and AST structure for context attributes
+#### ~~Current Issues~~
+- ~~Unclear distinction between how `inherit_context` and `accumulate_data` interact in reduce operations~~
+- ~~Inconsistent handling of dual-context tracking across different operators~~
+- ~~Ambiguous mapping between XML schema and AST structure for context attributes~~
 
-#### Recommendations
-1. Standardize context inheritance model:
-   - Define clear rules for when context is inherited vs. accumulated
-   - Document interaction between inheritance and accumulation
-   - Specify behavior for each operator type
+#### Resolution
+This issue has been resolved in ADR 14 (Operator Context Configuration) by implementing a hybrid configuration approach with operator-specific defaults and explicit overrides:
 
-2. Formalize context flow:
+1. Each operator type has specific default settings:
+   | Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
+   |---------------|-----------------|-----------------|---------------------|---------------|
+   | atomic        | full            | false           | notes_only          | enabled       |
+   | sequential    | full            | true            | notes_only          | enabled       |
+   | reduce        | none            | true            | notes_only          | enabled       |
+   | script        | full            | false           | notes_only          | disabled      |
+   | director_evaluator_loop | none  | true            | notes_only          | enabled       |
+
+2. These defaults apply when no explicit context_management block is provided
+3. When present, explicit settings override the defaults
+4. This hybrid approach provides both consistency and flexibility
+
+#### Context Flow
+The standardized context flow model remains valid:
    ```
    Parent Context -> Child Task
      │

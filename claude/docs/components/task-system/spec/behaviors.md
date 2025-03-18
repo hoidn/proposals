@@ -196,14 +196,40 @@ flowchart TD
 
 ## Context Management Delegation
 
-The Task System delegates **all context management** to the Evaluator according to the standardized three-dimensional model. In other words:
+The Task System implements a hybrid configuration approach with operator-specific defaults and explicit overrides:
 
-1. The Task System's role is primarily to define task structure (sequential, map, reduce, etc.) and signal the Evaluator to execute steps.
+| Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
+|---------------|-----------------|-----------------|---------------------|---------------|
+| atomic        | full            | false           | notes_only          | enabled       |
+| sequential    | full            | true            | notes_only          | enabled       |
+| reduce        | none            | true            | notes_only          | enabled       |
+| script        | full            | false           | notes_only          | disabled      |
+| director_evaluator_loop | none  | true            | notes_only          | enabled       |
+
+These defaults apply when no explicit context_management block is provided. When present, the explicit settings override the defaults:
+
+```xml
+<context_management>
+    <inherit_context>full|none|subset</inherit_context>
+    <accumulate_data>true|false</accumulate_data>
+    <accumulation_format>notes_only|full_output</accumulation_format>
+    <fresh_context>enabled|disabled</fresh_context>
+</context_management>
+```
+
+The Task System delegates **all context management execution** to the Evaluator according to the final merged configuration. In other words:
+
+1. The Task System's role is to:
+   - Define task structure (sequential, map, reduce, etc.)
+   - Process context management configuration (defaults + overrides)
+   - Signal the Evaluator to execute steps with the final configuration
+
 2. The Evaluator manages all three dimensions of context:
    - **inherit_context**: Controls parent context inheritance ("full", "none", or "subset").
    - **accumulate_data**: Controls accumulation of previous step outputs (true/false).
    - **accumulation_format**: Specifies storage format for accumulated data ("notes_only" or "full_output").
    - **fresh_context**: Controls whether new context is generated via associative matching ("enabled" or "disabled").
+
 3. The Evaluator decides how and when to call `MemorySystem.getRelevantContextFor()` based on these settings.
 4. The Handler remains focused on resource tracking (turns, tokens).
 5. No direct context accumulation logic occurs in the Task System itself.

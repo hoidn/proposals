@@ -1,7 +1,7 @@
 # Architecture Decision Record: Sequential Context Management
 
 ## Status
-Proposed
+Implemented (see ADR 14)
 
 ## Context
 We need to separate context inheritance from data accumulation and provide a robust mechanism for step-by-step history tracking.
@@ -15,6 +15,22 @@ Currently, tasks either share context automatically or produce data that might o
 4. **Include step outputs** in error results for failed sequences.  
 5. **Enforce resource limits** on total stored step data.
 
+## Implementation
+This ADR has been fully implemented as part of ADR 14 (Operator Context Configuration), which introduced a hybrid configuration approach with operator-specific defaults and explicit overrides:
+
+| Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
+|---------------|-----------------|-----------------|---------------------|---------------|
+| sequential    | full            | true            | notes_only          | enabled       |
+
+These defaults apply when no explicit context_management block is provided. When present, explicit settings override the defaults, providing both consistency and flexibility.
+
+The implementation includes:
+1. Default context settings for all operator types
+2. XML schema support for the context_management block
+3. Template processing with merged settings (defaults + overrides)
+4. Evaluator integration for applying the final configuration
+5. Partial results preservation in error handling
+
 ## Consequences
 - **Cleaner separation of concerns** between inheritance and accumulation  
 - **More flexible context management** through distinct modes (`inherit_context`, `accumulate_data`, etc.)  
@@ -22,21 +38,9 @@ Currently, tasks either share context automatically or produce data that might o
 - **Predictable error output**: if step N fails, steps 1..N-1 remain visible  
 - **Clear resource usage capping** for historical data
 
-## Implementation Notes
-1. The new `<context_management>` block in the `sequential` task schema.  
-2. The Evaluator stores subtask outputs in a local structure (`SequentialHistory`).  
-3. On subtask completion (whether success or error), the Evaluator updates the history.  
-4. If `accumulate_data` is `true`, the next subtask can optionally see prior outputs (the system uses these to fill in an associative matching context or a merged notes field).  
-5. If `accumulation_format` is `notes_only`, we store only minimal text from each step in the history. If `full_output`, we store the entire subtask result.  
-6. The plan accounts for partial failures by storing partial results in the final error. 
-
-## Alternatives Considered
-- **Context merging** in each step: Rejected due to complexity and risk of indefinite growth.  
-- **Forcing every step to have fresh context**: Would break certain use cases that require incremental data usage.  
-- **Implicit partial output usage**: Proposed approach is more explicit, ensuring developers set `accumulate_data` if they need it.
-
 ## Related
+- [ADR 14 - Operator Context Configuration] for the complete implementation
 - [Pattern:SequentialTask:2.0] in system/architecture/overview.md  
 - [misc/operators.md] for structural usage  
 - [system/contracts/protocols.md] for updated XSD schema  
-- [components/task-system/impl/examples.md] for a usage example
+- [components/task-system/impl/examples.md] for usage examples

@@ -65,6 +65,67 @@
 - Partial parsing support
 - Clear error locations
 
+## Context Management Implementation
+
+### Hybrid Configuration Approach
+
+The Task System implements a hybrid configuration approach with operator-specific defaults and explicit overrides:
+
+```typescript
+// Default context management settings by operator type
+const DEFAULT_CONTEXT_SETTINGS = {
+  atomic: {
+    inheritContext: 'full',
+    accumulateData: false,
+    accumulationFormat: 'notes_only',
+    freshContext: 'enabled'
+  },
+  sequential: {
+    inheritContext: 'full',
+    accumulateData: true,
+    accumulationFormat: 'notes_only',
+    freshContext: 'enabled'
+  },
+  reduce: {
+    inheritContext: 'none',
+    accumulateData: true,
+    accumulationFormat: 'notes_only',
+    freshContext: 'enabled'
+  },
+  script: {
+    inheritContext: 'full',
+    accumulateData: false,
+    accumulationFormat: 'notes_only',
+    freshContext: 'disabled'
+  },
+  director_evaluator_loop: {
+    inheritContext: 'none',
+    accumulateData: true,
+    accumulationFormat: 'notes_only',
+    freshContext: 'enabled'
+  }
+};
+
+// Template processing with merged settings
+function processTemplate(template) {
+  const operatorType = template.type;
+  const defaults = DEFAULT_CONTEXT_SETTINGS[operatorType];
+  
+  // If context_management is present, merge with defaults
+  if (template.contextManagement) {
+    return {
+      ...defaults,
+      ...template.contextManagement
+    };
+  }
+  
+  // Otherwise use defaults
+  return defaults;
+}
+```
+
+During task execution, the final merged configuration is passed to the Evaluator, which applies the settings accordingly.
+
 ## Task/Template Matching
 
 The Task System uses a heuristic, associative matching process for atomic tasks. In this approach:
@@ -73,7 +134,7 @@ The Task System uses a heuristic, associative matching process for atomic tasks.
 - **Disable Context Option:** An optional "disable context" flag can be set in the task's `ContextGenerationInput` to omit inherited context entirely. This ensures that only the explicit task description and any previous outputs inform the matching process.
 - **Highest-Scoring Candidate:** The system evaluates all candidates and selects the template with the highest score. Composite tasks are built by sequencing multiple atomic task templates rather than by direct template matching.
 
-For further details on context handling and related design decisions, see [ADR 002 - Context Management](../../system/architecture/decisions/002-context-management.md) and [ADR 005 - Context Handling](../../system/architecture/decisions/005-context-handling.md).
+For further details on context handling and related design decisions, see [ADR 002 - Context Management](../../system/architecture/decisions/002-context-management.md), [ADR 005 - Context Handling](../../system/architecture/decisions/005-context-handling.md), and [ADR 14 - Operator Context Configuration](../../system/architecture/decisions/14-operator-ctx-config.md).
 
 #### Matching Call Chain
 

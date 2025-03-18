@@ -4,7 +4,7 @@ Below is the completion level (0-100%) for each ADR as reflected in the current 
 
 - decisions/completed/010-evaluator-director.md: 100%
 - decisions/removed.md: 100%
-- decisions/14-operator-ctx-config.md: 80%
+- decisions/14-operator-ctx-config.md: 100%
 - decisions/12-function-based-templates.md: 95%
 - decisions/13-json-output.md: 100%
 - decisions/9-partial-results.md: 100%

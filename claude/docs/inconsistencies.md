@@ -18,15 +18,19 @@ Options:
 
 Recommendation: If you plan to handle context failures with specialized fallback or re-tries, choose (A). If context issues are not special in your system's eyes, keep (B) to avoid error-type proliferation.
 
-## Inherited Context for Map and Reduce
+## Inherited Context for Map and Reduce - RESOLVED
 
-Question: "Should <inherit_context> be available on all operators (map, reduce, sequential) so sub-tasks can share or skip context?"
+This issue has been resolved in ADR 14 (Operator Context Configuration). All operators now support the `<inherit_context>` setting with consistent semantics, following the hybrid configuration approach with operator-specific defaults:
 
-Options:
-- A: Provide <inherit_context> consistently on all multi-step operators.
-- B: Keep inheritance on sequential only, and treat map/reduce differently.
+| Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
+|---------------|-----------------|-----------------|---------------------|---------------|
+| atomic        | full            | false           | notes_only          | enabled       |
+| sequential    | full            | true            | notes_only          | enabled       |
+| reduce        | none            | true            | notes_only          | enabled       |
+| script        | full            | false           | notes_only          | disabled      |
+| director_evaluator_loop | none  | true            | notes_only          | enabled       |
 
-Recommendation: If the system's mental model is that all nested tasks might optionally share the environment, use (A). If parallel tasks or reduce tasks inherently require a "fresh" environment, then (B) is simpler.
+These defaults apply when no explicit context_management block is provided. When present, explicit settings override the defaults, providing both consistency and flexibility.
 
 ## Handler Tools API (Read-Only vs. Read/Write)
 
