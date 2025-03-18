@@ -130,6 +130,7 @@ The task template schema defines the structure for XML task template files and m
             <xs:enumeration value="sequential"/>
             <xs:enumeration value="reduce"/>
             <xs:enumeration value="script"/>
+            <xs:enumeration value="director_evaluator_loop"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:attribute>
@@ -172,6 +173,34 @@ The task template schema defines the structure for XML task template files and m
       </xs:sequence>
     </xs:complexType>
   </xs:element>
+<!-- Director-Evaluator Loop Task Definition -->
+<xs:element name="director_evaluator_loop">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element name="description" type="xs:string"/>
+      <xs:element name="max_iterations" type="xs:integer" minOccurs="0"/>
+      <xs:element ref="context_management"/>
+      <xs:element name="director" type="TaskType"/>
+      <xs:element name="evaluator" type="TaskType"/>
+      <xs:element name="script_execution" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="command" type="xs:string"/>
+            <xs:element name="timeout" type="xs:integer" minOccurs="0"/>
+            <xs:element name="inputs" type="InputsType"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="termination_condition" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="condition" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
 </xs:schema>
 ```
 

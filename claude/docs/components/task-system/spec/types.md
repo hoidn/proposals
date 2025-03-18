@@ -1,7 +1,7 @@
 # Task System Types
 
 // Core task types used across the Task System.
-export type TaskType = "atomic" | "sequential" | "reduce" | "script";
+export type TaskType = "atomic" | "sequential" | "reduce" | "script" | "director_evaluator_loop";
 export type AtomicTaskSubtype = "standard" | "subtask";
 
 // Task execution status.
@@ -116,10 +116,6 @@ export interface EvaluationResult {
     feedback?: string;
 }
 
-export interface DirectorEnv extends Environment {
-    last_evaluator_output: string | null;
-    // Other variables are cleared on continuation
-}
 
 export interface Environment {
     bindings: Record<string, any>;
@@ -131,16 +127,6 @@ export interface Environment {
     find(varName: string): any;
 }
 
-function prepareContinuationEnv(currentEnv: Environment): Environment {
-    return new Environment({
-        last_evaluator_output: currentEnv.get('last_evaluator_output')
-    });
-}
-
-function storeEvaluatorResult(result: TaskResult, env: Environment): void {
-    env.set('last_evaluator_output', result.content);
-    env.clearExcept(['last_evaluator_output']);
-}
 
 ## Resource Management Types
 
@@ -284,3 +270,46 @@ interface TemplateValidation extends ValidationResult {
 2. Public API types are a subset of these definitions
 3. Implementation details for memory system metadata types pending definition
 4. All resource limits and metrics are enforced per-Handler
+/**
+ * Represents a director_evaluator_loop task type with explicit
+ * director, evaluator, and optional script_execution components.
+ */
+interface DirectorEvaluatorLoopTask extends BaseTask {
+    type: 'director_evaluator_loop';
+    contextManagement: ContextManagement;
+    maxIterations?: number;
+    director: Task;
+    evaluator: Task;
+    scriptExecution?: ScriptExecution;
+    terminationCondition?: string;
+}
+
+/**
+ * Specialized result structure for evaluator feedback
+ */
+export interface EvaluationResult extends TaskResult {
+    notes: {
+        success: boolean;        // Whether the evaluation passed
+        feedback: string;        // Human-readable feedback message
+        details?: {              // Optional structured details
+            metrics?: Record<string, number>; // Optional evaluation metrics
+            violations?: string[];            // Specific validation failures
+            suggestions?: string[];           // Suggested improvements
+            [key: string]: any;               // Extension point
+        };
+        scriptOutput?: {         // Present when script execution is involved
+            stdout: string;      // Standard output from script
+            stderr: string;      // Standard error output from script
+            exitCode: number;    // Exit code from script
+        };
+    };
+}
+
+/**
+ * Script execution configuration
+ */
+export interface ScriptExecution {
+    command: string;
+    timeout?: number;
+    inputs: Record<string, string>;
+}

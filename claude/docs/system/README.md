@@ -198,30 +198,42 @@ Below is a typical usage sequence:
     (task "evaluator" "Evaluate script output" )))
 ```
 
-### 2. XML Example
+### 2. XML Example: Director-Evaluator Loop
 ```xml
-<task type="sequential">
-  <description>Static Director-Evaluator Pipeline</description>
+<task type="director_evaluator_loop">
+  <description>Iterative code refinement</description>
+  <max_iterations>3</max_iterations>
   <context_management>
     <inherit_context>none</inherit_context>
     <accumulate_data>true</accumulate_data>
     <accumulation_format>notes_only</accumulation_format>
     <fresh_context>enabled</fresh_context>
   </context_management>
-  <steps>
-    <task>
-      <description>Generate Initial Output</description>
-    </task>
-    <task type="script">
-      <description>Run External Script</description>
-      <inputs>
-        <input name="director_output" from="previous_step" />
-      </inputs>
-    </task>
-    <task>
-      <description>Evaluate Script Output</description>
-    </task>
-  </steps>
+  <director>
+    <description>Generate solution for {{problem}}</description>
+    <inputs>
+      <input name="problem" from="user_query"/>
+      <input name="feedback" from="evaluation_feedback"/>
+      <input name="iteration" from="current_iteration"/>
+    </inputs>
+  </director>
+  <evaluator>
+    <description>Evaluate solution against requirements</description>
+    <inputs>
+      <input name="solution" from="director_result"/>
+      <input name="requirements" from="user_query"/>
+    </inputs>
+  </evaluator>
+  <script_execution>
+    <command>./test_solution.sh</command>
+    <timeout>300</timeout>
+    <inputs>
+      <input name="script_input" from="director_result"/>
+    </inputs>
+  </script_execution>
+  <termination_condition>
+    <condition>evaluation.success === true</condition>
+  </termination_condition>
 </task>
 ```
 

@@ -13,6 +13,8 @@ The Director-Evaluator pattern is a specialized variant of the unified task‐su
 
 ## Pattern Description
 
+### Dynamic Variant
+
 This pattern follows a three-phase flow:
 
 1. **Parent Task (Director):**
@@ -21,20 +23,106 @@ This pattern follows a three-phase flow:
    - Uses a `<context_management>` block with `inherit_context` set to `none` to start a new execution chain.
 
 2. **Evaluation Trigger via Continuation:**
-   - Rather than a fixed callback subtask, the evaluation step is triggered dynamically when the Director task returns a `CONTINUATION` status.
+   - The evaluation step is triggered dynamically when the Director task returns a `CONTINUATION` status.
    - The embedded `evaluation_request` specifies both:
        - The **bash script** (or external callback mechanism) to execute, and
        - The **target** string that describes the aspects of the output requiring evaluation.
    - The Evaluator uses this information—with associative matching—to select an appropriate evaluation task template.
-   - Only the latest evaluator output is retained; after the Evaluator completes its feedback step, the environment contains solely last_evaluator_output while all other temporary data is cleared. This significantly simplifies the feedback loop.
 
 3. **Child Task (Evaluator):**
    - Is dynamically spawned by the Evaluator when it detects a `CONTINUATION` status along with an `evaluation_request` in the Director's output.
    - Uses a `<context_management>` block with `inherit_context` set to `subset` and `accumulate_data` enabled to incorporate only the relevant context.
-   - Executes the evaluation subtask—which may include invoking the specified bash script via the Handler or Evaluator—and feeds its results back to the parent task so that the Director may continue its sequence.
+   - Executes the evaluation subtask—which may include invoking the specified bash script via the Handler or Evaluator—and feeds its results back to the parent task.
 
-### Environment Variable Management
-Environment variables are managed so that last_evaluator_output is the only persistent variable across continuations. Any new evaluation clears other data, thereby reducing context window usage.
+### Static Variant (Director-Evaluator Loop)
+
+The static variant uses a dedicated task type with a standardized structure:
+
+```xml
+<task type="director_evaluator_loop">
+  <description>{{task_description}}</description>
+  <max_iterations>5</max_iterations>
+  <context_management>
+    <inherit_context>none</inherit_context>
+    <accumulate_data>true</accumulate_data>
+    <accumulation_format>notes_only</accumulation_format>
+    <fresh_context>enabled</fresh_context>
+  </context_management>
+  <director>
+    <description>Generate solution for {{original_prompt}}</description>
+    <inputs>
+      <input name="original_prompt" from="user_query"/>
+      <input name="feedback" from="evaluation_feedback"/>
+      <input name="iteration" from="current_iteration"/>
+    </inputs>
+  </director>
+  <evaluator>
+    <description>Evaluate solution against {{original_prompt}}</description>
+    <inputs>
+      <input name="solution" from="director_result"/>
+      <input name="original_prompt" from="user_query"/>
+    </inputs>
+  </evaluator>
+  <script_execution>
+    <!-- Optional script execution -->
+    <command>{{script_path}}</command>
+    <timeout>300</timeout>
+    <inputs>
+      <input name="script_input" from="director_result"/>
+    </inputs>
+  </script_execution>
+  <termination_condition>
+    <!-- Optional early termination -->
+    <condition>evaluation.success === true</condition>
+  </termination_condition>
+</task>
+```
+
+### Parameter Passing
+
+The Director-Evaluator loop uses direct parameter passing rather than environment variables:
+
+```mermaid
+flowchart LR
+    A[Parent Task] -->|"TaskResult{status:CONTINUATION,\n notes:{subtask_request}}"| B[Task System]
+    B -->|"Template Selection\n& Direct Input Passing"| C[Subtask]
+    C -->|"TaskResult"| D[Task System]
+    D -->|"Resume with\n{subtask_result:TaskResult}"| A
+```
+
+### Result Structure
+
+All task results follow a consistent base structure with extensions for specific needs:
+
+```typescript
+// Base task result structure
+interface TaskResult {
+    content: string;
+    status: "COMPLETE" | "CONTINUATION" | "WAITING" | "FAILED";
+    notes: {
+        [key: string]: any;
+    };
+}
+
+// Specialized structure for evaluator feedback
+interface EvaluationResult extends TaskResult {
+    notes: {
+        success: boolean;        // Whether the evaluation passed
+        feedback: string;        // Human-readable feedback message
+        details?: {              // Optional structured details
+            metrics?: Record<string, number>; // Optional evaluation metrics
+            violations?: string[];            // Specific validation failures
+            suggestions?: string[];           // Suggested improvements
+            [key: string]: any;               // Extension point
+        };
+        scriptOutput?: {         // Present when script execution is involved
+            stdout: string;      // Standard output from script
+            stderr: string;      // Standard error output from script
+            exitCode: number;    // Exit code from script
+        };
+    };
+}
+```
 
 ### Example Workflow
 
@@ -63,37 +151,43 @@ Upon receiving this result, the Evaluator:
 
 ## Integration with the Unified Architecture
 
-The updated Director-Evaluator pattern fully embraces the dynamic subtask concept. Rather than a statically defined bash callback subtask, the evaluation step is triggered by the Director task's output. The Evaluator examines the task result for a `CONTINUATION` status and an embedded `evaluation_request`, then:
- - Uses associative matching (with help from the Memory System if needed) to select an evaluation template.
- - Dynamically spawns the evaluation subtask.
- - Invokes any specified bash script callback via the Handler or its own callback mechanism (since tasks remain reserved for LLM sessions).
+The Director-Evaluator pattern fully embraces the dynamic subtask concept and integrates with the three-dimensional context management model:
 
-**Key Characteristics:**
+- **Inherited Context**: The parent task's context, controlled by `inherit_context` setting.
+- **Accumulated Data**: The step-by-step outputs collected during sequential execution, controlled by `accumulate_data` setting.
+- **Fresh Context**: New context generated via associative matching, controlled by `fresh_context` setting.
 
- - **Unified Model:** The pattern adheres to the unified context management and task execution model. All tasks, including those used for callbacks, use the same XML structure and TS types.
+### Script Execution Integration
 
- - **Bash Script Callback:** The intermediary bash script is invoked as a subtask. Its output can be logged, used to adjust the environment, or to validate the parent task's results.
+When a script execution step is included:
+- The script receives the Director's output as input
+- Script output (stdout, stderr, exit code) is captured
+- Results are passed to the Evaluator for processing
+- The Evaluator considers both the original output and script results
 
- - **Context Management:** The Evaluator subtask receives updated context via standard `<context_management>` settings (e.g. `inherit_context` set to `subset` and `accumulate_data` enabled).
+## Relationship to Subtask Spawning
+
+The Director-Evaluator Loop and Subtask Spawning mechanism are complementary features:
+
+| Director-Evaluator Loop | Subtask Spawning Mechanism |
+|-------------------------|----------------------------|
+| Specialized higher-level pattern | General-purpose primitive |
+| Built for iterative refinement | Ad-hoc dynamic task creation |
+| Predefined iteration structure | Flexible composition pattern |
+| Built-in termination conditions | Manual continuation control |
+
+**When to use Director-Evaluator Loop:**
+- Iterative refinement processes
+- Create-evaluate feedback cycles
+- Multiple potential iterations
+- External validation via scripts
+
+**When to use Subtask Spawning:**
+- One-off subtask creation
+- Dynamic task composition
+- Task flows that aren't primarily iterative
+- Complex task trees with varying subtypes
 
 ## Conclusion
 
-The updated Director-Evaluator pattern exemplifies the dynamic task–subtask paradigm. By returning a CONTINUATION status along with an embedded evaluation_request, a Director task signals that additional evaluation is required. The Evaluator then dynamically spawns an evaluation subtask—invoking a bash script callback via the Handler (or its own mechanism) if specified—to process and refine the output before feeding the results back to the parent task. This approach ensures flexibility and a seamless integration of external evaluation within the unified execution architecture.
-
-## Static Director-Evaluator Variant
-
-In addition to the dynamic pattern described above, a static variant is available for scenarios where the entire execution sequence is predetermined. In the static variant:
- - The Director Task generates the initial output.
- - A Target Script Execution task immediately runs an external command (e.g. a bash script) using the director's output.
- - The Evaluator Task then processes the output from the script.
-
-### XML Template Example
-```xml
-<task type="director">
-    <output_slot>last_evaluator_output</output_slot>
-</task>
-
-<task type="evaluator">
-    <input_source>last_evaluator_output</input_source>
-</task>
-```
+The Director-Evaluator pattern provides a structured approach to iterative refinement, with both dynamic and static variants. It uses direct parameter passing for clean data flow and integrates fully with the unified context management model. This approach ensures flexibility and seamless integration within the overall task execution architecture.

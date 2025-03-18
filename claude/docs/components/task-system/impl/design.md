@@ -114,21 +114,54 @@ The Task System enforces resource limits via a per‑Handler turn counter and co
 
 ### Environment Management
 
-#### Output Slot Management
-The design now leverages last_evaluator_output as the single persistent feedback variable. The function prepareContinuationEnv(currentEnv) constructs a new environment retaining only last_evaluator_output, ensuring that all other keys are cleared on continuation.
+#### Parameter Passing
+The system implements direct parameter passing between tasks rather than using environment variables. This approach:
 
-On continuation, the evaluator clears all environment variables except for last_evaluator_output. This reset is achieved via the prepareContinuationEnv helper, which copies only last_evaluator_output from the current environment.
+1. Maintains clear data flow between components
+2. Improves debug visibility by making dependencies explicit
+3. Supports the `director_evaluator_loop` task type
+4. Enhances testability by reducing hidden state
+
+For Director-Evaluator loops, parameters are passed explicitly:
+```typescript
+async function executeDirectorEvaluatorLoop(task, inputs) {
+  // Execute director with current inputs
+  const directorOutput = await executeTask(
+    task.director,
+    {
+      ...inputs,
+      feedback: previousEvaluation?.feedback,
+      current_iteration: currentIteration
+    }
+  );
+  
+  // Execute evaluator with director's result
+  const evaluationResult = await executeTask(
+    task.evaluator,
+    {
+      solution: directorOutput.content,
+      original_prompt: inputs.original_prompt
+    }
+  );
+  
+  // Resume loop with new parameters
+  return continueExecution(task, {
+    ...inputs,
+    director_result: directorOutput,
+    evaluation_result: evaluationResult
+  });
+}
+```
 
 ### Script Execution Implementation
-The system now supports executing external scripts as part of a static director-evaluator workflow. When a task of type "script" is encountered, the Handler:
-- Detects the "script" task type.
-- Executes the specified external command (e.g. a bash script).
-- Captures the command's standard output, error output, and exit code.
-- Passes the script's output to the subsequent evaluator task.
+The system now supports executing external scripts as part of a static director-evaluator workflow. When a script_execution element is specified:
 
-During script execution, the evaluator invokes the script task, captures its outputs (stdout, stderr, and exitCode), and then wraps these into an EvaluationResult. This result is stored in last_evaluator_output, which is later used by the Director upon resuming the sequence.
+1. The script receives the Director's output as direct input
+2. Script execution captures stdout, stderr, and exit code
+3. These outputs are passed as direct parameters to the Evaluator
+4. No environment variables are used in this data flow
 
-This design ensures that the director's output flows seamlessly through the script execution step before final evaluation.
+This design ensures that the director's output flows seamlessly through the script execution step before final evaluation, using explicit parameter passing throughout.
 
 ## Integration Points
 ### Memory System Interaction

@@ -93,7 +93,7 @@ flowchart TD
 4. **Context and Environment Handling**  
    - In multi-step or operator-based tasks (sequential, reduce, etc.), the Evaluator ensures the proper propagation of the environment and partial context. Every new task or function call execution uses a child environment (based on the parent environment or the global environment, depending on the XML attribute `inherit_context`), thereby ensuring that the TaskLibrary and any built-in variables remain accessible through the environment chain.
    - The Evaluator leverages the Memory System for associative context retrieval but does not manage file content directly.  
-   - Note: The Evaluator now writes its output exclusively to the environment variable last_evaluator_output—this value is a serialized EvaluationResult (with fields success and optional feedback).
+   - Note: The Evaluator produces a structured EvaluationResult (with fields success and optional feedback) that is passed directly to subsequent tasks as parameters.
 
 5. **Integration with Task System**  
    - The Task System may call the Evaluator with a structured or partially structured task. The Evaluator then "executes" it by walking its representation (e.g., an AST or an XML-based operator chain).  
@@ -261,10 +261,15 @@ interface TaskOutput {
 4. **Error Handling**: If a step fails, the last known `SequentialHistory` object is packaged with the error output, so that partial results can be surfaced if needed.
 
 ### Script Execution and Feedback Flow
-When executing a script task, the evaluator captures stdout, stderr, and exitCode from the external command. These outputs are then formatted into an EvaluationResult and stored in last_evaluator_output. Upon continuation, all other environment variables are cleared to isolate this single piece of feedback.
+When executing a script task, the evaluator captures stdout, stderr, and exitCode from the external command. These outputs are structured into a standardized result object and passed directly to the subsequent evaluator task as parameters, rather than through environment variables.
 
 ### Static Pattern Execution
-The Evaluator now supports a static Director-Evaluator variant. In this mode, after the Director task generates the initial output, a script execution task (of type "script") is automatically invoked. The Evaluator captures the script's output—including stdout, stderr, and exit code—and feeds it into the subsequent evaluation step, ensuring a predictable, pre-compiled control flow.
+The Evaluator supports both the dynamic Director-Evaluator variant and a static variant using the `director_evaluator_loop` task type. In the static variant:
+- The Director task generates the initial output
+- If specified, a script execution step runs an external command using the director's output
+- The Evaluator task processes both the director's output and script results
+- All data flows through direct parameter passing rather than environment variables
+- The loop continues until max iterations or termination conditions are met
 
 ### Usage Example
 When a multi-step sequence is run, each subtask is executed in turn. The Evaluator:
@@ -273,17 +278,78 @@ When a multi-step sequence is run, each subtask is executed in turn. The Evaluat
 3. Moves on to the second subtask, incrementing `currentStep`. If it fails, the Evaluator includes `outputs[0]` data in the final error's notes, to assist debugging or partial re-usage.
 4. If steps continue successfully, the final result merges all step outputs or final subtask output as the overall `TaskResult`.
 
-The evaluator now produces an EvaluationResult (with success and optional feedback) for each task. Only the last evaluator output is stored in the environment variable last_evaluator_output; all other variables are cleared on continuation.
+The evaluator produces an EvaluationResult (with success and optional feedback) for each task, which is passed directly to subsequent tasks as parameters.
 
-Example task definitions:
+Example task definition:
 ```xml
-<task type="director">
-    <output_slot>last_evaluator_output</output_slot>
-</task>
-
-<task type="evaluator">
-    <input_source>last_evaluator_output</input_source>
+<task type="director_evaluator_loop">
+  <description>Iterative refinement process</description>
+  <max_iterations>3</max_iterations>
+  <director>
+    <description>Generate output</description>
+    <inputs>
+      <input name="feedback" from="evaluation_feedback"/>
+    </inputs>
+  </director>
+  <evaluator>
+    <description>Evaluate output</description>
+    <inputs>
+      <input name="solution" from="director_result"/>
+    </inputs>
+  </evaluator>
 </task>
 ```
 
 **Important**: Because subtask outputs can be large, the system should either store them as short notes or partial references. The data accumulation approach can be toggled with `accumulateData` (in `ContextManagement`), plus an `accumulationFormat` indicating whether to store full outputs or only summary notes.
+## Director-Evaluator Pattern Implementation
+
+The Evaluator supports both dynamic and static variants of the Director-Evaluator pattern:
+
+### Dynamic Variant
+
+When a Director task returns a `CONTINUATION` status with an `evaluation_request` in its notes, the Evaluator:
+1. Uses the request details to select an appropriate evaluation template
+2. Dynamically spawns the evaluation subtask
+3. Passes the evaluation results back to the Director via direct parameter passing
+4. Manages context according to the three-dimensional model
+
+### Static Variant
+
+The Evaluator also supports the static Director-Evaluator loop using the `director_evaluator_loop` task type:
+
+```xml
+<task type="director_evaluator_loop">
+  <description>{{task_description}}</description>
+  <max_iterations>5</max_iterations>
+  <context_management>
+    <inherit_context>none</inherit_context>
+    <accumulate_data>true</accumulate_data>
+    <accumulation_format>notes_only</accumulation_format>
+  </context_management>
+  <director>
+    <description>Generate solution</description>
+    <inputs>
+      <input name="feedback" from="evaluation_feedback"/>
+    </inputs>
+  </director>
+  <evaluator>
+    <description>Evaluate solution</description>
+    <inputs>
+      <input name="solution" from="director_result"/>
+    </inputs>
+  </evaluator>
+  <script_execution>
+    <command>{{script_path}}</command>
+    <inputs>
+      <input name="script_input" from="director_result"/>
+    </inputs>
+  </script_execution>
+</task>
+```
+
+In this implementation:
+- The Director task generates output
+- If script execution is specified, the script receives the Director's output
+- The Evaluator receives both the Director's output and script results
+- Results flow through direct parameter passing rather than environment variables
+- The loop continues until max iterations or termination conditions are met

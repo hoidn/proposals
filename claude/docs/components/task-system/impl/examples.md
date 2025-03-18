@@ -201,33 +201,41 @@ console.log('Retrieved context:', memoryResult.content);
     </steps>
 </task>
 
-<!-- Example: Static Director-Evaluator with Script Execution -->
-<task type="sequential">
-    <description>Static Director-Evaluator Pipeline</description>
-    <context_management>
-        <inherit_context>none</inherit_context>
-        <accumulate_data>true</accumulate_data>
-        <accumulation_format>notes_only</accumulation_format>
-    </context_management>
-    <steps>
-        <task>
-            <description>Generate Initial Output</description>
-        </task>
-        <task type="script">
-            <description>Run Target Script</description>
-            <inputs>
-                <input name="director_output" from="last_director_output"/>
-            </inputs>
-        </task>
-        <task>
-            <description>Evaluate Script Output</description>
-            <inputs>
-                <input name="script_output">
-                    <task>
-                        <description>Process output from target script</description>
-                    </task>
-                </input>
-            </inputs>
-        </task>
-    </steps>
+<!-- Example: Static Director-Evaluator Loop with Script Execution -->
+<task type="director_evaluator_loop">
+  <description>Process and evaluate code</description>
+  <max_iterations>3</max_iterations>
+  <context_management>
+    <inherit_context>none</inherit_context>
+    <accumulate_data>true</accumulate_data>
+    <accumulation_format>notes_only</accumulation_format>
+    <fresh_context>enabled</fresh_context>
+  </context_management>
+  <director>
+    <description>Generate Python code to solve problem: {{problem_statement}}</description>
+    <inputs>
+      <input name="problem_statement" from="user_query"/>
+      <input name="feedback" from="evaluation_feedback"/>
+      <input name="iteration" from="current_iteration"/>
+    </inputs>
+  </director>
+  <script_execution>
+    <command>python3 -c "{{script_input}}"</command>
+    <timeout>5</timeout>
+    <inputs>
+      <input name="script_input" from="director_result"/>
+    </inputs>
+  </script_execution>
+  <evaluator>
+    <description>Evaluate code quality and execution results</description>
+    <inputs>
+      <input name="code" from="director_result"/>
+      <input name="execution_output" from="script_output"/>
+      <input name="execution_errors" from="script_errors"/>
+      <input name="exit_code" from="script_exit_code"/>
+    </inputs>
+  </evaluator>
+  <termination_condition>
+    <condition>evaluation.success === true || iteration >= 3</condition>
+  </termination_condition>
 </task>
