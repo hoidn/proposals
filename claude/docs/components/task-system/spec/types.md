@@ -313,3 +313,31 @@ export interface ScriptExecution {
     timeout?: number;
     inputs: Record<string, string>;
 }
+
+/**
+ * Represents a function template definition
+ */
+export interface TemplateNode extends ASTNode {
+    type: "template";
+    name: string;
+    parameters: string[];  // Parameter names in order
+    body: TaskNode;        // The actual task implementation
+    returns?: string;      // Optional return type information
+}
+
+/**
+ * Represents a function call expression
+ */
+export interface FunctionCallNode extends ASTNode {
+    type: "call";
+    templateName: string;
+    arguments: ArgumentNode[];  // Evaluated in caller's environment
+}
+
+/**
+ * Represents an argument to a function call
+ */
+export interface ArgumentNode extends ASTNode {
+    type: "argument";
+    value: string | ASTNode;  // String for variables/literals, ASTNode for nested
+}

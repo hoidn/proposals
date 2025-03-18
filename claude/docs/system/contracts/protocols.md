@@ -157,6 +157,26 @@ The task template schema defines the structure for XML task template files and m
     </xs:complexType>
   </xs:element>
   
+  <xs:element name="template">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="name" type="xs:string"/>
+        <xs:element name="params" type="xs:string"/>
+        <xs:element name="returns" type="xs:string" minOccurs="0"/>
+        <xs:element name="task" type="TaskType"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="call">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="template" type="xs:string"/>
+        <xs:element name="arg" type="xs:string" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
   <xs:element name="cond">
     <xs:complexType>
       <xs:sequence>
@@ -266,6 +286,28 @@ And function calls with positional arguments:
 ```
 
 This enforces strict scope boundaries - templates can only access explicitly passed parameters.
+
+#### Parameter Resolution
+
+- Parameter names are declared in the comma-separated `params` attribute
+- Inside templates, `{{...}}` placeholders only reference declared parameters
+- Arguments are evaluated in the caller's environment before being passed to the template
+- String arguments can be either variable references or literal values
+
+#### Return Types
+
+Templates can optionally specify a return type using the `returns` attribute:
+
+```xml
+<template name="get_file_info" params="filepath" returns="object">
+  <task>
+    <description>Get metadata for {{filepath}}</description>
+    <output_format type="json" schema="object" />
+  </task>
+</template>
+```
+
+This aids in type validation and enables better composition between templates.
 
 ### Output Format Specification
 

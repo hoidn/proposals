@@ -260,6 +260,32 @@ See system/contracts/resources.md for complete ownership model.
 
 ---
 
+### Function-Based Template Pattern [Pattern:FunctionTemplate:1.0]
+
+The system implements a function-based template pattern that enforces clear boundaries between caller and callee contexts:
+
+1. **Template Definition**
+   - Templates explicitly declare their parameters using a `params` attribute
+   - Each template has its own lexical scope containing only its parameters
+   - Templates are registered in a central TaskLibrary during parsing
+
+2. **Function Calling**
+   - Function calls use positional arguments evaluated in the caller's context
+   - Arguments can be literals, variable references, or nested expressions
+   - A new environment is created for each function call with bindings for parameters
+   - No implicit access to the caller's environment is allowed
+
+3. **AST Representation**
+   - TemplateNode represents function definitions
+   - FunctionCallNode represents function invocations
+   - ArgumentNode represents argument values
+
+This pattern enables:
+ - Clear data dependencies between components
+ - Improved reasoning about variable scope
+ - Better encapsulation of implementation details
+ - Foundations for more advanced functional patterns
+
 ### Sequential Task Management [Pattern:SequentialTask:2.0]
 
 The system maintains **explicit task history** for sequential operations. This design clarifies how multiple steps in a single task can share context in a controlled, trackable way, and how partial or final outputs are captured.

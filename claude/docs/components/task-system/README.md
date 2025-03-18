@@ -53,6 +53,34 @@ Each task type can specify its context management requirements through XML confi
 </task>
 ```
 
+### Function Templates
+
+The system supports function-based templates with explicit parameter declarations:
+
+```xml
+<template name="analyze_data" params="dataset,config">
+  <task>
+    <description>Analyze {{dataset}} using {{config}}</description>
+  </task>
+</template>
+```
+
+These templates are called with positional arguments:
+
+```xml
+<call template="analyze_data">
+  <arg>weather_data</arg>
+  <arg>standard_config</arg>
+</call>
+```
+
+Key characteristics:
+
+- Templates can only access explicitly passed parameters
+- Arguments are evaluated in the caller's environment
+- Function calls create a new lexical scope
+- Template registration happens automatically during parsing
+
 ## Integration and Dependencies
 
 The Task System integrates with several core components. It uses the Memory System for context access and management, Handler Tools for file and system operations, the Compiler for task parsing and transformation, and the Evaluator for error recovery and task decomposition. These integrations enable comprehensive task execution while maintaining clean component boundaries.
@@ -80,6 +108,23 @@ const validation = taskSystem.validateTemplate({
     systemPrompt: "System context",
     model: "claude-3-sonnet",
     isManualXML: false
+});
+
+// Register a template
+const templateResult = await taskSystem.registerTemplate({
+  name: "process_data",
+  parameters: ["input_file", "options"],
+  body: {
+    type: "atomic",
+    description: "Process {{input_file}} with options {{options}}",
+    // Additional task properties
+  }
+});
+
+// Call a template with arguments
+const callResult = await taskSystem.executeCall({
+  templateName: "process_data",
+  arguments: ["data.csv", {format: "standard"}]
 });
 ```
 

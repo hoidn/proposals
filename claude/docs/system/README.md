@@ -63,7 +63,33 @@ graph TD
 ## Core Concepts & DSL Approach
 
 ### Tasks as Code
-A user's request can be viewed as a "program," with subtasks akin to function calls. The system can compile these instructions into either XML operators or a Scheme-like DSL:
+A user's request can be viewed as a "program," with subtasks akin to function calls. The system supports two approaches:
+
+1. **Implicit Variable Access** (Legacy):
+   Tasks can access variables from their parent environment via `{{variable_name}}` syntax.
+
+2. **Function-Based Templates** (Recommended):
+   Templates explicitly declare their parameters, providing clearer scope boundaries and dependencies:
+
+   ```xml
+   <template name="analyze_data" params="dataset,config">
+     <task>
+       <description>Analyze {{dataset}} using {{config}}</description>
+     </task>
+   </template>
+   ```
+
+   These templates are called with positional arguments:
+   ```xml
+   <call template="analyze_data">
+     <arg>weather_data</arg>
+     <arg>standard_config</arg>
+   </call>
+   ```
+
+   This approach offers cleaner variable scoping, explicit dependencies, and improved maintainability.
+
+The system can also compile these instructions into a Scheme-like DSL:
 
 ```scheme
 (define (process-data data-source)
@@ -254,6 +280,53 @@ const result = await taskSystem.executeTask(
 if (result.status === "FAILED") {
   console.error("Task failed:", result.notes);
 }
+```
+
+### 4. Function Template Example
+```xml
+<!-- Define a template -->
+<template name="process_file" params="filepath,options">
+  <task type="sequential">
+    <description>Process file {{filepath}} with options {{options}}</description>
+    <context_management>
+      <inherit_context>none</inherit_context>
+      <accumulate_data>true</accumulate_data>
+      <accumulation_format>notes_only</accumulation_format>
+    </context_management>
+    <steps>
+      <task>
+        <description>Load and validate file {{filepath}}</description>
+      </task>
+      <task>
+        <description>Apply transformations with {{options}}</description>
+      </task>
+    </steps>
+  </task>
+</template>
+
+<!-- Call the template -->
+<call template="process_file">
+  <arg>data/sample.csv</arg>
+  <arg>{"normalize": true, "filter_nulls": true}</arg>
+</call>
+```
+
+```typescript
+// Register a template
+taskSystem.registerTemplate({
+  name: "analyze_data",
+  parameters: ["dataset", "config"],
+  body: /* Task AST node */
+});
+
+// Execute a function call
+const result = await taskSystem.executeCall({
+  templateName: "analyze_data",
+  arguments: [
+    "weather_data.csv",
+    {"method": "statistical", "outliers": "remove"}
+  ]
+});
 ```
 
 ## References & Documentation Map

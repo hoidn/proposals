@@ -104,6 +104,84 @@ try {
 }
 ```
 
+## Template Definition and Function Calling
+
+### Basic Template Definition
+```xml
+<template name="validate_input" params="data,rules">
+  <task type="atomic">
+    <description>Validate {{data}} against {{rules}}</description>
+    <context_management>
+      <inherit_context>none</inherit_context>
+      <fresh_context>disabled</fresh_context>
+    </context_management>
+  </task>
+</template>
+```
+
+### Function Call with Variable Arguments
+```xml
+<call template="validate_input">
+  <arg>user_input</arg>
+  <arg>validation_schema</arg>
+</call>
+```
+
+### Template with Return Type
+```xml
+<template name="extract_metrics" params="log_data" returns="object">
+  <task type="atomic">
+    <description>Extract performance metrics from {{log_data}}</description>
+    <output_format type="json" schema="object" />
+  </task>
+</template>
+```
+
+### Complex Function Composition
+```xml
+<task type="sequential">
+  <steps>
+    <task>
+      <description>Load input data</description>
+    </task>
+    <call template="validate_input">
+      <arg>loaded_data</arg>
+      <arg>{"required": ["name", "email"], "format": {"email": "email"}}</arg>
+    </call>
+    <call template="process_validated_data">
+      <arg>validation_result</arg>
+      <arg>processing_options</arg>
+    </call>
+  </steps>
+</task>
+```
+
+### TypeScript Example
+```typescript
+// Register template
+await taskSystem.registerTemplate({
+  name: "analyze_data",
+  parameters: ["dataset", "config"],
+  body: {
+    type: "atomic",
+    description: "Analyze {{dataset}} using {{config}}",
+    // Additional properties...
+  },
+  returns: "object"
+});
+
+// Execute function call
+const result = await taskSystem.executeCall({
+  templateName: "analyze_data",
+  arguments: [
+    "sensor_readings.csv",
+    {method: "statistical", outliers: "remove"}
+  ]
+}, environment);
+
+console.log("Analysis result:", result.content);
+```
+
 ## Global Index Example
 ```typescript
 // Minimal memory object focusing on file metadata

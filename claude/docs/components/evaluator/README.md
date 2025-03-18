@@ -39,8 +39,39 @@ class Env implements Environment {
             ? this.bindings[varName]
             : this.outer ? this.outer.find(varName) : throw new Error(`Variable ${varName} not found`);
     }
+    extend(bindings: Record<string, any>): Environment {
+        return new Env(bindings, this);
+    }
 }
 ```
+
+## Nested Environment Model for Function Templates
+
+Function calls create new environments with parameter bindings:
+
+```typescript
+// Function call evaluation
+function evaluateFunctionCall(call: FunctionCallNode, env: Environment): Promise<any> {
+  // 1. Lookup the template in the TaskLibrary
+  const template = env.find("taskLibrary").get(call.templateName);
+  
+  // 2. Evaluate all arguments in the caller's environment
+  const argValues = await Promise.all(
+    call.arguments.map(arg => evaluateArgument(arg, env))
+  );
+  
+  // 3. Create a new environment with parameter bindings
+  const funcEnv = env.extend({});
+  for (let i = 0; i < template.parameters.length; i++) {
+    funcEnv.bindings[template.parameters[i]] = argValues[i];
+  }
+  
+  // 4. Evaluate the template body in the new environment
+  return evaluateTask(template.body, funcEnv);
+}
+```
+
+This ensures proper variable scoping where templates can only access their explicitly declared parameters, not the caller's entire environment.
 
 ## Responsibilities and Role
 
@@ -122,6 +153,37 @@ class FunctionCallNode implements FunctionCall {
     }
 }
 ```
+
+## FunctionCall AST Node Evaluation
+
+The FunctionCall node represents a template invocation. When evaluated:
+
+1. **Template Lookup**: The Evaluator retrieves the template from the TaskLibrary
+2. **Argument Evaluation**: Each argument is evaluated in the caller's environment:
+   - String values are checked against environment variables
+   - If the string matches a variable name, the variable's value is used
+   - If not, the string is treated as a literal
+   - Nested AST nodes are recursively evaluated
+3. **Environment Creation**: A new environment is created with bindings from parameter names to argument values
+4. **Template Execution**: The template body is executed in this new environment
+
+This process maintains clean scope boundaries, preventing unintended variable access.
+
+### Argument Resolution Strategy
+
+For string arguments, a two-step resolution occurs:
+```typescript
+function resolveArgument(arg: string, env: Environment): any {
+  // First try to find it as a variable in the environment
+  try {
+    return env.find(arg);
+  } catch (e) {
+    // If not found as a variable, treat as a literal
+    return arg;
+  }
+}
+```
+This allows for passing both variable references and literal values as function arguments.
 
 ## Metacircular Approach
 
