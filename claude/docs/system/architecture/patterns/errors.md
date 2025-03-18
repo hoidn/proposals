@@ -67,7 +67,21 @@ Progress failures occur when a task cannot advance despite resources being avail
 
 ### 2.4 Partial Results Handling
 
-For Sequential Tasks:
+The system maintains a standardized approach for preserving partial results when multi-step operations fail:
+
+#### Atomic Tasks
+```typescript
+{
+  type: 'TASK_FAILURE',
+  reason: 'execution_halted',
+  message: 'Task execution failed',
+  notes: {
+    partialOutput: "Partial content generated before failure"
+  }
+}
+```
+
+#### Sequential Tasks
 ```typescript
 {
   type: 'TASK_FAILURE',
@@ -91,7 +105,7 @@ For Sequential Tasks:
 }
 ```
 
-For Reduce Tasks:
+#### Reduce Tasks
 ```typescript
 {
   type: 'TASK_FAILURE',
@@ -109,6 +123,17 @@ For Reduce Tasks:
   }
 }
 ```
+
+#### Storage Format Control
+The format of preserved partial results depends on the task's `accumulation_format` setting:
+- `notes_only`: Only summary information is preserved from each step
+- `full_output`: Complete output (with reasonable size limits)
+
+#### Size Management
+To prevent memory issues:
+- Individual step outputs are kept reasonably sized
+- When accumulated data becomes too large, older results may be summarized or truncated
+- The system indicates when truncation has occurred
 
 ### 2.5 Output Format Validation
 

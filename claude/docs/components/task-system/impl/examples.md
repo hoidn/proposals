@@ -314,6 +314,54 @@ console.log('Retrieved context:', memoryResult.content);
 
 ---
 
+// Example: Sequential Task Failure with Partial Results
+try {
+  const result = await taskSystem.executeTask(
+    "process data in multiple steps",
+    memorySystem
+  );
+} catch (error) {
+  if (error.type === 'TASK_FAILURE' && error.reason === 'subtask_failure') {
+    console.log(`Failed at step ${error.details.failedStep} of ${error.details.totalSteps}`);
+    
+    // Access partial results from completed steps
+    error.details.partialResults.forEach(result => {
+      console.log(`Step ${result.stepIndex} output: ${result.output}`);
+    });
+    
+    // Potentially use partial results for recovery
+    const recoveryResult = await taskSystem.executeTask(
+      `Continue processing from step ${error.details.failedStep}`,
+      memorySystem,
+      { initialState: error.details.partialResults }
+    );
+  }
+}
+
+// Example: Reduce Task Failure with Partial Results
+try {
+  const result = await taskSystem.executeTask(
+    "<task type='reduce'>...</task>",
+    memorySystem
+  );
+} catch (error) {
+  if (error.type === 'TASK_FAILURE' && 
+      error.reason === 'subtask_failure' &&
+      error.details.failedInputIndex !== undefined) {
+    
+    console.log(`Failed processing input ${error.details.failedInputIndex}`);
+    console.log(`Processed ${error.details.processedInputs.length} of ${error.details.totalInputs} inputs`);
+    
+    // Access the current accumulator state
+    console.log("Current accumulator:", error.details.currentAccumulator);
+    
+    // Access individual processed results
+    error.details.partialResults.forEach(result => {
+      console.log(`Input ${result.inputIndex} result: ${result.result}`);
+    });
+  }
+}
+
 <!-- Example: Sequential Task with Data Accumulation -->
 <task type="sequential">
     <description>Process and analyze data</description>

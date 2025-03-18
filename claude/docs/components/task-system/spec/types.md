@@ -27,6 +27,7 @@ export interface TaskResult {
     notes: {
         dataUsage: string;
         successScore?: number;
+        partialOutput?: string;  // Partial results for atomic tasks
         [key: string]: any;
     };
 }
@@ -229,6 +230,32 @@ type TaskError =
         metrics?: { used: number; limit: number; };
     }
     | { 
+        type: 'TASK_FAILURE';
+        reason: TaskFailureReason;
+        message: string;
+        details?: {
+            // Common fields
+            partial_context?: any;
+            context_metrics?: any;
+            violations?: string[];
+            
+            // Sequential task fields
+            failedStep?: number;
+            totalSteps?: number;
+            partialResults?: Array<{
+                stepIndex: number;
+                output: string;
+                notes?: any;
+            }>;
+            
+            // Reduce task fields
+            failedInputIndex?: number;
+            totalInputs?: number;
+            processedInputs?: number[];
+            currentAccumulator?: any;
+        };
+    }
+    | { 
         type: 'INVALID_OUTPUT';
         message: string;
         violations?: string[];
@@ -248,6 +275,23 @@ type TaskError =
 
 ## Validation Types
 ```typescript
+// Add a type for sequential history tracking
+export interface SequentialHistory {
+    outputs: TaskOutput[];
+    metadata: {
+        startTime: Date;
+        currentStep: number;
+        resourceUsage: ResourceMetrics;
+    };
+}
+
+export interface TaskOutput {
+    stepId: string;  // or step index
+    output: string;  // The main content from that step
+    notes: any;      // Additional metadata or partial information
+    timestamp: Date;
+}
+
 interface ValidationResult {
     valid: boolean;
     warnings: string[];

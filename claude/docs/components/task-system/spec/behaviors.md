@@ -243,6 +243,50 @@ The Task System delegates **all context management** to the Evaluator according 
 - Location information when available
 - May trigger reparse if not disabled
 
+#### Partial Results Preservation
+
+The system preserves partial results for different task types:
+
+1. **Atomic Tasks**
+   - Stores partial content in `notes.partialOutput`
+   - Preserves as much of the generated output as possible
+   - No structure guarantees for partial content
+
+2. **Sequential Tasks**
+   - Stores step-by-step outputs in `details.partialResults`
+   - Includes metadata such as `failedStep` and `totalSteps`
+   - Each step result includes `stepIndex`, `output`, and optional `notes`
+
+3. **Reduce Tasks**
+   - Stores processed input results in `details.partialResults`
+   - Includes the current accumulator state in `details.currentAccumulator`
+   - Tracks processed inputs in `details.processedInputs`
+   - Records the failed input index in `details.failedInputIndex`
+
+#### Format Control
+
+The `accumulation_format` setting in the task's `context_management` block controls how much data is preserved:
+
+```xml
+<context_management>
+    <inherit_context>full</inherit_context>
+    <accumulate_data>true</accumulate_data>
+    <accumulation_format>notes_only|full_output</accumulation_format>
+    <fresh_context>enabled</fresh_context>
+</context_management>
+```
+
+- `notes_only`: Only summary information from each step (default for memory efficiency)
+- `full_output`: Complete step outputs (with size limits)
+
+#### Size Management
+
+To prevent memory issues with partial results:
+- Individual outputs are kept reasonably sized
+- When accumulated data becomes too large, older results may be summarized or truncated
+- The system indicates when truncation has occurred in the error details
+- A maximum size cap applies regardless of settings
+
 ### Error Response
 
 #### Error Surfacing
