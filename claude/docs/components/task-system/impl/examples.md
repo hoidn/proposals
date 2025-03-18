@@ -104,6 +104,63 @@ try {
 }
 ```
 
+## Output Format Examples
+
+### Task with JSON Output Format
+```xml
+<task type="atomic">
+  <description>List files in directory</description>
+  <output_format type="json" schema="string[]" />
+</task>
+```
+
+### Template with Return Type
+```xml
+<template name="get_file_info" params="filepath" returns="object">
+  <task>
+    <description>Get metadata for {{filepath}}</description>
+    <output_format type="json" schema="object" />
+  </task>
+</template>
+```
+
+### Function Call with JSON Result
+```xml
+<task type="sequential">
+  <steps>
+    <task>
+      <description>Get directory listing</description>
+    </task>
+    <call template="get_file_info">
+      <arg>result[0]</arg>
+    </call>
+  </steps>
+</task>
+```
+
+### TypeScript Example
+```typescript
+// Execute task with JSON output format
+const result = await taskSystem.executeTask(
+  "<task><description>List files</description><output_format type='json' schema='string[]'/></task>",
+  memorySystem
+);
+
+// Check if content was parsed as JSON
+if (result.parsedContent) {
+  // Use the parsed content as a typed value
+  const files: string[] = result.parsedContent;
+  console.log(`Found ${files.length} files`);
+  
+  // Process the files array
+  const textFiles = files.filter(file => file.endsWith('.txt'));
+  console.log(`Text files: ${textFiles.join(', ')}`);
+} else {
+  // Fall back to string content
+  console.log(`Raw output: ${result.content}`);
+}
+```
+
 ## Template Definition and Function Calling
 
 ### Basic Template Definition

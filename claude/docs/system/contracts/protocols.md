@@ -37,6 +37,19 @@ The task template schema defines the structure for XML task template files and m
             <xs:attribute name="schema" type="xs:string" use="optional"/>
           </xs:complexType>
         </xs:element>
+        <xs:element name="output_format" minOccurs="0">
+          <xs:complexType>
+            <xs:attribute name="type" use="required">
+              <xs:simpleType>
+                <xs:restriction base="xs:string">
+                  <xs:enumeration value="json"/>
+                  <xs:enumeration value="text"/>
+                </xs:restriction>
+              </xs:simpleType>
+            </xs:attribute>
+            <xs:attribute name="schema" type="xs:string" use="optional"/>
+          </xs:complexType>
+        </xs:element>
         <xs:element name="context_management">
           <xs:complexType>
             <xs:sequence>
@@ -263,6 +276,26 @@ Example:
   </steps>
 </task>
 ```
+
+### Output Format Specification
+
+Tasks can specify structured output format:
+
+```xml
+<task>
+  <description>List files in directory</description>
+  <output_format type="json" schema="string[]" />
+</task>
+```
+
+The `schema` attribute provides basic type information:
+- "object" - JSON object
+- "array" or "[]" - JSON array
+- "string[]" - Array of strings
+- "number" - Numeric value
+- "boolean" - Boolean value
+
+Output validation ensures the result matches the specified type.
 
 ### Function-Based Templates
 

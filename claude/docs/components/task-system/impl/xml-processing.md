@@ -85,6 +85,43 @@
 - Type validation for known fields
 - XML well-formedness checking
 
+### Output Format Validation
+- Format specification via `<output_format>` element
+- JSON detection process:
+  * Attempts to parse content as JSON
+  * Validates parsed content against schema attribute
+  * Returns original content if parsing fails
+- Type validation against schema attribute:
+  * "object" - Validates as JavaScript object
+  * "array" or "[]" - Validates as array
+  * "string[]" - Validates as array of strings
+  * "number" - Validates as numeric value
+  * "boolean" - Validates as boolean value
+- Error handling for format violations:
+  * Generates TASK_FAILURE with reason "output_format_failure"
+  * Includes expected vs actual type information
+  * Preserves original output in error details
+- Template return type validation:
+  * Function templates can specify return types
+  * Return types are validated against actual output
+  * Type mismatches generate validation errors
+
+Example XML showing proper usage:
+```xml
+<task>
+  <description>Get repository statistics</description>
+  <output_format type="json" schema="object" />
+</task>
+
+<!-- With template return type -->
+<template name="get_stats" params="repo_path" returns="object">
+  <task>
+    <description>Get statistics for {{repo_path}}</description>
+    <output_format type="json" schema="object" />
+  </task>
+</template>
+```
+
 ### Fallback Behavior
 - Return unstructured string on parse failure
 - Collect and surface warnings

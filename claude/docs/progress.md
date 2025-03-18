@@ -6,7 +6,7 @@ Below is the completion level (0-100%) for each ADR as reflected in the current 
 - decisions/removed.md: 100%
 - decisions/14-operator-ctx-config.md: 80%
 - decisions/12-function-based-templates.md: 95%
-- decisions/13-json-output.md: 85%
+- decisions/13-json-output.md: 100%
 - decisions/9-partial-results.md: 80%
 - decisions/8-errors.md: 90%
 - decisions/needs_update/003-memory-context-update.md: 100%

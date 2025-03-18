@@ -17,6 +17,10 @@ export interface TaskResult {
      */
     criteria?: string;
     /**
+     * Parsed content if output was successfully parsed as JSON.
+     */
+    parsedContent?: any;
+    /**
      * Additional notes from task execution. May include extra metadata,
      * such as an optional success score (e.g., `successScore?: number`) for future adaptive template matching.
      */
@@ -108,6 +112,10 @@ interface ASTNode {
     children?: ASTNode[];
     metadata?: Record<string, any>;
     operatorType?: TaskType;
+    outputFormat?: {
+        type: "json" | "text";
+        schema?: string;  // Basic type: "object", "array", "string", etc.
+    };
 }
 ```
 

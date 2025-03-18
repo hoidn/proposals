@@ -127,6 +127,30 @@ When a task specifies an output format using `<output_format type="json" schema=
 }
 ```
 
+This error occurs when:
+1. The task specifies an output format with `type="json"`
+2. The output is successfully parsed as JSON
+3. The parsed content doesn't match the specified schema type
+
+The original output is preserved in the `partialOutput` field to allow for potential recovery or manual parsing. The error includes both the expected and actual types to aid in debugging and recovery.
+
+### 2.5 Output Format Validation
+
+When a task specifies an output format using `<output_format type="json" schema="...">`, validation failures result in:
+
+```typescript
+{
+  type: 'TASK_FAILURE',
+  reason: 'output_format_failure',
+  message: 'Expected output of type "array" but got "object"',
+  details: {
+    expectedType: "array",
+    actualType: "object",
+    partialOutput: "..." // The original output
+  }
+}
+```
+
 ## 3. Recovery Process
 
 ### 3.1 Detection Phase

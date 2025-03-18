@@ -38,6 +38,17 @@ interface TaskSystem {
         score: number;
         taskType: TaskType;    // Now limited to atomic, sequence, reduce
     }>>;
+    
+    /**
+     * Parse and validate task output against declared format
+     * @param output - Raw task output
+     * @param format - Optional output format specification
+     * @returns Parsed output or the original if parsing fails
+     */
+    parseTaskOutput(output: string, format?: {
+        type: "json" | "text";
+        schema?: string;
+    }): { isParsed: boolean; value: any };
 }
 ```
 
