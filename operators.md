@@ -17,6 +17,12 @@ interface MemorySystem {
 }
 ```
 
+## Operator Default Settings
+
+The system implements a hybrid configuration approach with operator-specific defaults and explicit overrides. For the complete reference of default settings by operator type and configuration options, see [Pattern:ContextFrame:1.0] in `system/architecture/patterns/context-frames.md`.
+
+These defaults apply when no explicit context_management block is provided. When present, explicit settings override the defaults, providing both consistency and flexibility.
+
 ## Sequential Operator
 
 ### Purpose
