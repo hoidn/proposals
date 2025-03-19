@@ -193,3 +193,62 @@ Process a list of named inputs through repeated application of inner task and re
 - XML structure must encode all input dependencies
 - All inputs must have unique names within their scope
 - Inner tasks can specify multiple inputs
+
+## Subtask Spawning Integration
+
+The Task System supports dynamic subtask spawning through a standardized mechanism:
+
+```typescript
+interface SubtaskRequest {
+  // Required fields
+  type: TaskType;                      // Type of subtask to spawn
+  description: string;                 // Description of the subtask
+  inputs: Record<string, any>;         // Input parameters for the subtask
+  
+  // Optional fields
+  template_hints?: string[];           // Hints for template selection
+  context_management?: {               // Override default context settings
+    inherit_context?: 'full' | 'none' | 'subset';
+    accumulate_data?: boolean;
+    accumulation_format?: 'notes_only' | 'full_output';
+    fresh_context?: 'enabled' | 'disabled';
+  };
+  max_depth?: number;                  // Override default max nesting depth
+  subtype?: string;                    // Optional subtype for atomic tasks
+}
+```
+
+### Context Management Defaults
+
+Subtasks have specific default context management settings:
+
+| Setting | Default Value | Description |
+|---------|---------------|-------------|
+| inherit_context | subset | Inherits only relevant context from parent |
+| accumulate_data | false | Does not accumulate previous step outputs |
+| accumulation_format | notes_only | Stores only summary information |
+| fresh_context | enabled | Generates new context via associative matching |
+
+These defaults can be overridden through explicit configuration in the SubtaskRequest.
+
+### Data Flow
+
+Subtask spawning uses direct parameter passing rather than environment variables:
+
+1. Parent task returns with `status: "CONTINUATION"` and a `subtask_request` in its notes
+2. System validates the request and selects an appropriate template
+3. Subtask executes with inputs from the request
+4. Subtask result is passed back to the parent task when execution resumes
+
+This approach ensures clear data dependencies and improves debug visibility.
+
+### Depth Control
+
+To prevent infinite recursion and resource exhaustion:
+
+1. **Maximum Nesting Depth**: Default limit of 5 levels of nested subtasks
+2. **Cycle Detection**: Prevention of tasks spawning identical subtasks
+3. **Resource Tracking**: Monitoring of total resource usage across the subtask chain
+4. **Timeout Enforcement**: Overall time limits for the complete subtask chain
+
+These mechanisms ensure that subtask spawning remains controlled and resource-efficient.

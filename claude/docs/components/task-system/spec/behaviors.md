@@ -194,6 +194,71 @@ flowchart TD
 - Managed through Anthropic's tool use system
 - See Anthropic documentation for details
 
+## Subtask Spawning Behavior
+
+The Task System implements a standardized approach to subtask spawning:
+
+### Request Processing
+
+1. **Validation and Preparation**
+   - Validates the SubtaskRequest structure for required fields
+   - Checks nesting depth against maximum allowed (default: 5)
+   - Performs cycle detection to prevent recursive spawning
+   - Prepares context according to context management settings
+
+2. **Template Selection and Execution**
+   - Uses the description and template_hints for associative matching
+   - Selects the highest-scoring template that matches the request
+   - Creates a new execution environment with direct parameter passing
+   - Executes the subtask with appropriate resource tracking
+
+3. **Result Handling**
+   - Passes the complete TaskResult back to the parent task
+   - Preserves partial results if the subtask fails
+   - Maintains resource tracking across the subtask chain
+   - Ensures proper cleanup of resources after completion
+
+### Context Management Defaults
+
+Subtasks have specific default context management settings:
+
+| Setting | Default Value | Description |
+|---------|---------------|-------------|
+| inherit_context | subset | Inherits only relevant context from parent |
+| accumulate_data | false | Does not accumulate previous step outputs |
+| accumulation_format | notes_only | Stores only summary information |
+| fresh_context | enabled | Generates new context via associative matching |
+
+These defaults can be overridden through explicit configuration in the SubtaskRequest.
+
+### Error Handling
+
+When a subtask fails, a standardized error structure is generated:
+
+```typescript
+{
+  type: 'TASK_FAILURE',
+  reason: 'subtask_failure',
+  message: 'Subtask execution failed',
+  details: {
+    subtaskRequest: {
+      type: 'atomic',
+      description: 'Process data',
+      inputs: { /* original inputs */ }
+    },
+    subtaskError: {
+      type: 'TASK_FAILURE',
+      reason: 'execution_halted',
+      message: 'Failed to process data'
+    },
+    nestingDepth: 2,
+    partialOutput: "Partial processing results"
+  }
+}
+```
+
+This structure preserves the complete error context, allowing the parent task to implement recovery strategies if needed.
+
 ## Context Management Delegation
 
 The Task System implements a hybrid configuration approach with operator-specific defaults and explicit overrides:

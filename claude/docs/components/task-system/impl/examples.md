@@ -443,3 +443,189 @@ try {
     <condition>evaluation.success === true || iteration >= 3</condition>
   </termination_condition>
 </task>
+
+## Subtask Spawning Examples
+
+### Basic Subtask Request Example
+
+```typescript
+// Parent task implementation
+async function processComplexTask(input: string): Promise<TaskResult> {
+  // Determine if we need to spawn a subtask
+  if (isComplexInput(input)) {
+    // Return a continuation with subtask request
+    return {
+      content: "Need to process complex input with a specialized subtask",
+      status: "CONTINUATION",
+      notes: {
+        subtask_request: {
+          type: "atomic",
+          description: "Process complex data structure",
+          inputs: {
+            data: input,
+            format: "json",
+            validation_rules: { required: ["id", "name"] }
+          },
+          template_hints: ["data_processor", "validator"],
+          context_management: {
+            inherit_context: "subset",
+            fresh_context: "enabled"
+          }
+        }
+      }
+    };
+  }
+  
+  // Process simple input directly
+  return {
+    content: `Processed: ${input}`,
+    status: "COMPLETE",
+    notes: { dataUsage: "Simple processing completed" }
+  };
+}
+
+// Task System handling
+const result = await taskSystem.executeTask("process complex data");
+
+// If result is a continuation with subtask request
+if (result.status === "CONTINUATION" && result.notes.subtask_request) {
+  const subtaskRequest = result.notes.subtask_request;
+  const subtaskResult = await taskSystem.executeSubtask(subtaskRequest, result);
+  
+  // Resume parent task with subtask result
+  const finalResult = await taskSystem.resumeTask(result, {
+    subtask_result: subtaskResult
+  });
+  
+  console.log("Final result:", finalResult.content);
+}
+```
+
+### Error Handling Example
+
+```typescript
+try {
+  // Execute task that might spawn subtasks
+  const result = await taskSystem.executeTask("analyze complex document");
+  console.log("Analysis complete:", result.content);
+} catch (error) {
+  // Check if this is a subtask failure
+  if (error.type === 'TASK_FAILURE' && error.reason === 'subtask_failure') {
+    console.log(`Subtask failed: ${error.details.subtaskRequest.description}`);
+    
+    // Access the original subtask request
+    const originalRequest = error.details.subtaskRequest;
+    
+    // Access the specific subtask error
+    const subtaskError = error.details.subtaskError;
+    console.log(`Subtask error: ${subtaskError.message}`);
+    
+    // Use partial results if available
+    if (error.details.partialOutput) {
+      console.log(`Partial output available: ${error.details.partialOutput}`);
+      
+      // Attempt recovery with modified request
+      const modifiedRequest = {
+        ...originalRequest,
+        description: `Retry: ${originalRequest.description} with simplified approach`,
+        inputs: {
+          ...originalRequest.inputs,
+          use_partial_results: error.details.partialOutput
+        }
+      };
+      
+      try {
+        const recoveryResult = await taskSystem.executeSubtask(modifiedRequest);
+        console.log("Recovery successful:", recoveryResult.content);
+      } catch (recoveryError) {
+        console.error("Recovery failed:", recoveryError.message);
+      }
+    }
+  } else {
+    console.error("Task failed:", error.message);
+  }
+}
+```
+
+### Context Integration Example
+
+```xml
+<!-- Parent task that spawns a subtask -->
+<task type="atomic">
+  <description>Analyze code repository structure</description>
+  <context_management>
+    <inherit_context>full</inherit_context>
+    <fresh_context>enabled</fresh_context>
+  </context_management>
+  
+  <!-- This task will return CONTINUATION status with a subtask_request -->
+</task>
+
+<!-- Example of how the subtask request would be structured -->
+<!-- This is not XML that would be written directly, but represents
+     the structure that would be in the subtask_request -->
+<task type="atomic">
+  <description>Analyze specific module dependencies</description>
+  <context_management>
+    <inherit_context>subset</inherit_context>
+    <fresh_context>enabled</fresh_context>
+  </context_management>
+  <inputs>
+    <input name="module_path" from="parent_analysis.target_module"/>
+    <input name="depth" from="parent_analysis.analysis_depth"/>
+  </inputs>
+</task>
+```
+
+```typescript
+// TypeScript implementation showing context flow
+async function executeWithContextIntegration() {
+  // Execute parent task
+  const parentResult = await taskSystem.executeTask(
+    "<task><description>Analyze code repository structure</description></task>",
+    memorySystem
+  );
+  
+  // Check for continuation with subtask request
+  if (parentResult.status === "CONTINUATION" && 
+      parentResult.notes.subtask_request) {
+    
+    const subtaskRequest = parentResult.notes.subtask_request;
+    
+    // Context management settings from request (or defaults)
+    const contextSettings = subtaskRequest.context_management || {
+      inherit_context: "subset",
+      fresh_context: "enabled"
+    };
+    
+    // Get appropriate context based on settings
+    let subtaskContext;
+    if (contextSettings.inherit_context === "full") {
+      subtaskContext = parentContext;
+    } else if (contextSettings.inherit_context === "subset") {
+      // Get relevant subset via associative matching
+      subtaskContext = await memorySystem.getRelevantContextFor({
+        taskText: subtaskRequest.description,
+        inheritedContext: parentContext
+      });
+    } else {
+      // No inherited context
+      subtaskContext = null;
+    }
+    
+    // Execute subtask with appropriate context
+    const subtaskResult = await taskSystem.executeSubtask(
+      subtaskRequest,
+      subtaskContext
+    );
+    
+    // Resume parent task with subtask result
+    const finalResult = await taskSystem.resumeTask(
+      parentResult,
+      { subtask_result: subtaskResult }
+    );
+    
+    console.log("Final analysis:", finalResult.content);
+  }
+}
+```

@@ -207,17 +207,36 @@ The Director-Evaluator Loop and Subtask Spawning mechanism are complementary fea
 | Predefined iteration structure | Flexible composition pattern |
 | Built-in termination conditions | Manual continuation control |
 
+### Integration Points
+
+1. **Dynamic Director-Evaluator Implementation**
+   - The dynamic variant of Director-Evaluator uses the subtask spawning mechanism
+   - When a Director task returns with `CONTINUATION` status and an `evaluation_request`, it's using subtask spawning
+   - The Evaluator component handles the subtask creation and execution
+   - Results flow back to the parent task using the standard subtask result passing
+
+2. **Context Management Alignment**
+   - Both patterns follow the hybrid configuration approach from ADR 14
+   - Director-Evaluator Loop uses `inherit_context: none` by default
+   - Subtasks use `inherit_context: subset` by default
+   - Both can be explicitly configured through their respective XML structures
+
+### When to Use Each Pattern
+
 **When to use Director-Evaluator Loop:**
 - Iterative refinement processes
 - Create-evaluate feedback cycles
 - Multiple potential iterations
 - External validation via scripts
+- When the evaluation criteria are well-defined
 
 **When to use Subtask Spawning:**
 - One-off subtask creation
 - Dynamic task composition
 - Task flows that aren't primarily iterative
 - Complex task trees with varying subtypes
+- When flexibility in subtask selection is needed
+- For ad-hoc decomposition of complex problems
 
 ## Conclusion
 

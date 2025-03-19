@@ -227,6 +227,63 @@ flowchart TD
     B -- No --> F[Proceed with Normal Execution]
 ```
 
+### Subtask Failure Handling
+
+When a subtask fails, the system provides a standardized error structure that preserves context and enables recovery:
+
+```typescript
+{
+  type: 'TASK_FAILURE',
+  reason: 'subtask_failure',
+  message: 'Subtask "Process complex data" failed',
+  details: {
+    subtaskRequest: {
+      type: 'atomic',
+      description: 'Process complex data',
+      inputs: { /* original inputs */ }
+    },
+    subtaskError: {
+      type: 'TASK_FAILURE',
+      reason: 'execution_halted',
+      message: 'Failed to process data format'
+    },
+    nestingDepth: 2,
+    partialOutput: "Partial processing results before failure"
+  }
+}
+```
+
+This standardized structure provides several benefits:
+1. Complete error context preservation
+2. Clear indication of which subtask failed
+3. Access to the original subtask request for potential retry
+4. Preservation of partial results for recovery
+
+Example of parent task handling subtask failures:
+```typescript
+try {
+  const result = await taskSystem.executeTask(complexTask);
+} catch (error) {
+  if (error.type === 'TASK_FAILURE' && error.reason === 'subtask_failure') {
+    console.log(`Subtask failed: ${error.details.subtaskRequest.description}`);
+    
+    // Access the original subtask request for potential retry
+    const modifiedRequest = {
+      ...error.details.subtaskRequest,
+      description: `Retry: ${error.details.subtaskRequest.description} with simplified approach`
+    };
+    
+    // Use partial results if available
+    if (error.details.partialOutput) {
+      console.log(`Using partial output: ${error.details.partialOutput}`);
+    }
+    
+    // Attempt recovery with modified request
+    const recoveryResult = await taskSystem.executeTask(modifiedRequest);
+  }
+}
+```
+
 ### 3.4 Validation Phase
 Recovery validation includes:
 - Verifying resource usage of recovery approach

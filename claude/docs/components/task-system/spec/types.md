@@ -358,6 +358,60 @@ export interface EvaluationResult extends TaskResult {
 }
 
 /**
+ * Represents a request to spawn a subtask from a parent task.
+ * Used when a task returns with status: "CONTINUATION".
+ */
+export interface SubtaskRequest {
+    /** Type of subtask to spawn */
+    type: TaskType;
+    
+    /** Description of the subtask */
+    description: string;
+    
+    /** Input parameters for the subtask */
+    inputs: Record<string, any>;
+    
+    /** Optional hints for template selection */
+    template_hints?: string[];
+    
+    /** Optional context management overrides */
+    context_management?: {
+        inherit_context?: 'full' | 'none' | 'subset';
+        accumulate_data?: boolean;
+        accumulation_format?: 'notes_only' | 'full_output';
+        fresh_context?: 'enabled' | 'disabled';
+    };
+    
+    /** Optional maximum nesting depth override */
+    max_depth?: number;
+    
+    /** Optional subtype for atomic tasks */
+    subtype?: string;
+}
+
+/**
+ * Error structure for subtask failures.
+ * Preserves the complete error context for potential recovery.
+ */
+export interface SubtaskFailureError extends TaskError {
+    type: 'TASK_FAILURE';
+    reason: 'subtask_failure';
+    details: {
+        /** The original subtask request */
+        subtaskRequest: SubtaskRequest;
+        
+        /** The error from the subtask */
+        subtaskError: TaskError;
+        
+        /** Current nesting depth */
+        nestingDepth: number;
+        
+        /** Any partial output if available */
+        partialOutput?: string;
+    };
+}
+
+/**
  * Script execution configuration
  */
 export interface ScriptExecution {

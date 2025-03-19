@@ -284,6 +284,86 @@ The `schema` attribute provides basic type information:
 
 Output validation ensures the result matches the specified type.
 
+## Subtask Spawning Protocol [Protocol:SubtaskSpawning:1.0]
+
+The subtask spawning protocol defines how tasks can dynamically create and execute subtasks.
+
+### Request Structure
+
+```typescript
+interface SubtaskRequest {
+  // Required fields
+  type: TaskType;                      // Type of subtask to spawn
+  description: string;                 // Description of the subtask
+  inputs: Record<string, any>;         // Input parameters for the subtask
+  
+  // Optional fields
+  template_hints?: string[];           // Hints for template selection
+  context_management?: {               // Override default context settings
+    inherit_context?: 'full' | 'none' | 'subset';
+    accumulate_data?: boolean;
+    accumulation_format?: 'notes_only' | 'full_output';
+    fresh_context?: 'enabled' | 'disabled';
+  };
+  max_depth?: number;                  // Override default max nesting depth
+  subtype?: string;                    // Optional subtype for atomic tasks
+}
+```
+
+### Execution Flow
+
+1. **Request Generation**: A parent task returns a result with `status: "CONTINUATION"` and includes a `subtask_request` in its notes.
+
+2. **Request Validation**: The system validates the subtask request structure, ensuring all required fields are present and correctly formatted.
+
+3. **Template Selection**: The system selects an appropriate template based on:
+   - The `type` and optional `subtype` fields
+   - The `description` field for associative matching
+   - Any provided `template_hints`
+
+4. **Depth Control**: The system checks:
+   - Current nesting depth against maximum allowed depth (default: 5)
+   - Cycle detection to prevent recursive spawning of identical tasks
+   - Resource usage across the entire subtask chain
+
+5. **Subtask Execution**: The system executes the subtask with:
+   - Direct parameter passing from the `inputs` field
+   - Context management according to defaults or overrides
+   - Resource tracking linked to the parent task
+
+6. **Result Handling**: The subtask result is passed back to the parent task when execution resumes, with the parent receiving the complete TaskResult structure.
+
+### Error Handling
+
+If a subtask fails, a standardized error structure is generated:
+
+```typescript
+{
+  type: 'TASK_FAILURE',
+  reason: 'subtask_failure',
+  message: 'Subtask execution failed',
+  details: {
+    subtaskRequest: SubtaskRequest;    // The original request
+    subtaskError: TaskError;           // The error from the subtask
+    nestingDepth: number;              // Current nesting depth
+    partialOutput?: string;            // Any partial output if available
+  }
+}
+```
+
+This structure preserves the complete error context, allowing for potential recovery strategies.
+
+### Depth Control Mechanisms
+
+To prevent infinite recursion and resource exhaustion:
+
+1. **Maximum Nesting Depth**: Default limit of 5 levels of nested subtasks
+2. **Cycle Detection**: Prevention of tasks spawning identical subtasks
+3. **Resource Tracking**: Monitoring of total resource usage across the subtask chain
+4. **Timeout Enforcement**: Overall time limits for the complete subtask chain
+
+These mechanisms ensure that subtask spawning remains controlled and resource-efficient.
+
 ### Function-Based Templates
 
 The XML schema now supports function-based templates with explicit parameter declarations:
