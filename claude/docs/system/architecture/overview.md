@@ -154,6 +154,14 @@ See [Contract:Tasks:2.0] in system/contracts/protocols.md for complete specifica
 
 The system consists of four core components working together to process, execute, and manage tasks:
 
+### Handler [Component:Handler:1.0]
+LLM interface and resource tracking component.
+- Performs ALL file I/O operations (reading, writing, deletion)
+- For Anthropic models: Optionally configures computer use tools (bash, text editor)
+- For other models: Uses appropriate file access mechanisms
+- Manages resource usage tracking (turns, tokens)
+- Handles LLM interactions and session management
+
 ### Compiler [Component:Compiler:1.0]
 Task parsing and transformation component.
 - Translates natural language to XML/AST
@@ -183,11 +191,11 @@ See components/task-system/README.md for complete specification.
 
 ### Memory System [Component:Memory:3.0]
 Metadata management component.
-- Maintains global file metadata index
+- Maintains global file metadata index (paths and descriptive strings)
 - Provides metadata for associative matching without ranking or prioritization
 - Supplies metadata for file-based lookup and partial matching
-- Does not store file content or task context
-- Does not allocate or manage resources - only provides matching services
+- Does NOT store file content, perform file operations, track resources, or rank matches
+- NEVER performs file I/O operations - all file access is handled by Handler
 
 See [Contract:Integration:TaskMemory:2.0] for integration specification.
 

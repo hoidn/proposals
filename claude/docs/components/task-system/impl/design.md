@@ -372,11 +372,19 @@ This design ensures that the director's output flows seamlessly through the scri
 
 ## Integration Points
 ### Memory System Interaction
-- Uses Anthropic's computer use tools for file operations.
-- Read-only access.
-- No state maintenance.
-- Clear context boundaries.
-- Standard memory structure.
+
+#### Clear Responsibility Boundaries
+- **Memory System** (read-only metadata):
+  - Maintains metadata index (file paths and descriptions)
+  - Provides associative matching based on metadata
+  - Never performs file I/O operations
+  - Does not store or parse file contents
+
+- **Handler** (all file operations):
+  - Reads/writes files when needed
+  - For Anthropic models: Configures computer use tools (optional)
+  - For other models: Uses appropriate file access mechanisms
+  - Handles all file system interaction
   
 ### Compiler Integration
 - Task parsing services

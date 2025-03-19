@@ -20,6 +20,10 @@ Tasks are organized into four categories:
 - Memory Component Separation with clear interfaces and integration documentation
 - File tracking ownership decided (Memory System owns metadata, Handler owns file operations)
 - Resource tracking responsibilities documented in Pattern:ResourceManagement:1.0
+- File operation responsibility boundaries clearly defined:
+  * Memory System: Manages ONLY metadata (file paths and descriptive strings)
+  * Handler: Performs ALL file I/O operations using appropriate tools (including Anthropic's computer use tools for Anthropic models)
+  * Clear separation of concerns between metadata management and file operations
 
 ### Context Management
 - Document best practices (ADR 004, ADR 14)
@@ -146,9 +150,6 @@ Tasks are organized into four categories:
    - Method was removed in Memory System 3.0 but still referenced in some docs
    - Remove all references to this deprecated method
 
-3. **File operation responsibility boundaries**
-   - Sometimes blurred between Memory System and Handler tools
-   - Clarify that Memory System manages only metadata, Handler handles file operations
 
 4. **Treatment of tool calls vs. subtasks**
    - Inconsistent definition of boundaries and responsibilities

@@ -165,13 +165,13 @@ flowchart TD
 ## Memory System Integration
 
 ### File Operations
-- Uses Anthropic's computer use tools:
-  * computer_20241022
-  * text_editor_20241022
-  * bash_20241022
-- No direct file operation interface
-- Managed through Anthropic's tool use system
-- See Anthropic documentation for details
+- **Memory System**: Manages ONLY metadata (file paths and descriptive strings)
+- **Handler**: Performs ALL file I/O operations (reading, writing, deletion)
+- For Anthropic models: Handler configures and uses Anthropic's computer use tools
+  * computer_20250124 (or 20241022)
+  * text_editor_20250124 (or 20241022)
+  * bash_20250124 (or 20241022)
+- All file content access is always handled by the Handler, never the Memory System
 
 ### Context Management
 - Context accessed via async getContext/updateContext
@@ -186,13 +186,20 @@ flowchart TD
 - Simple file modification tracking
 
 ## File Operations
-- Uses Anthropic's computer use tools:
-  * computer_20241022
-  * text_editor_20241022
-  * bash_20241022
-- No direct file operation interface
-- Managed through Anthropic's tool use system
-- See Anthropic documentation for details
+
+### Clear Responsibility Boundaries
+- **Memory System**: Manages ONLY metadata (file paths and descriptive strings)
+- **Handler**: Performs ALL file I/O operations (reading, writing, deletion)
+
+### Implementation Details
+- For Anthropic models: Handler configures and uses Anthropic's computer use tools
+  * computer_20250124 (or 20241022)
+  * text_editor_20250124 (or 20241022)
+  * bash_20250124 (or 20241022)
+- For other models: Handler uses appropriate alternative mechanisms
+- All file content access is always handled by the Handler, never the Memory System
+- The Memory System provides only file paths that may be relevant (via associative matching)
+- Context Management System decides which files to read based on policy
 
 ## Subtask Spawning Behavior
 
