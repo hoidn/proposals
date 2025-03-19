@@ -1,13 +1,12 @@
 # Computer use (beta)
-Computer use (beta)
 Claude 3.7 Sonnet and Claude 3.5 Sonnet (new) are capable of interacting with tools that can manipulate a computer desktop environment. Claude 3.7 Sonnet introduces additional tools and allows you to enable thinking, giving you more insight into the model’s reasoning process.
 
 Computer use is a beta feature. Please be aware that computer use poses unique risks that are distinct from standard API features or chat interfaces. These risks are heightened when using computer use to interact with the internet. To minimize risks, consider taking precautions such as:
 
-Use a dedicated virtual machine or container with minimal privileges to prevent direct system attacks or accidents.
-Avoid giving the model access to sensitive data, such as account login information, to prevent information theft.
-Limit internet access to an allowlist of domains to reduce exposure to malicious content.
-Ask a human to confirm decisions that may result in meaningful real-world consequences as well as any tasks requiring affirmative consent, such as accepting cookies, executing financial transactions, or agreeing to terms of service.
+- Use a dedicated virtual machine or container with minimal privileges to prevent direct system attacks or accidents.
+- Avoid giving the model access to sensitive data, such as account login information, to prevent information theft.
+- Limit internet access to an allowlist of domains to reduce exposure to malicious content.
+- Ask a human to confirm decisions that may result in meaningful real-world consequences as well as any tasks requiring affirmative consent, such as accepting cookies, executing financial transactions, or agreeing to terms of service.
 In some circumstances, Claude will follow commands found in content even if it conflicts with the user’s instructions. For example, Claude instructions on webpages or contained in images may override instructions or cause Claude to make mistakes. We suggest taking precautions to isolate Claude from sensitive data and actions to avoid risks related to prompt injection.
 
 We’ve trained the model to resist these prompt injections and have added an extra layer of defense. If you use our computer use tools, we’ll automatically run classifiers on your prompts to flag potential instances of prompt injections. When these classifiers identify potential prompt injections in screenshots, they will automatically steer the model to ask for user confirmation before proceeding with the next action. We recognize that this extra protection won’t be ideal for every use case (for example, use cases without a human in the loop), so if you’d like to opt out and turn it off, please contact us.
@@ -16,21 +15,16 @@ We still suggest taking precautions to isolate Claude from sensitive data and ac
 
 Finally, please inform end users of relevant risks and obtain their consent prior to enabling computer use in your own products.
 
-Computer use reference implementation
+## Computer use reference implementation
 Get started quickly with our computer use reference implementation that includes a web interface, Docker container, example tool implementations, and an agent loop.
 
 Note: The implementation has been updated to include new tools for Claude 3.7 Sonnet. Be sure to pull the latest version of the repo to access these new features.
 
-Please use this form to provide feedback on the quality of the model responses, the API itself, or the quality of the documentation - we cannot wait to hear from you!
 
 Here’s an example of how to provide computer use tools to Claude using the Messages API:
 
 
-Shell
-
-Python
-
-TypeScript
+```python
 
 import anthropic
 
@@ -61,8 +55,7 @@ response = client.beta.messages.create(
     thinking={"type": "enabled", "budget_tokens": 1024}
 )
 print(response)
-​
-How computer use works
+## How computer use works
 1. Provide Claude with computer use tools and a user prompt
 
 Add Anthropic-defined computer use tools to your API request. - Include a user prompt that might require these tools, e.g., “Save a picture of a cat to my desktop.”
@@ -77,8 +70,7 @@ On your end, extract the tool name and input from Claude’s request. - Use the 
 Claude analyzes the tool results to determine if more tool use is needed or the task has been completed. - If Claude decides it needs another tool, it responds with another tool_use stop_reason and you should return to step 3. - Otherwise, it crafts a text response to the user.
 We refer to the repetition of steps 3 and 4 without user input as the “agent loop” - i.e., Claude responding with a tool use request and your application responding to Claude with the results of evaluating that request.
 
-​
-The computing environment
+## The computing environment
 Computer use requires a sandboxed computing environment where Claude can safely interact with applications and the web. This environment includes:
 
 Virtual display: A virtual X11 display server (using Xvfb) that renders the desktop interface Claude will see through screenshots and control with mouse/keyboard actions.
@@ -99,21 +91,20 @@ Captures the results (screenshots, command outputs, etc.)
 Returns these results to Claude
 For security and isolation, the reference implementation runs all of this inside a Docker container with appropriate port mappings for viewing and interacting with the environment.
 
-​
-How to implement computer use
-​
-Start with our reference implementation
+## How to implement computer use
+
+### Start with our reference implementation
 We have built a reference implementation that includes everything you need to get started quickly with computer use:
 
-A containerized environment suitable for computer use with Claude
-Implementations of the computer use tools
-An agent loop that interacts with the Anthropic API and executes the computer use tools
-A web interface to interact with the container, agent loop, and tools.
-​
-Understanding the multi-agent loop
+- A containerized environment suitable for computer use with Claude
+- Implementations of the computer use tools
+- An agent loop that interacts with the Anthropic API and executes the computer use tools
+- A web interface to interact with the container, agent loop, and tools.
+### Understanding the multi-agent loop
 The core of computer use is the “agent loop” - a cycle where Claude requests tool actions, your application executes them, and returns results to Claude. Here’s a simplified example:
 
 
+```python
 async def sampling_loop(
     *,
     model: str,
@@ -188,64 +179,62 @@ async def sampling_loop(
 
         # Add tool results to messages for the next iteration with Claude
         messages.append({"role": "user", "content": tool_results})
+```
+
 The loop continues until either Claude responds without requesting any tools (task completion) or the maximum iteration limit is reached. This safeguard prevents potential infinite loops that could result in unexpected API costs.
 
 For each version of the tools, you must use the corresponding beta flag in your API request:
 
 
-Claude 3.7 Sonnet beta flag
+**Claude 3.7 Sonnet beta flag**
 
-When using tools with 20250124 in their type (Claude 3.7 Sonnet tools), include this beta flag: "betas": ["computer-use-2025-01-24"] Note: The Bash (bash_20250124) and Text Editor (text_editor_20250124) tools are generally available for Claude 3.5 Sonnet (new) as well and can be used without the computer use beta header.
+When using tools with 20250124 in their type (Claude 3.7 Sonnet tools), include this beta flag: `"betas": ["computer-use-2025-01-24"]` 
 
-
-Claude 3.5 Sonnet (new) beta flag
+Note: The Bash (bash_20250124) and Text Editor (text_editor_20250124) tools are generally available for Claude 3.5 Sonnet (new) as well and can be used without the computer use beta header.
 
 We recommend trying the reference implementation out before reading the rest of this documentation.
 
-​
-Optimize model performance with prompting
+## Optimize model performance with prompting
 Here are some tips on how to get the best quality outputs:
 
-Specify simple, well-defined tasks and provide explicit instructions for each step.
-Claude sometimes assumes outcomes of its actions without explicitly checking their results. To prevent this you can prompt Claude with After each step, take a screenshot and carefully evaluate if you have achieved the right outcome. Explicitly show your thinking: "I have evaluated step X..." If not correct, try again. Only when you confirm a step was executed correctly should you move on to the next one.
-Some UI elements (like dropdowns and scrollbars) might be tricky for Claude to manipulate using mouse movements. If you experience this, try prompting the model to use keyboard shortcuts.
-For repeatable tasks or UI interactions, include example screenshots and tool calls of successful outcomes in your prompt.
-If you need the model to log in, provide it with the username and password in your prompt inside xml tags like <robot_credentials>. Using computer use within applications that require login increases the risk of bad outcomes as a result of prompt injection. Please review our guide on mitigating prompt injections before providing the model with login credentials.
-If you repeatedly encounter a clear set of issues or know in advance the tasks Claude will need to complete, use the system prompt to provide Claude with explicit tips or instructions on how to do the tasks successfully.
+- Specify simple, well-defined tasks and provide explicit instructions for each step.
+- Claude sometimes assumes outcomes of its actions without explicitly checking their results. To prevent this you can prompt Claude with "After each step, take a screenshot and carefully evaluate if you have achieved the right outcome. Explicitly show your thinking: 'I have evaluated step X...' If not correct, try again. Only when you confirm a step was executed correctly should you move on to the next one."
+- Some UI elements (like dropdowns and scrollbars) might be tricky for Claude to manipulate using mouse movements. If you experience this, try prompting the model to use keyboard shortcuts.
+- For repeatable tasks or UI interactions, include example screenshots and tool calls of successful outcomes in your prompt.
+- If you need the model to log in, provide it with the username and password in your prompt inside xml tags like `<robot_credentials>`. Using computer use within applications that require login increases the risk of bad outcomes as a result of prompt injection. Please review our guide on mitigating prompt injections before providing the model with login credentials.
+- If you repeatedly encounter a clear set of issues or know in advance the tasks Claude will need to complete, use the system prompt to provide Claude with explicit tips or instructions on how to do the tasks successfully.
 
-​
-System prompts
+## System prompts
 When one of the Anthropic-defined tools is requested via the Anthropic API, a computer use-specific system prompt is generated. It’s similar to the tool use system prompt but starts with:
 
 You have access to a set of functions you can use to answer the user’s question. This includes access to a sandboxed computing environment. You do NOT currently have the ability to inspect files or interact with external resources, except by invoking the below functions.
 
 As with regular tool use, the user-provided system_prompt field is still respected and used in the construction of the combined system prompt.
 
-​
-Understand Anthropic-defined tools
+## Understand Anthropic-defined tools
 As a beta, these tool definitions are subject to change.
 We have provided a set of tools that enable Claude to effectively use computers. When specifying an Anthropic-defined tool, description and tool_schema fields are not necessary or allowed.
 
-Anthropic-defined tools are user executed
+### Anthropic-defined tools are user executed
 
 Anthropic-defined tools are defined by Anthropic but you must explicitly evaluate the results of the tool and return the tool_results to Claude. As with any tool, the model does not automatically execute the tool.
 
 We provide a set of Anthropic-defined tools, with each tool having versions optimized for both Claude 3.5 Sonnet (new) and Claude 3.7 Sonnet:
 
 
-Claude 3.7 Sonnet tools
+### Claude 3.7 Sonnet tools
 
 The following enhanced tools can be used with Claude 3.7 Sonnet:
 
-{ "type": "computer_20250124", "name": "computer" } - Includes new actions for more precise control
-{ "type": "text_editor_20250124", "name": "str_replace_editor" } - Same capabilities as 20241022 version
-{ "type": "bash_20250124", "name": "bash" } - Same capabilities as 20241022 version
+- `{ "type": "computer_20250124", "name": "computer" }` - Includes new actions for more precise control
+- `{ "type": "text_editor_20250124", "name": "str_replace_editor" }` - Same capabilities as 20241022 version
+- `{ "type": "bash_20250124", "name": "bash" }` - Same capabilities as 20241022 version
 When using Claude 3.7 Sonnet, you can also enable the extended thinking capability to understand the model’s reasoning process.
 
 
-Claude 3.5 Sonnet (new) tools
+### Claude 3.5 Sonnet (new) tools
 
-The type field identifies the tool and its parameters for validation purposes, the name field is the tool name exposed to the model.
+The `type` field identifies the tool and its parameters for validation purposes, the `name` field is the tool name exposed to the model.
 
 If you want to prompt the model to use one of these tools, you can explicitly refer the tool by the name field. The name field must be unique within the tool list; you cannot define a tool with the same name as an Anthropic-defined tool in the same API call.
 
@@ -353,17 +342,18 @@ We are providing our input schema for reference only. You should not specify thi
     }
 }
 ```
-​
-Enable thinking capability in Claude 3.7 Sonnet
+## Enable thinking capability in Claude 3.7 Sonnet
 Claude 3.7 Sonnet introduces a new “thinking” capability that allows you to see the model’s reasoning process as it works through complex tasks. This feature helps you understand how Claude is approaching a problem and can be particularly valuable for debugging or educational purposes.
 
 To enable thinking, add a thinking parameter to your API request:
 
 
+```json
 "thinking": {
   "type": "enabled",
   "budget_tokens": 1024
 }
+```
 The budget_tokens parameter specifies how many tokens Claude can use for thinking. This is subtracted from your overall max_tokens budget.
 
 When thinking is enabled, Claude will return its reasoning process as part of the response, which can help you:
@@ -375,6 +365,7 @@ Get more visibility into complex multi-step operations
 Here’s an example of what thinking output might look like:
 
 
+```
 [Thinking]
 I need to save a picture of a cat to the desktop. Let me break this down into steps:
 
@@ -383,6 +374,7 @@ I need to save a picture of a cat to the desktop. Let me break this down into st
 3. After finding a suitable image, I'll need to save it to the desktop
 
 Let me start by taking a screenshot to see what's available...
+```
 ## Combine computer use with other tools
 
 You can combine regular tool use with the Anthropic-defined tools for computer use.
@@ -437,16 +429,14 @@ response = client.beta.messages.create(
 )
 print(response)
 ```
-​
-Build a custom computer use environment
+## Build a custom computer use environment
 The reference implementation is meant to help you get started with computer use. It includes all of the components needed have Claude use a computer. However, you can build your own environment for computer use to suit your needs. You’ll need:
 
-A virtualized or containerized environment suitable for computer use with Claude
-An implementation of at least one of the Anthropic-defined computer use tools
-An agent loop that interacts with the Anthropic API and executes the tool_use results using your tool implementations
-An API or UI that allows user input to start the agent loop
-​
-Understand computer use limitations
+- A virtualized or containerized environment suitable for computer use with Claude
+- An implementation of at least one of the Anthropic-defined computer use tools
+- An agent loop that interacts with the Anthropic API and executes the tool_use results using your tool implementations
+- An API or UI that allows user input to start the agent loop
+## Understand computer use limitations
 The computer use functionality is in beta. While Claude’s capabilities are cutting edge, developers should be aware of its limitations:
 
 Latency: the current computer use latency for human-AI interactions may be too slow compared to regular human-directed computer actions. We recommend focusing on use cases where speed isn’t critical (e.g., background information gathering, automated software testing) in trusted environments.
