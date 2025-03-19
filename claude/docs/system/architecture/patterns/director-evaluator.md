@@ -200,13 +200,6 @@ When a script execution step is included:
 
 The Director-Evaluator Loop and Subtask Spawning mechanism are complementary features:
 
-| Director-Evaluator Loop | Subtask Spawning Mechanism |
-|-------------------------|----------------------------|
-| Specialized higher-level pattern | General-purpose primitive |
-| Built for iterative refinement | Ad-hoc dynamic task creation |
-| Predefined iteration structure | Flexible composition pattern |
-| Built-in termination conditions | Manual continuation control |
-
 ### Integration Points
 
 1. **Dynamic Director-Evaluator Implementation**
@@ -221,22 +214,21 @@ The Director-Evaluator Loop and Subtask Spawning mechanism are complementary fea
    - Subtasks use `inherit_context: subset` by default
    - Both can be explicitly configured through their respective XML structures
 
-### When to Use Each Pattern
+### Pattern Selection Guide
 
-**When to use Director-Evaluator Loop:**
-- Iterative refinement processes
-- Create-evaluate feedback cycles
-- Multiple potential iterations
-- External validation via scripts
-- When the evaluation criteria are well-defined
+**Director-Evaluator Loop** is optimal for:
+- Iterative refinement processes requiring multiple feedback cycles
+- Workflows needing external validation via scripts with standardized input/output
+- Scenarios with well-defined evaluation criteria and termination conditions
+- Cases requiring preservation of iteration history for auditing or debugging
 
-**When to use Subtask Spawning:**
-- One-off subtask creation
-- Dynamic task composition
-- Task flows that aren't primarily iterative
-- Complex task trees with varying subtypes
-- When flexibility in subtask selection is needed
-- For ad-hoc decomposition of complex problems
+**Subtask Spawning** is better for:
+- Ad-hoc dynamic task creation based on runtime discoveries
+- Complex task trees with varying subtypes and unpredictable branching
+- Workflows requiring specialized template selection per subtask
+- Situations where flexibility in execution path is more important than iteration structure
+
+The patterns can be used together, with Director-Evaluator loops spawning subtasks when needed for specialized processing.
 
 ## Conclusion
 

@@ -157,26 +157,6 @@ The task template schema defines the structure for XML task template files and m
     </xs:complexType>
   </xs:element>
   
-  <xs:element name="template">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element name="name" type="xs:string"/>
-        <xs:element name="params" type="xs:string"/>
-        <xs:element name="returns" type="xs:string" minOccurs="0"/>
-        <xs:element name="task" type="TaskType"/>
-      </xs:sequence>
-    </xs:complexType>
-  </xs:element>
-
-  <xs:element name="call">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element name="template" type="xs:string"/>
-        <xs:element name="arg" type="xs:string" maxOccurs="unbounded"/>
-      </xs:sequence>
-    </xs:complexType>
-  </xs:element>
-  
   <xs:element name="cond">
     <xs:complexType>
       <xs:sequence>

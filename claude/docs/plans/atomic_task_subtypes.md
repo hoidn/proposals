@@ -125,16 +125,13 @@ Phase 3: Deprecate top-level director/evaluator types
 
 Phase 4: Update documentation (errorspec.md, operators.md)
 
-Key Benefits:
+## Implementation Implications
 
-Maintains atomic task execution semantics
+The atomic subtyping approach provides precise technical advantages:
 
-Enables custom director/evaluator logic through subtype hooks
-
-Reduces type system complexity
-
-Allows shared resource tracking infrastructure
-
-Preserves XML schema backward compatibility
+- **Execution Model Integration**: Subtypes inherit the established turn tracking, resource management, and cleanup protocols already defined for atomic tasks
+- **Architecture Simplification**: Reduces duplicated code by keeping atomic behavior in a single class hierarchy rather than implementing separate task types
+- **Integration Cost Reduction**: Requires only minimal changes to the XML schema (adding the `subtype` attribute) rather than introducing new top-level element types
+- **Template System Compatibility**: Existing template matching logic continues to work without modification
 
 This approach balances specialization needs with architectural consistency, while maintaining the simplified context model from previous planning.

@@ -314,51 +314,62 @@ console.log('Retrieved context:', memoryResult.content);
 
 ---
 
-// Example: Sequential Task Failure with Partial Results
+// Unified error handling example showing different task types
 try {
-  const result = await taskSystem.executeTask(
-    "process data in multiple steps",
-    memorySystem
-  );
+  const result = await taskSystem.executeTask(taskDefinition, memorySystem);
+  console.log("Task completed successfully:", result.content);
 } catch (error) {
-  if (error.type === 'TASK_FAILURE' && error.reason === 'subtask_failure') {
-    console.log(`Failed at step ${error.details.failedStep} of ${error.details.totalSteps}`);
+  // Handle different error types with specific strategies
+  if (error.type === 'RESOURCE_EXHAUSTION') {
+    console.log(`Resource limit exceeded: ${error.resource}`);
+    console.log('Usage metrics:', error.metrics);
     
-    // Access partial results from completed steps
-    error.details.partialResults.forEach(result => {
-      console.log(`Step ${result.stepIndex} output: ${result.output}`);
-    });
+    // Resource exhaustion recovery strategy
+    const decomposedTask = await taskSystem.decomposeTask(taskDefinition);
+    // Continue with decomposed task...
     
-    // Potentially use partial results for recovery
-    const recoveryResult = await taskSystem.executeTask(
-      `Continue processing from step ${error.details.failedStep}`,
-      memorySystem,
-      { initialState: error.details.partialResults }
-    );
-  }
-}
-
-// Example: Reduce Task Failure with Partial Results
-try {
-  const result = await taskSystem.executeTask(
-    "<task type='reduce'>...</task>",
-    memorySystem
-  );
-} catch (error) {
-  if (error.type === 'TASK_FAILURE' && 
-      error.reason === 'subtask_failure' &&
-      error.details.failedInputIndex !== undefined) {
-    
-    console.log(`Failed processing input ${error.details.failedInputIndex}`);
-    console.log(`Processed ${error.details.processedInputs.length} of ${error.details.totalInputs} inputs`);
-    
-    // Access the current accumulator state
-    console.log("Current accumulator:", error.details.currentAccumulator);
-    
-    // Access individual processed results
-    error.details.partialResults.forEach(result => {
-      console.log(`Input ${result.inputIndex} result: ${result.result}`);
-    });
+  } else if (error.type === 'TASK_FAILURE') {
+    // Handle different failure reasons
+    switch (error.reason) {
+      case 'subtask_failure':
+        // Sequential task partial results handling
+        if (error.details.failedStep !== undefined) {
+          console.log(`Sequential task failed at step ${error.details.failedStep} of ${error.details.totalSteps}`);
+          console.log('Completed steps:');
+          error.details.partialResults.forEach(result => {
+            console.log(`- Step ${result.stepIndex}: ${result.output.substring(0, 50)}...`);
+          });
+          
+          // Sequential task recovery example
+          const recoveryResult = await taskSystem.executeTask(
+            `Continue processing from step ${error.details.failedStep}`,
+            memorySystem,
+            { initialState: error.details.partialResults }
+          );
+        }
+        // Reduce task partial results handling
+        else if (error.details.failedInputIndex !== undefined) {
+          console.log(`Reduce task failed processing input ${error.details.failedInputIndex}`);
+          console.log(`Processed ${error.details.processedInputs.length} of ${error.details.totalInputs} inputs`);
+          console.log('Current accumulator state:', error.details.currentAccumulator);
+          
+          // Reduce task recovery example
+          const recoveryResult = await taskSystem.executeReduceTaskWithState(
+            taskDefinition,
+            error.details.currentAccumulator,
+            inputsArray.slice(error.details.failedInputIndex)
+          );
+        }
+        break;
+        
+      case 'output_format_failure':
+        console.log(`Output format validation failed: ${error.message}`);
+        console.log(`Expected: ${error.details.expectedType}, Got: ${error.details.actualType}`);
+        // Format recovery strategy
+        break;
+        
+      // Other failure reasons
+    }
   }
 }
 
