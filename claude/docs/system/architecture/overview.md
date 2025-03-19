@@ -150,6 +150,22 @@ Key concepts:
 
 See [Contract:Tasks:2.0] in system/contracts/protocols.md for complete specification.
 
+## Delegation Mechanisms
+
+The system provides two distinct delegation mechanisms:
+
+1. **Tool Calls**: Handler-managed deterministic operations with rigid APIs.
+   - Used for external interactions (files, APIs, scripts)
+   - No continuation mechanism or complex context management
+   - Executed directly by the Handler component
+
+2. **Subtasks**: LLM-to-LLM interactions using continuation.
+   - Involve Memory System for context management
+   - Use SubtaskRequest structure and CONTINUATION status
+   - Follow the context management model defined in ADR 14
+
+These mechanisms serve different purposes but can be composed in patterns like Director-Evaluator.
+
 ## Component Architecture
 
 The system consists of four core components working together to process, execute, and manage tasks:

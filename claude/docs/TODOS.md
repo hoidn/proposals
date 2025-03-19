@@ -26,6 +26,10 @@ Tasks are organized into four categories:
   * Clear separation of concerns between metadata management and file operations
 - Memory System version consistently referenced as 3.0 across all documentation
 - updateContext method references removed; documentation consistently reflects read-only context model
+- Tool calls vs. subtasks boundaries clearly defined:
+  * Tool calls: Handler-managed deterministic operations with rigid APIs
+  * Subtasks: LLM-to-LLM interactions using continuation mechanism
+  * Clear component responsibilities established for each type
 
 ### Context Management
 - Document best practices (ADR 004, ADR 14)
@@ -143,10 +147,6 @@ Tasks are organized into four categories:
     - Consider alternative syntax or language support
 
 ## Inconsistent ⚠️
-
-1. **Treatment of tool calls vs. subtasks**
-   - Inconsistent definition of boundaries and responsibilities
-   - Provide clear distinction and interaction patterns
 
 2. **Task-subtask context inheritance**
    - Multiple conflicting descriptions exist

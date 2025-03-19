@@ -30,6 +30,27 @@ See [Component:MemorySystem:3.0]
   - Index Management: [Interface:Memory:3.0]
     - Global index serves as the bootstrap for matching; updates occur in bulk.
 
+### 1.5 Delegation Boundaries
+
+#### Handler Responsibilities
+- Execute all tool calls (file operations, scripts, APIs)
+- Manage tool-specific resources
+- Configure model-specific tools (e.g., Anthropic computer use)
+- Direct execution without continuation mechanism
+- Track resource usage for tool operations
+
+#### Memory System Responsibilities
+- Provide context for subtask execution
+- Support context inheritance for LLM-to-LLM interaction
+- Not involved in tool call execution
+- Maintain metadata for associative matching
+
+#### Task System Responsibilities
+- Coordinate both delegation mechanisms
+- Translate tasks into appropriate delegation type
+- Manage interaction between tools and subtasks
+- Handle template selection for subtasks
+
 #### Responsibilities
 Memory System:
  - Maintains global file metadata index

@@ -358,8 +358,17 @@ export interface EvaluationResult extends TaskResult {
 }
 
 /**
- * Represents a request to spawn a subtask from a parent task.
- * Used when a task returns with status: "CONTINUATION".
+ * Tool Call - Handler-managed operations with deterministic APIs
+ * Distinct from subtasks (LLM-to-LLM interactions via continuation)
+ */
+export interface ToolCall {
+  name: string;
+  input: Record<string, any>;
+}
+
+/**
+ * Subtask Request - Used for LLM-to-LLM delegation via continuation
+ * Distinct from tool calls (deterministic operations without continuation)
  */
 export interface SubtaskRequest {
     /** Type of subtask to spawn */

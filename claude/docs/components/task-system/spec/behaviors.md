@@ -185,6 +185,26 @@ flowchart TD
 - Clear task execution boundaries
 - Simple file modification tracking
 
+## Delegation Mechanisms
+
+### Tool Calls
+- Handled by Handler component
+- Deterministic with fixed APIs
+- No continuation mechanism
+- Used for file operations, APIs, script execution
+- Examples: file access, bash commands, computer tools
+- Direct execution without complex context management
+- Resource tracking handled by Handler
+
+### Subtasks
+- LLM-to-LLM interactions
+- Use CONTINUATION status with SubtaskRequest
+- Full context management via Memory System
+- Support complex reasoning and creative tasks
+- Follow ADR 14 context management model
+- Depth tracking to prevent infinite recursion
+- Template selection via associative matching
+
 ## File Operations
 
 ### Clear Responsibility Boundaries

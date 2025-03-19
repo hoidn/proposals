@@ -190,11 +190,24 @@ When the context_management block is omitted, the operator-specific defaults app
 
 ### Script Execution Integration
 
+Script execution is implemented as a tool call handled by the Handler:
+
+```xml
+<script_execution>
+  <command>{{script_path}}</command>
+  <timeout>300</timeout>
+  <inputs>
+    <input name="script_input" from="director_result"/>
+  </inputs>
+</script_execution>
+```
+
 When a script execution step is included:
 - The script receives the Director's output as input
 - Script output (stdout, stderr, exit code) is captured
 - Results are passed to the Evaluator for processing
 - The Evaluator considers both the original output and script results
+- As a tool call, script execution does not use the continuation mechanism
 
 ## Relationship to Subtask Spawning
 

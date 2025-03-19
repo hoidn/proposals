@@ -4,7 +4,7 @@
 Accepted
 
 ## Context
-The system needs a standardized mechanism for tasks to dynamically spawn subtasks during execution. This capability is essential for adaptive task decomposition, dependency discovery, verification through testing, and dynamic workflow execution.
+The system needs a standardized mechanism for LLM-to-LLM delegation (subtasks). This differs from tool calls, which are Handler-managed deterministic operations with rigid APIs. The subtask mechanism is essential for adaptive task decomposition, dependency discovery, verification through testing, and dynamic workflow execution.
 
 Current inconsistencies exist in how we handle context management for subtasks, data passing between parent and child tasks, and the relationship between subtasks and other patterns like Director-Evaluator.
 

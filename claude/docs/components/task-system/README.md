@@ -81,6 +81,22 @@ Key characteristics:
 - Function calls create a new lexical scope
 - Template registration happens automatically during parsing
 
+## Delegation Mechanisms
+
+The system supports two delegation approaches:
+
+1. **Tool Calls**: Handler-managed deterministic operations (file operations, scripts)
+   - Direct execution without continuation
+   - Fixed APIs with predictable behavior
+   - Managed entirely by the Handler component
+
+2. **Subtasks**: LLM-to-LLM interactions using continuation mechanism
+   - Complex context management via Memory System
+   - Template selection through associative matching
+   - Depth tracking to prevent infinite recursion
+
+These serve different purposes and involve different components but can be composed to create powerful patterns like Director-Evaluator loops.
+
 ## Integration and Dependencies
 
 The Task System integrates with several core components. It uses the Memory System for context access and management, Handler Tools for file and system operations, the Compiler for task parsing and transformation, and the Evaluator for error recovery and task decomposition. These integrations enable comprehensive task execution while maintaining clean component boundaries.
