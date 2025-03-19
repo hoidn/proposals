@@ -1,66 +1,4 @@
-
-Anthropic home pagelight logo
-English
-
-Search...
-⌘K
-Research
-News
-Go to claude.ai
-
-Welcome
-User Guides
-API Reference
-Prompt Library
-Release Notes
-Developer Newsletter
-Developer Console
-Developer Discord
-Support
-Get started
-Overview
-Initial setup
-Intro to Claude
-Learn about Claude
-Use cases
-Models & pricing
-Security and compliance
-Build with Claude
-Define success criteria
-Develop test cases
-Context windows
-Vision
-Prompt engineering
-Extended thinking
-Multilingual support
-Tool use (function calling)
-Prompt caching
-PDF support
-Citations
-Token counting
-Batch processing
-Embeddings
-Agents and tools
-Claude Code
-Computer use (beta)
-Model Context Protocol (MCP)
-Google Sheets add-on
-Test and evaluate
-Strengthen guardrails
-Using the Evaluation Tool
-Administration
-Admin API
-Resources
-Glossary
-Model deprecations
-System status
-Claude 3 model card
-Claude 3.7 system card
-Anthropic Cookbook
-Anthropic Courses
-Legal center
-Anthropic Privacy Policy
-AGENTS AND TOOLS
+# Computer use (beta)
 Computer use (beta)
 Claude 3.7 Sonnet and Claude 3.5 Sonnet (new) are capable of interacting with tools that can manipulate a computer desktop environment. Claude 3.7 Sonnet introduces additional tools and allows you to enable thinking, giving you more insight into the model’s reasoning process.
 
@@ -313,19 +251,18 @@ If you want to prompt the model to use one of these tools, you can explicitly re
 
 We do not recommend defining tools with the names of Anthropic-defined tools. While you can still redefine tools with these names (as long as the tool name is unique in your tools block), doing so may result in degraded model performance.
 
+### Computer tool
 
-Computer tool
+### Text editor tool
 
+**Types**
+- `text_editor_20250124` - Same capabilities as the 20241022 version, for use with Claude 3.7 Sonnet
+- `text_editor_20241022` - Original text editor tool used with Claude 3.5 Sonnet (new)
 
-Text editor tool
-
-Types
-text_editor_20250124 - Same capabilities as the 20241022 version, for use with Claude 3.7 Sonnet
-text_editor_20241022 - Original text editor tool used with Claude 3.5 Sonnet (new)
-Tool description
+**Tool description**
 We are providing our tool description for reference only. You should not specify this in your Anthropic-defined tool call.
 
-
+```
 Custom editing tool for viewing, creating and editing files
 * State is persistent across command calls and discussions with the user
 * If `path` is a file, `view` displays the result of applying `cat -n`. If `path` is a directory, `view` lists non-hidden files and directories up to 2 levels deep
@@ -337,10 +274,12 @@ Notes for using the `str_replace` command:
 * The `old_str` parameter should match EXACTLY one or more consecutive lines from the original file. Be mindful of whitespaces!
 * If the `old_str` parameter is not unique in the file, the replacement will not be performed. Make sure to include enough context in `old_str` to make it unique
 * The `new_str` parameter should contain the edited lines that should replace the `old_str`
-Tool input schema
+```
+
+**Tool input schema**
 We are providing our input schema for reference only. You should not specify this in your Anthropic-defined tool call.
 
-
+```json
 {
     "properties": {
         "command": {
@@ -377,16 +316,17 @@ We are providing our input schema for reference only. You should not specify thi
     "required": ["command", "path"],
     "type": "object",
 }
+```
+### Bash tool
 
-Bash tool
+**Types**
+- `bash_20250124` - Same capabilities as the 20241022 version, for use with Claude 3.7 Sonnet
+- `bash_20241022` - Original bash tool used with Claude 3.5 Sonnet (new)
 
-Types
-bash_20250124 - Same capabilities as the 20241022 version, for use with Claude 3.7 Sonnet
-bash_20241022 - Original bash tool used with Claude 3.5 Sonnet (new)
-Tool description
+**Tool description**
 We are providing our tool description for reference only. You should not specify this in your Anthropic-defined tool call.
 
-
+```
 Run commands in a bash shell
 * When invoking this tool, the contents of the "command" parameter does NOT need to be XML-escaped.
 * You have access to a mirror of common linux and python packages via apt and pip.
@@ -394,10 +334,12 @@ Run commands in a bash shell
 * To inspect a particular line range of a file, e.g. lines 10-25, try 'sed -n 10,25p /path/to/the/file'.
 * Please avoid commands that may produce a very large amount of output.
 * Please run long lived commands in the background, e.g. 'sleep 10 &' or start a server in the background.
-Tool input schema
+```
+
+**Tool input schema**
 We are providing our input schema for reference only. You should not specify this in your Anthropic-defined tool call.
 
-
+```json
 {
     "properties": {
         "command": {
@@ -410,6 +352,7 @@ We are providing our input schema for reference only. You should not specify thi
         },
     }
 }
+```
 ​
 Enable thinking capability in Claude 3.7 Sonnet
 Claude 3.7 Sonnet introduces a new “thinking” capability that allows you to see the model’s reasoning process as it works through complex tasks. This feature helps you understand how Claude is approaching a problem and can be particularly valuable for debugging or educational purposes.
@@ -440,17 +383,11 @@ I need to save a picture of a cat to the desktop. Let me break this down into st
 3. After finding a suitable image, I'll need to save it to the desktop
 
 Let me start by taking a screenshot to see what's available...
-​
-Combine computer use with other tools
+## Combine computer use with other tools
+
 You can combine regular tool use with the Anthropic-defined tools for computer use.
 
-
-Shell
-
-Python
-
-TypeScript
-
+```python
 import anthropic
 
 client = anthropic.Anthropic()
@@ -499,6 +436,7 @@ response = client.beta.messages.create(
     thinking={"type": "enabled", "budget_tokens": 1024},
 )
 print(response)
+```
 ​
 Build a custom computer use environment
 The reference implementation is meant to help you get started with computer use. It includes all of the components needed have Claude use a computer. However, you can build your own environment for computer use to suit your needs. You’ll need:
@@ -521,60 +459,31 @@ Vulnerabilities: Vulnerabilities like jailbreaking or prompt injection may persi
 Inappropriate or illegal actions: Per Anthropic’s terms of service, you must not employ computer use to violate any laws or our Acceptable Use Policy.
 Always carefully review and verify Claude’s computer use actions and logs. Do not use Claude for tasks requiring perfect precision or sensitive user information without human oversight.
 
-​
-Pricing
+## Pricing
+
 See the tool use pricing documentation for a detailed explanation of how Claude Tool Use API requests are priced.
 
 As a subset of tool use requests, computer use requests are priced the same as any other Claude API request.
 
 We also automatically include a special system prompt for the model, which enables computer use.
 
-Model	Tool choice	System prompt token count
-Claude 3.5 Sonnet (new)	auto
-any, tool	466 tokens
-499 tokens
-Claude 3.7 Sonnet	auto
-any, tool	466 tokens
-499 tokens
+| Model | Tool choice | System prompt token count |
+|-------|-------------|---------------------------|
+| Claude 3.5 Sonnet (new) | auto | 466 tokens |
+| | any, tool | 499 tokens |
+| Claude 3.7 Sonnet | auto | 466 tokens |
+| | any, tool | 499 tokens |
+
 In addition to the base tokens, the following additional input tokens are needed for the Anthropic-defined tools:
 
-Tool	Additional input tokens
-computer_20241022 (Claude 3.5 Sonnet)	683 tokens
-computer_20250124 (Claude 3.7 Sonnet)	735 tokens
-text_editor_20241022 (Claude 3.5 Sonnet)	700 tokens
-text_editor_20250124 (Claude 3.7 Sonnet)	700 tokens
-bash_20241022 (Claude 3.5 Sonnet)	245 tokens
-bash_20250124 (Claude 3.7 Sonnet)	245 tokens
+| Tool | Additional input tokens |
+|------|-------------------------|
+| computer_20241022 (Claude 3.5 Sonnet) | 683 tokens |
+| computer_20250124 (Claude 3.7 Sonnet) | 735 tokens |
+| text_editor_20241022 (Claude 3.5 Sonnet) | 700 tokens |
+| text_editor_20250124 (Claude 3.7 Sonnet) | 700 tokens |
+| bash_20241022 (Claude 3.5 Sonnet) | 245 tokens |
+| bash_20250124 (Claude 3.7 Sonnet) | 245 tokens |
+
 If you enable thinking with Claude 3.7 Sonnet, the tokens used for thinking will be counted against your max_tokens budget based on the budget_tokens you specify in the thinking parameter.
-
-Was this page helpful?
-
-
-Yes
-
-No
-Troubleshooting
-Model Context Protocol (MCP)
-x
-linkedin
-Computer use (beta) - Anthropic
-Ask AI
-
-
-Ask AI
-
-
-Ask AI
-
-
-Ask AI
-
-
-Ask AI
-
-
-Ask AI
-
-
-Ask AI
 
