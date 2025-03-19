@@ -79,39 +79,13 @@ For full technical details on any topic, please refer to the canonical file list
 
 ### Director-Evaluator Pattern [Pattern:DirectorEvaluator:1.1]
 
-The Director-Evaluator Pattern supports both dynamic and static variants:
+The system implements a standardized mechanism for iterative refinement that supports both static (predefined) and dynamic (continuation-based) variants. This pattern enables:
 
-#### Dynamic Variant
-When a Director task returns with a `CONTINUATION` status and an `evaluation_request` in its notes, the Evaluator dynamically spawns an evaluation subtask that processes the output and provides feedback.
+- Iterative improvement through feedback loops
+- Optional integration with script execution
+- Explicit termination conditions based on evaluation results
 
-#### Static Variant (Director-Evaluator Loop)
-A dedicated task type with explicit structure:
-
-```xml
-<task type="director_evaluator_loop">
-  <description>{{task_description}}</description>
-  <max_iterations>5</max_iterations>
-  <context_management>
-    <inherit_context>none</inherit_context>
-    <accumulate_data>true</accumulate_data>
-    <accumulation_format>notes_only</accumulation_format>
-  </context_management>
-  <director>
-    <description>Generate solution</description>
-    <inputs>
-      <input name="feedback" from="evaluation_feedback"/>
-    </inputs>
-  </director>
-  <evaluator>
-    <description>Evaluate solution</description>
-    <inputs>
-      <input name="solution" from="director_result"/>
-    </inputs>
-  </evaluator>
-</task>
-```
-
-All data flow uses direct parameter passing between components rather than environment variables, ensuring clear dependencies and improved testability.
+For the complete specification, including implementation details, integration points, and context management integration, see [Pattern:DirectorEvaluator:1.1] in `system/architecture/patterns/director-evaluator.md`.
 
 The system follows a unified context management model. Task input values are dynamically substituted using the `{{...}}` syntax, allowing direct parameter passing between tasks. This explicit binding mechanism (using the `from` attribute) improves clarity and flexibility in task execution by making data dependencies clear and reducing reliance on environment variables.
 
