@@ -35,11 +35,19 @@ Memory System:
  - Maintains global file metadata index
  - Provides bulk index updates
  - Supplies metadata for associative matching (refer to Appendix A for constraints)
+ - NEVER performs file I/O operations (reading, writing, deletion)
+ - Does NOT store or process file contents
 
 Task System:
  - Uses context for task execution
  - Receives file references via associative matching
  - Delegates file access to Handler tools
+
+Handler:
+ - Performs ALL file I/O operations
+ - For Anthropic models: Configures computer use tools (optional)
+ - For other models: Uses appropriate file access mechanisms
+ - Manages all direct interaction with file system
 
 #### Integration Points
  - Context flow from associative matching to task execution

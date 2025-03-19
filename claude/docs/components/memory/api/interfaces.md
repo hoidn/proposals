@@ -1,5 +1,13 @@
 # Memory System Interfaces [Interface:Memory:3.0]
 
+/**
+ * Memory System Interfaces [Interface:Memory:3.0]
+ *
+ * IMPORTANT: The Memory System manages ONLY metadata about files (paths and descriptive strings).
+ * It does NOT perform any file I/O operations - all file reading, writing, and deletion
+ * is handled exclusively by Handler tools.
+ */
+
 ## Overview
 The Memory System provides two core capabilities:
 1. Global file metadata index maintenance for associative matching
@@ -18,11 +26,17 @@ type FileMetadata = string;
  * Global index mapping file paths to their metadata
  * - Keys are absolute file paths
  * - Values are unstructured metadata strings
+ * 
+ * NOTE: The Memory System is responsible only for providing file metadata
+ * (including file paths and unstructured metadata strings). All file I/O 
+ * operations (reading, writing, deletion) are delegated to Handler tools.
+ * The index serves as a bootstrap mechanism for associative matching when
+ * full content scanning is not feasible.
  */
 type GlobalIndex = Map<string, FileMetadata>;
 ```
 
-A mapping of file paths to their associated metadata strings. **Note:** The Memory System is responsible only for providing file metadata (including file paths and unstructured metadata strings). All file I/O operations (reading, writing, deletion) are delegated to Handler tools. The index serves as a bootstrap mechanism for associative matching when full content scanning is not feasible.
+A mapping of file paths to their associated metadata strings. The Memory System is responsible only for providing file metadata (including file paths and unstructured metadata strings). All file I/O operations (reading, writing, deletion) are delegated to Handler tools. The index serves as a bootstrap mechanism for associative matching when full content scanning is not feasible.
 
 Key characteristics:
 - Keys are absolute file paths
@@ -74,6 +88,19 @@ Performs a bulk update of the global file metadata index. Replaces the entire ex
  * 
  * The Memory System does NOT perform ranking or prioritization of matches.
  * It only provides associative matching based on the input structure.
+ *
+ * @param input - The ContextGenerationInput containing task context
+ * @returns A promise resolving to an AssociativeMatchResult object containing:
+ *   - `context`: Unstructured text data relevant to the query
+ *   - `matches`: An unordered list of file paths (and optional metadata) relevant to the query
+ * @throws {INVALID_INPUT} If the input structure is malformed or missing required fields
+ */
+/**
+ * Retrieve context using associative matching.
+ * 
+ * The Memory System does NOT perform ranking or prioritization of matches.
+ * It only provides associative matching based on the input structure.
+ * It does NOT read file contents - it only returns file paths and metadata.
  *
  * @param input - The ContextGenerationInput containing task context
  * @returns A promise resolving to an AssociativeMatchResult object containing:

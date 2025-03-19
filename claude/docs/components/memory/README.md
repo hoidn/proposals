@@ -12,6 +12,8 @@ The Memory System provides a standardized interface as defined in [Interface:Mem
 - Context retrieval through associative matching
 - Clear separation between metadata management and file operations
 
+**IMPORTANT: The Memory System NEVER performs file I/O operations (reading, writing, deletion). All file operations are exclusively handled by Handler tools.**
+
 The system focuses purely on metadata management and context retrieval - it does not store file content, perform file operations, track resources, or rank matches.
 
 For the complete interface specification, method signatures, and type definitions, see `components/memory/api/interfaces.md`.
