@@ -18,6 +18,7 @@ The memory system needs to manage short-term task context and maintain a global 
    - Manages global file metadata index
    - Delegates file access to Handler tools
    - Does not handle file content storage or retrieval
+   - Provides read-only context access (no updateContext)
 
 2. **Memory Organization**
    - Working Memory includes only data context from associative matching

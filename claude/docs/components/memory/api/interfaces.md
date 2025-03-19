@@ -6,6 +6,9 @@
  * IMPORTANT: The Memory System manages ONLY metadata about files (paths and descriptive strings).
  * It does NOT perform any file I/O operations - all file reading, writing, and deletion
  * is handled exclusively by Handler tools.
+ * 
+ * NOTE: As of version 3.0, the Memory System follows a read-only context model.
+ * The updateContext method has been removed to enforce better architectural boundaries.
  */
 
 ## Overview
@@ -109,6 +112,9 @@ Performs a bulk update of the global file metadata index. Replaces the entire ex
  * @throws {INVALID_INPUT} If the input structure is malformed or missing required fields
  */
 declare function getRelevantContextFor(input: ContextGenerationInput): Promise<AssociativeMatchResult>;
+
+// Note: updateContext method has been removed in version 3.0
+// Context updates must happen through appropriate Task System mechanisms
 
 ## Integration Points
 - Handler: Uses file paths from AssociativeMatchResult to read files via tools

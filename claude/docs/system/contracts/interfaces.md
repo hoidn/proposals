@@ -37,11 +37,13 @@ Memory System:
  - Supplies metadata for associative matching (refer to Appendix A for constraints)
  - NEVER performs file I/O operations (reading, writing, deletion)
  - Does NOT store or process file contents
+ - Follows read-only context model (no updateContext capability)
 
 Task System:
  - Uses context for task execution
  - Receives file references via associative matching
  - Delegates file access to Handler tools
+ - Must not attempt to update context directly (removed in 3.0)
 
 Handler:
  - Performs ALL file I/O operations

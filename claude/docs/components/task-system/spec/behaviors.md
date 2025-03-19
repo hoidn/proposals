@@ -174,7 +174,7 @@ flowchart TD
 - All file content access is always handled by the Handler, never the Memory System
 
 ### Context Management
-- Context accessed via async getContext/updateContext
+- Context accessed via async getRelevantContextFor
 - File metadata accessed via GlobalIndex
 - Existing context preserved during task execution
 - Structure/parsing handled by associative memory tasks

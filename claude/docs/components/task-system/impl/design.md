@@ -379,6 +379,7 @@ This design ensures that the director's output flows seamlessly through the scri
   - Provides associative matching based on metadata
   - Never performs file I/O operations
   - Does not store or parse file contents
+  - Follows read-only context model (no updateContext capability)
 
 - **Handler** (all file operations):
   - Reads/writes files when needed

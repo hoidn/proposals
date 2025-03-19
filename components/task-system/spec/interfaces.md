@@ -56,6 +56,7 @@ interface TaskSystem {
 ```typescript
 /**
  * Memory management interface focused on metadata
+ * Uses read-only context model (no updateContext capability)
  */
 type FileMetadata = string;
 
@@ -74,6 +75,9 @@ interface MemorySystem {
     
     // Update global file metadata index
     updateGlobalIndex(index: GlobalIndex): Promise<void>;
+    
+    // Get relevant context for task execution
+    getRelevantContextFor(input: ContextGenerationInput): Promise<AssociativeMatchResult>;
 }
 ```
 

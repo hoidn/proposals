@@ -1,7 +1,7 @@
 # Architecture Decision Record: Remove Context Update Capability
 
 ## Status
-Accepted
+Completed
 
 ## Context
 The Memory System's updateContext capability was found to be inconsistent with its architectural goals:

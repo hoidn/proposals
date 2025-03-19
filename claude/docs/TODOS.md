@@ -24,6 +24,8 @@ Tasks are organized into four categories:
   * Memory System: Manages ONLY metadata (file paths and descriptive strings)
   * Handler: Performs ALL file I/O operations using appropriate tools (including Anthropic's computer use tools for Anthropic models)
   * Clear separation of concerns between metadata management and file operations
+- Memory System version consistently referenced as 3.0 across all documentation
+- updateContext method references removed; documentation consistently reflects read-only context model
 
 ### Context Management
 - Document best practices (ADR 004, ADR 14)
@@ -142,20 +144,11 @@ Tasks are organized into four categories:
 
 ## Inconsistent ⚠️
 
-1. **Memory System version references**
-   - Some documentation still refers to version 2.0 while system is now at 3.0
-   - Update all references to consistently use Memory System 3.0
-
-2. **updateContext method references**
-   - Method was removed in Memory System 3.0 but still referenced in some docs
-   - Remove all references to this deprecated method
-
-
-4. **Treatment of tool calls vs. subtasks**
+1. **Treatment of tool calls vs. subtasks**
    - Inconsistent definition of boundaries and responsibilities
    - Provide clear distinction and interaction patterns
 
-5. **Task-subtask context inheritance**
+2. **Task-subtask context inheritance**
    - Multiple conflicting descriptions exist
    - Standardize on the approach defined in ADR 14
 

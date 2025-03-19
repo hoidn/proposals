@@ -14,6 +14,8 @@ The Memory System provides a standardized interface as defined in [Interface:Mem
 
 **IMPORTANT: The Memory System NEVER performs file I/O operations (reading, writing, deletion). All file operations are exclusively handled by Handler tools.**
 
+**NOTE: As of version 3.0, the Memory System follows a read-only context model. The updateContext method has been removed, and all context must be managed through the appropriate context management mechanisms in the Task System.**
+
 The system focuses purely on metadata management and context retrieval - it does not store file content, perform file operations, track resources, or rank matches.
 
 For the complete interface specification, method signatures, and type definitions, see `components/memory/api/interfaces.md`.
@@ -72,4 +74,4 @@ Use descriptive but concise metadata strings, maintain consistent formats, and h
 
 The current Version 3.0 removed the updateContext capability and enforces a read-only context model with simplified state management. This follows from architecture decisions documented in [ADR:Memory:1.0] and interface specifications in [Interface:Memory:3.0].
 
-For detailed implementation specifications and patterns, refer to [Contract:Integration:TaskMemory:1.0] and [Pattern:ContextFrame:1.0].
+For detailed implementation specifications and patterns, refer to [Contract:Integration:TaskMemory:3.0] and [Pattern:ContextFrame:1.0].
