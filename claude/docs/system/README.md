@@ -31,6 +31,37 @@ graph TD
 ```
 
 ## Table of Contents
+
+## Documentation Guide
+
+### Documentation Structure
+This documentation is organized into several key areas:
+- **System Level**: Architecture, patterns, and system-wide contracts in `/system`
+- **Component Level**: Detailed documentation for each component in `/components`
+- **Implementation Details**: Specific implementation guidance in `/components/*/impl`
+- **Interface Definitions**: Public and internal interfaces in `/components/*/api`
+
+### Canonical Sources and Cross-References
+To reduce duplication and maintain consistency, this documentation follows a pattern of canonical sources and cross-references:
+
+- **Canonical Sources**: Definitive documentation for each concept lives in a single location
+- **Cross-References**: Other documents reference the canonical source rather than duplicating content
+
+### Cross-Reference Syntax
+The documentation uses a consistent cross-reference syntax:
+- `[Type:Name:Version]` for type references (e.g., `[Type:TaskSystem:TaskResult:1.0]`)
+- `[Pattern:Name:Version]` for pattern references (e.g., `[Pattern:DirectorEvaluator:1.1]`)
+- `[ADR N: Title]` for architecture decision references (e.g., `[ADR 14: Operator Context Configuration]`)
+- `[Component:Name:Version]` for component references (e.g., `[Component:Evaluator:1.0]`)
+- `[Contract:Category:Name:Version]` for contract references (e.g., `[Contract:Tasks:TemplateSchema:1.0]`)
+- `[Interface:Component:Name:Version]` for interface references (e.g., `[Interface:Memory:3.0]`)
+
+### Finding Authoritative Sources
+To find the canonical source for a concept:
+1. Look for matching files in the pattern directories (`/system/architecture/patterns/`)
+2. Check ADRs for decisions (`/system/architecture/decisions/`)
+3. Consult component READMEs for component-specific concepts
+4. Review contract documents for system-wide agreements
 - [Key Capabilities](#key-capabilities)
 - [Core Concepts & DSL Approach](#core-concepts--dsl-approach)
 - [Architecture Overview](#architecture-overview)

@@ -297,39 +297,14 @@ The system maintains **explicit task history** for sequential operations. This d
 
 ### Subtask Spawning Mechanism [Pattern:SubtaskSpawning:1.0]
 
-The system implements a standardized subtask spawning mechanism that enables dynamic task creation and composition:
+The system implements a standardized mechanism for dynamic task creation and composition through the subtask spawning protocol. This mechanism enables:
 
-1. **Continuation Protocol**
-   - A parent task returns with `status: "CONTINUATION"` and a `subtask_request` in its notes
-   - The subtask_request contains type, description, inputs, and optional template_hints
-   - The system validates the request structure before processing
-   - Depth control prevents infinite recursion and detects cycles
+- Dynamic task decomposition based on runtime discoveries
+- Controlled depth management to prevent infinite recursion
+- Direct parameter passing between parent and child tasks
+- Standardized error handling for subtask failures
 
-2. **Data Flow**
-   ```mermaid
-   flowchart LR
-       A[Parent Task] -->|"TaskResult{status:CONTINUATION,\n notes:{subtask_request}}"| B[Task System]
-       B -->|"Template Selection\n& Direct Input Passing"| C[Subtask]
-       C -->|"TaskResult"| D[Task System]
-       D -->|"Resume with\n{subtask_result:TaskResult}"| A
-   ```
-   - Direct parameter passing (not environment variables) ensures clear data dependencies
-   - Parent task receives subtask result as a parameter when execution resumes
-   - All data flow is explicit and traceable
-
-3. **Context Integration**
-   - Subtasks have default context management settings:
-     | inherit_context | accumulate_data | accumulation_format | fresh_context |
-     |-----------------|-----------------|---------------------|---------------|
-     | subset          | false           | notes_only          | enabled       |
-   - These defaults can be overridden through explicit configuration in the subtask_request
-   - Context management follows the hybrid configuration approach from ADR 14
-
-4. **Resource Protection**
-   - Maximum nesting depth prevents infinite recursion (default: 5 levels)
-   - Cycle detection prevents tasks from spawning themselves
-   - Resource usage is tracked across the entire subtask chain
-   - Partial results are preserved when subtasks fail
+For the complete specification, including request structure, execution flow, context management integration, and depth control mechanisms, see [ADR 11: Subtask Spawning Mechanism] in `system/architecture/decisions/11-subtask-spawning.md`.
 
 2. **Context Management**
    - The system implements a hybrid configuration approach with operator-specific defaults and explicit overrides:

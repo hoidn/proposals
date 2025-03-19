@@ -287,129 +287,24 @@ This design ensures that only the Evaluator initiates associative matching, prev
 
 ## Sequential Task History
 
-When evaluating a **sequential** task (type="sequential"), the Evaluator maintains a **step-by-step output history**:
+When evaluating sequential tasks, the Evaluator implements the Sequential Task Management pattern [Pattern:SequentialTask:2.0] as defined in the system architecture. This includes:
 
-### Output Tracking
-1. **History per sequence**: Each sequential task run has a dedicated list (or array) of step outputs.
-2. **Preservation**: All step outputs remain available until the task completes (success or error).
-3. **Failure case**: If a step fails, the partial results from prior steps are included in the final error notes.
-4. **Resource awareness**: The evaluator must keep track of the size of stored outputs, possibly truncating or summarizing them to prevent memory or token overflow.
+- Maintaining explicit task history for each sequential operation
+- Preserving step outputs until task completion or failure
+- Implementing resource-aware storage with potential summarization
+- Including partial results in error responses for failed sequences
 
-### History Structure (example)
-```typescript
-interface SequentialHistory {
-    outputs: TaskOutput[];
-    metadata: {
-        startTime: Date;
-        currentStep: number;
-        resourceUsage: ResourceMetrics;
-    };
-}
+The Evaluator is responsible for tracking this history independent of the Handler's resource management and implementing the appropriate accumulation behavior based on the task's context_management configuration.
 
-interface TaskOutput {
-    stepId: string;       // or step index
-    output: string;       // The main content from that step
-    notes: string;        // Additional or partial notes
-    timestamp: Date;
-}
-```
-
-### Lifecycle Management
-1. **Creation**: On the first step of a sequential task, the Evaluator initializes a new `SequentialHistory`.
-2. **Updates**: After each step completes, the Evaluator appends a `TaskOutput` object to `SequentialHistory.outputs`.
-3. **Clearing**: Once the entire sequence finishes (success or error), the Evaluator discards the stored step outputs to reclaim resources.
-4. **Error Handling**: If a step fails, the last known `SequentialHistory` object is packaged with the error output, so that partial results can be surfaced if needed.
-
-### Script Execution and Feedback Flow
-When executing a script task, the evaluator captures stdout, stderr, and exitCode from the external command. These outputs are structured into a standardized result object and passed directly to the subsequent evaluator task as parameters, rather than through environment variables.
-
-### Static Pattern Execution
-The Evaluator supports both the dynamic Director-Evaluator variant and a static variant using the `director_evaluator_loop` task type. In the static variant:
-- The Director task generates the initial output
-- If specified, a script execution step runs an external command using the director's output
-- The Evaluator task processes both the director's output and script results
-- All data flows through direct parameter passing rather than environment variables
-- The loop continues until max iterations or termination conditions are met
-
-### Usage Example
-When a multi-step sequence is run, each subtask is executed in turn. The Evaluator:
-1. Sets up a new `SequentialHistory` with `currentStep=0`.
-2. Executes the first subtask, storing its `TaskOutput` in `outputs[0]`.
-3. Moves on to the second subtask, incrementing `currentStep`. If it fails, the Evaluator includes `outputs[0]` data in the final error's notes, to assist debugging or partial re-usage.
-4. If steps continue successfully, the final result merges all step outputs or final subtask output as the overall `TaskResult`.
-
-The evaluator produces an EvaluationResult (with success and optional feedback) for each task, which is passed directly to subsequent tasks as parameters.
-
-Example task definition:
-```xml
-<task type="director_evaluator_loop">
-  <description>Iterative refinement process</description>
-  <max_iterations>3</max_iterations>
-  <director>
-    <description>Generate output</description>
-    <inputs>
-      <input name="feedback" from="evaluation_feedback"/>
-    </inputs>
-  </director>
-  <evaluator>
-    <description>Evaluate output</description>
-    <inputs>
-      <input name="solution" from="director_result"/>
-    </inputs>
-  </evaluator>
-</task>
-```
-
-**Important**: Because subtask outputs can be large, the system should either store them as short notes or partial references. The data accumulation approach can be toggled with `accumulateData` (in `ContextManagement`), plus an `accumulationFormat` indicating whether to store full outputs or only summary notes.
+For the complete specification of the Sequential Task Management pattern, including output tracking, preservation policies, and resource considerations, see `system/architecture/overview.md`.
 ## Director-Evaluator Pattern Implementation
 
-The Evaluator supports both dynamic and static variants of the Director-Evaluator pattern:
+The Evaluator implements the Director-Evaluator pattern as defined in [Pattern:DirectorEvaluator:1.1]. This includes support for both the dynamic variant (using CONTINUATION status) and the static variant (using the director_evaluator_loop task type).
 
-### Dynamic Variant
+Key responsibilities of the Evaluator in this pattern:
+- Recognizing continuation requests from Director tasks
+- Managing context according to the specified configuration
+- Coordinating script execution when required
+- Passing evaluation results back to the Director
 
-When a Director task returns a `CONTINUATION` status with an `evaluation_request` in its notes, the Evaluator:
-1. Uses the request details to select an appropriate evaluation template
-2. Dynamically spawns the evaluation subtask
-3. Passes the evaluation results back to the Director via direct parameter passing
-4. Manages context according to the three-dimensional model
-
-### Static Variant
-
-The Evaluator also supports the static Director-Evaluator loop using the `director_evaluator_loop` task type:
-
-```xml
-<task type="director_evaluator_loop">
-  <description>{{task_description}}</description>
-  <max_iterations>5</max_iterations>
-  <context_management>
-    <inherit_context>none</inherit_context>
-    <accumulate_data>true</accumulate_data>
-    <accumulation_format>notes_only</accumulation_format>
-  </context_management>
-  <director>
-    <description>Generate solution</description>
-    <inputs>
-      <input name="feedback" from="evaluation_feedback"/>
-    </inputs>
-  </director>
-  <evaluator>
-    <description>Evaluate solution</description>
-    <inputs>
-      <input name="solution" from="director_result"/>
-    </inputs>
-  </evaluator>
-  <script_execution>
-    <command>{{script_path}}</command>
-    <inputs>
-      <input name="script_input" from="director_result"/>
-    </inputs>
-  </script_execution>
-</task>
-```
-
-In this implementation:
-- The Director task generates output
-- If script execution is specified, the script receives the Director's output
-- The Evaluator receives both the Director's output and script results
-- Results flow through direct parameter passing rather than environment variables
-- The loop continues until max iterations or termination conditions are met
+For complete implementation details, context management integration, and execution flow, refer to the canonical pattern definition in `system/architecture/patterns/director-evaluator.md`.

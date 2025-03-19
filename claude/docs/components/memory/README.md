@@ -6,20 +6,15 @@ The Memory System provides context management and associative matching services 
 
 ## Core Interface
 
-```typescript
-interface MemorySystem {
-    // Retrieve global file metadata index
-    getGlobalIndex(): Promise<GlobalIndex>;
-    
-    // Update global metadata index (bulk operation)
-    updateGlobalIndex(index: GlobalIndex): Promise<void>;
-    
-    // Get relevant context for task execution
-    getRelevantContextFor(input: ContextGenerationInput): Promise<AssociativeMatchResult>;
-}
-```
+The Memory System provides a standardized interface as defined in [Interface:Memory:3.0]. This interface supports:
 
-The system works with a simple but flexible type system. File metadata is stored as unstructured strings, with a global index mapping absolute file paths to their metadata. When performing associative matching, the system returns both relevant context and a list of matching files.
+- Global metadata index management through bulk operations
+- Context retrieval through associative matching
+- Clear separation between metadata management and file operations
+
+The system focuses purely on metadata management and context retrieval - it does not store file content, perform file operations, track resources, or rank matches.
+
+For the complete interface specification, method signatures, and type definitions, see `components/memory/api/interfaces.md`.
 
 ## Usage
 
