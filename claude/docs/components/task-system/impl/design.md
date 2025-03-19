@@ -216,16 +216,149 @@ async function executeDirectorEvaluatorLoop(task, inputs) {
 
 ## Subtask Spawning Implementation
 
-The Task System implements the standardized subtask spawning mechanism as defined in [ADR 11: Subtask Spawning Mechanism].
+The Task System implements a standardized subtask spawning mechanism that enables dynamic task creation and composition.
 
-Key implementation aspects include:
-- Validation of subtask requests against the standard SubtaskRequest interface
-- Depth control implementation with configurable maximum nesting depth
-- Context management integration following the hybrid configuration approach
-- Direct parameter passing between parent and child tasks
-- Standardized error handling for subtask failures with detailed context preservation
+### Request Structure
 
-For complete specification details, interface definitions, and behavior guidelines, refer to `system/architecture/decisions/11-subtask-spawning.md`.
+```typescript
+interface SubtaskRequest {
+  // Required fields
+  type: TaskType;                      // Type of subtask to spawn
+  description: string;                 // Description of the subtask
+  inputs: Record<string, any>;         // Input parameters for the subtask
+  
+  // Optional fields
+  template_hints?: string[];           // Hints for template selection
+  context_management?: {               // Override default context settings
+    inherit_context?: 'full' | 'none' | 'subset';
+    accumulate_data?: boolean;
+    accumulation_format?: 'notes_only' | 'full_output';
+    fresh_context?: 'enabled' | 'disabled';
+  };
+  max_depth?: number;                  // Override default max nesting depth
+  subtype?: string;                    // Optional subtype for atomic tasks
+}
+```
+
+### Execution Flow
+
+The subtask spawning process follows four main steps:
+
+1. **Validation**
+   - Validates the SubtaskRequest structure
+   - Checks nesting depth against maximum allowed
+   - Performs cycle detection to prevent recursive spawning
+   - Validates input parameters
+
+2. **Template Matching**
+   - Uses the description and template_hints for associative matching
+   - Selects the highest-scoring template that matches the request
+   - Falls back to default templates if no specific match is found
+
+3. **Subtask Creation**
+   - Creates a new execution environment with direct parameter passing
+   - Applies context management settings (defaults or overrides)
+   - Prepares resource tracking linked to the parent task
+
+4. **Execution and Result Handling**
+   - Executes the subtask with appropriate resource limits
+   - Passes the complete TaskResult back to the parent task
+   - Handles errors with standardized error structures
+   - Ensures proper cleanup of resources
+
+### Depth Control Implementation
+
+To prevent infinite recursion and resource exhaustion, the system implements depth control:
+
+```typescript
+async function executeTaskWithDepthControl(
+  request: SubtaskRequest, 
+  parentContext: ExecutionContext,
+  currentDepth: number = 0
+): Promise<TaskResult> {
+  // Check maximum nesting depth
+  const maxDepth = request.max_depth ?? DEFAULT_MAX_NESTING_DEPTH;
+  if (currentDepth >= maxDepth) {
+    throw new Error({
+      type: 'TASK_FAILURE',
+      reason: 'execution_halted',
+      message: `Maximum nesting depth (${maxDepth}) exceeded`
+    });
+  }
+  
+  // Perform cycle detection
+  if (detectCycle(request, parentContext.executionPath)) {
+    throw new Error({
+      type: 'TASK_FAILURE',
+      reason: 'execution_halted',
+      message: 'Cycle detected in subtask spawning'
+    });
+  }
+  
+  // Execute subtask with incremented depth
+  try {
+    return await executeTask(request, {
+      ...parentContext,
+      nestingDepth: currentDepth + 1,
+      executionPath: [...parentContext.executionPath, getTaskSignature(request)]
+    });
+  } catch (error) {
+    // Wrap error in standardized subtask failure structure
+    throw {
+      type: 'TASK_FAILURE',
+      reason: 'subtask_failure',
+      message: `Subtask "${request.description}" failed`,
+      details: {
+        subtaskRequest: request,
+        subtaskError: error,
+        nestingDepth: currentDepth + 1,
+        partialOutput: error.details?.partialOutput
+      }
+    };
+  }
+}
+```
+
+### Context Management Integration
+
+Subtasks use a hybrid configuration approach with default settings that can be overridden:
+
+```typescript
+// Default context management settings for subtasks
+const DEFAULT_SUBTASK_CONTEXT_SETTINGS = {
+  inherit_context: 'subset',
+  accumulate_data: false,
+  accumulation_format: 'notes_only',
+  fresh_context: 'enabled'
+};
+
+function getContextSettings(request: SubtaskRequest): ContextSettings {
+  // If context_management is provided in the request, merge with defaults
+  if (request.context_management) {
+    return {
+      ...DEFAULT_SUBTASK_CONTEXT_SETTINGS,
+      ...request.context_management
+    };
+  }
+  
+  // Otherwise use defaults
+  return DEFAULT_SUBTASK_CONTEXT_SETTINGS;
+}
+```
+
+### Parent-Child Communication
+
+When a parent task spawns a subtask, the communication follows this pattern:
+
+1. Parent task returns a CONTINUATION status with subtask_request in notes
+2. Task System validates the request and spawns the subtask
+3. Subtask executes with its own resource tracking
+4. Subtask result is passed back to the parent task when it resumes
+5. Parent task continues execution with the subtask result available as a parameter
+
+This approach ensures clear data flow and explicit dependencies between parent and child tasks.
+
+For historical context and decision rationale behind this implementation approach, see [ADR 11: Subtask Spawning Mechanism].
 
 ### Script Execution Implementation
 The system now supports executing external scripts as part of a static director-evaluator workflow. When a script_execution element is specified:

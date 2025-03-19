@@ -271,14 +271,71 @@ The system maintains **explicit task history** for sequential operations. This d
 
 ### Subtask Spawning Mechanism [Pattern:SubtaskSpawning:1.0]
 
-The system implements a standardized mechanism for dynamic task creation and composition through the subtask spawning protocol. This mechanism enables:
+The system implements a standardized subtask spawning mechanism that enables dynamic task creation and composition:
 
-- Dynamic task decomposition based on runtime discoveries
-- Controlled depth management to prevent infinite recursion
-- Direct parameter passing between parent and child tasks
-- Standardized error handling for subtask failures
+1. **Continuation Protocol**
+   - A parent task returns with `status: "CONTINUATION"` and a `subtask_request` in its notes
+   - The subtask_request contains type, description, inputs, and optional template_hints
+   - The system validates the request structure before processing
+   - Depth control prevents infinite recursion and detects cycles
 
-For the complete specification, including request structure, execution flow, context management integration, and depth control mechanisms, see [ADR 11: Subtask Spawning Mechanism] in `system/architecture/decisions/11-subtask-spawning.md`.
+2. **Request Structure**
+   ```typescript
+   interface SubtaskRequest {
+     // Required fields
+     type: TaskType;                      // Type of subtask to spawn
+     description: string;                 // Description of the subtask
+     inputs: Record<string, any>;         // Input parameters for the subtask
+     
+     // Optional fields
+     template_hints?: string[];           // Hints for template selection
+     context_management?: {               // Override default context settings
+       inherit_context?: 'full' | 'none' | 'subset';
+       accumulate_data?: boolean;
+       accumulation_format?: 'notes_only' | 'full_output';
+       fresh_context?: 'enabled' | 'disabled';
+     };
+     max_depth?: number;                  // Override default max nesting depth
+     subtype?: string;                    // Optional subtype for atomic tasks
+   }
+   ```
+
+3. **Data Flow**
+   ```mermaid
+   flowchart LR
+       A[Parent Task] -->|"TaskResult{status:CONTINUATION,\n notes:{subtask_request}}"| B[Task System]
+       B -->|"Template Selection\n& Direct Input Passing"| C[Subtask]
+       C -->|"TaskResult"| D[Task System]
+       D -->|"Resume with\n{subtask_result:TaskResult}"| A
+   ```
+   - Direct parameter passing (not environment variables) ensures clear data dependencies
+   - Parent task receives subtask result as a parameter when execution resumes
+   - All data flow is explicit and traceable
+
+4. **Context Integration**
+   - Subtasks have default context management settings:
+     | inherit_context | accumulate_data | accumulation_format | fresh_context |
+     |-----------------|-----------------|---------------------|---------------|
+     | subset          | false           | notes_only          | enabled       |
+   - These defaults can be overridden through explicit configuration in the subtask_request
+   - Context management follows the hybrid configuration approach with operator-specific defaults and explicit overrides
+
+5. **Resource Protection**
+   - Maximum nesting depth prevents infinite recursion (default: 5 levels)
+   - Cycle detection prevents tasks from spawning themselves
+   - Resource usage is tracked across the entire subtask chain
+   - Partial results are preserved when subtasks fail
+
+6. **Error Handling**
+   - Subtask failures are wrapped in standardized error structures
+   - Parent tasks receive detailed error information including:
+     - Original subtask request
+     - Specific error details from the subtask
+     - Current nesting depth
+     - Any partial results that were generated before failure
+   - This enables robust recovery strategies at the parent task level
+
+For historical context and decision rationale, see [ADR 11: Subtask Spawning Mechanism].
 
 2. **Context Management**
    - The system implements a hybrid configuration approach with operator-specific defaults and explicit overrides:

@@ -62,6 +62,8 @@ To find the canonical source for a concept:
 2. Check ADRs for decisions (`/system/architecture/decisions/`)
 3. Consult component READMEs for component-specific concepts
 4. Review contract documents for system-wide agreements
+
+**Note on ADR References**: Architecture Decision Records (ADRs) document the decision-making process at a specific point in time. While they may be referenced for historical context or rationale, all critical functionality should be fully documented in the main documentation without requiring readers to consult ADRs. Documentation should be self-contained with ADRs serving as supplementary, not required, reading.
 - [Key Capabilities](#key-capabilities)
 - [Core Concepts & DSL Approach](#core-concepts--dsl-approach)
 - [Architecture Overview](#architecture-overview)
@@ -189,7 +191,16 @@ This model is configured via a standardized XML structure:
 Each operator type has sensible defaults while allowing explicit overrides through template XML.
 
 ### 3. Subtask Spawning
-The system can create new subtasks if a task returns `status: "CONTINUATION"` along with a subtask request in notes.
+The system implements a standardized mechanism for dynamic task creation and composition through the subtask spawning protocol:
+
+- A parent task returns with `status: "CONTINUATION"` and a `subtask_request` in its notes
+- The subtask_request contains type, description, inputs, and optional template_hints
+- The system validates the request, checks depth limits, and performs cycle detection
+- The subtask executes with its own resource tracking and context management
+- Results flow back to the parent task through direct parameter passing
+- Error handling preserves partial results and detailed context for recovery
+
+This mechanism enables dynamic task decomposition based on runtime discoveries while maintaining controlled depth management to prevent infinite recursion.
 
 ### 4. DSL Environment Model
 - Lexical scoping for variables
