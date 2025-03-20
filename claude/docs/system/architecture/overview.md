@@ -152,19 +152,19 @@ See [Contract:Tasks:2.0] in system/contracts/protocols.md for complete specifica
 
 ## Delegation Mechanisms
 
-The system provides two distinct delegation mechanisms:
+The system provides a unified tool interface with two implementation mechanisms:
 
-1. **Tool Calls**: Handler-managed deterministic operations with rigid APIs.
+1. **Direct Tools**: Synchronous operations executed directly by the Handler.
    - Used for external interactions (files, APIs, scripts)
    - No continuation mechanism or complex context management
    - Executed directly by the Handler component
 
-2. **Subtasks**: LLM-to-LLM interactions using continuation.
+2. **Subtask Tools**: Complex operations implemented via the CONTINUATION mechanism.
    - Involve Memory System for context management
    - Use SubtaskRequest structure and CONTINUATION status
    - Follow the context management model defined in ADR 14
 
-These mechanisms serve different purposes but can be composed in patterns like Director-Evaluator.
+Both types appear as tools to the LLM but are implemented differently based on their requirements.
 
 ## Component Architecture
 

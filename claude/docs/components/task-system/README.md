@@ -83,19 +83,18 @@ Key characteristics:
 
 ## Delegation Mechanisms
 
-The system supports two delegation approaches:
+The system exposes a unified tool interface with two implementation approaches:
 
-1. **Tool Calls**: Handler-managed deterministic operations (file operations, scripts)
-   - Direct execution without continuation
-   - Fixed APIs with predictable behavior
-   - Managed entirely by the Handler component
+1. **Unified Tool Interface**: What the LLM sees and interacts with
+   - Consistent invocation patterns for all operations
+   - Standardized parameter schemas
+   - Unified error handling
 
-2. **Subtasks**: LLM-to-LLM interactions using continuation mechanism
-   - Complex context management via Memory System
-   - Template selection through associative matching
-   - Depth tracking to prevent infinite recursion
+2. **Implementation Mechanisms**: How tools are executed
+   - **Direct Implementation**: Synchronous Handler execution for simple operations
+   - **Subtask Implementation**: Asynchronous execution via CONTINUATION
 
-These serve different purposes and involve different components but can be composed to create powerful patterns like Director-Evaluator loops.
+See [Pattern:ToolInterface:1.0] for complete details on this approach.
 
 ## Integration and Dependencies
 

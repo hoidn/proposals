@@ -152,7 +152,7 @@ Each DSL expression or XML subtask runs in an environment that may inherit conte
 | Evaluator | Walk the AST, manage subtask calls, handle resource usage. | [Evaluator README](../components/evaluator/README.md) |
 | Task System | Provide operators, templates, and pattern frameworks. | [TaskSystem README](../components/task-system/README.md) |
 | Memory System | Manage file metadata & associative context retrieval. | [Memory README](../components/memory/README.md) |
-| Handler | Interact with the LLM, track turns/tokens, run scripts. | Handler Interface Docs |
+| Handler | LLM interface that exposes a unified tool system and manages resource tracking. | Handler Interface Docs |
 
 ### Flow
 1. User Input → [Compiler] → AST (XML or DSL)

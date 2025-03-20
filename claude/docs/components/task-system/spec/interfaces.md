@@ -151,6 +151,20 @@ interface Handler {
     ): Promise<string>;
 
     /**
+     * Register a direct tool that will be executed by the Handler
+     * @param name - Unique tool name
+     * @param handler - Function that implements the tool
+     */
+    registerDirectTool(name: string, handler: Function): void;
+
+    /**
+     * Register a subtask tool that will be implemented via CONTINUATION
+     * @param name - Unique tool name
+     * @param templateHints - Hints for template selection
+     */
+    registerSubtaskTool(name: string, templateHints: string[]): void;
+
+    /**
      * Callback for handling agent input requests
      * @param agentRequest - The agent's request for user input
      * @returns Promise resolving to user's input

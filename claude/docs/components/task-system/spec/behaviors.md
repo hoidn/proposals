@@ -196,7 +196,16 @@ flowchart TD
 
 ## Delegation Mechanisms
 
-### Tool Calls
+## Tool Interface
+The LLM interacts with a unified tool system that presents consistent patterns regardless of implementation mechanism:
+
+```typescript
+// All tools appear similar to the LLM
+tools.readFile("path/to/file");  // Direct implementation
+tools.analyzeData({ data: content });  // Subtask implementation
+```
+
+### Direct Tool Implementation
 - Handled by Handler component
 - Deterministic with fixed APIs
 - No continuation mechanism
@@ -205,7 +214,7 @@ flowchart TD
 - Direct execution without complex context management
 - Resource tracking handled by Handler
 
-### Subtasks
+### Subtask Tool Implementation
 - LLM-to-LLM interactions
 - Use CONTINUATION status with SubtaskRequest
 - Full context management via Memory System
@@ -213,6 +222,8 @@ flowchart TD
 - Follow ADR 14 context management model
 - Depth tracking to prevent infinite recursion
 - Template selection via associative matching
+
+See [Pattern:ToolInterface:1.0] for selection criteria and implementation details.
 
 ## File Operations
 

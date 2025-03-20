@@ -64,7 +64,9 @@ Handler:
 ### 1.5 Delegation Boundaries
 
 #### Handler Responsibilities
-- Execute all tool calls (file operations, scripts, APIs)
+- Present unified tool interface to the LLM
+- Execute direct tools synchronously
+- Transform subtask tool calls into CONTINUATION requests
 - Manage tool-specific resources
 - Configure model-specific tools (e.g., Anthropic computer use)
 - Direct execution without continuation mechanism
@@ -77,10 +79,10 @@ Handler:
 - Maintain metadata for associative matching
 
 #### Task System Responsibilities
-- Coordinate both delegation mechanisms
-- Translate tasks into appropriate delegation type
-- Manage interaction between tools and subtasks
-- Handle template selection for subtasks
+- Coordinate tool implementations (direct and subtask)
+- Process CONTINUATION requests from subtask tools
+- Manage execution flow between direct and subtask operations
+- Handle template selection for subtask tools
 
 #### Responsibilities
 Memory System:

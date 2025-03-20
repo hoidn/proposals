@@ -707,6 +707,47 @@ async function executeWithContextIntegration() {
     </context_management>
 </task>
 
+## Unified Tool Interface Examples
+
+### Direct vs. Subtask Tool Examples
+
+```typescript
+// Example of Handler registering both tool types
+handler.registerDirectTool("readFile", async (path) => {
+  return await fs.readFile(path, 'utf8');
+});
+
+handler.registerSubtaskTool("analyzeData", ["data_analysis", "statistical"]);
+
+// LLM usage looks similar for both
+const fileContent = tools.readFile("data.csv");
+const analysis = tools.analyzeData({ 
+  data: fileContent,
+  method: "statistical"
+});
+
+// But implementations differ:
+// Direct tool implementation (in Handler)
+async function executeReadFile(path) {
+  return await fs.readFile(path, 'utf8');
+}
+
+// Subtask tool implementation (via CONTINUATION)
+async function executeAnalyzeData(params) {
+  return {
+    status: "CONTINUATION",
+    notes: {
+      subtask_request: {
+        type: "atomic",
+        description: `Analyze data using ${params.method}`,
+        inputs: params,
+        template_hints: ["data_analysis"]
+      }
+    }
+  };
+}
+```
+
 <!-- Pattern 2: Rebuild Context While Preserving History -->
 <task type="sequential">
     <description>Rebuild context while keeping step history</description>
