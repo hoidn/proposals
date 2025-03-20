@@ -22,7 +22,38 @@ See [Component:TaskSystem:1.0] in components/task-system/README.md
 See [Contract:Resources:1.0]
 
 ### 1.4 Memory System Integration [Contract:Integration:TaskMemory:3.0]
-See [Component:MemorySystem:3.0]
+See [Component:Memory:3.0]
+
+#### Interfaces
+  - Metadata Management: [Interface:Memory:3.0]
+    - Task System uses metadata for associative matching; see Appendix A for validation criteria.
+  - Index Management: [Interface:Memory:3.0]
+    - Global index serves as the bootstrap for matching; updates occur in bulk.
+
+#### Responsibilities
+Memory System:
+ - Maintains global file metadata index
+ - Provides bulk index updates
+ - Supplies metadata for associative matching (refer to Appendix A for constraints)
+ - NEVER performs file I/O operations (reading, writing, deletion)
+ - Does NOT store or process file contents
+ - Follows read-only context model (no updateContext capability)
+
+Task System:
+ - Uses context for task execution
+ - Receives file references via associative matching
+ - Delegates file access to Handler tools
+ - Must not attempt to update context directly (removed in 3.0)
+
+Handler:
+ - Performs ALL file I/O operations
+ - For Anthropic models: Configures computer use tools (optional)
+ - For other models: Uses appropriate file access mechanisms
+ - Manages all direct interaction with file system
+
+#### Integration Points
+ - Context flow from associative matching to task execution
+ - File metadata index is used exclusively for matching; file access is handled by Handler tools
 
 #### Interfaces
   - Metadata Management: [Interface:Memory:3.0]

@@ -92,11 +92,11 @@ interface ScriptTaskResult {
 
 ## Interactions
 
-### With Memory System [Component:MemorySystem:1.0]
-- Provides long-term storage
-- Manages context persistence
-- Handles file operations
-- Maintains memory hierarchy
+### With Memory System [Component:Memory:3.0]
+- Maintains global file metadata index
+- Provides associative matching services
+- Manages read-only context retrieval
+- No file content operations (delegated to Handler)
 
 ### With Task System [Component:TaskSystem:1.0]
 - Creates/manages Handlers

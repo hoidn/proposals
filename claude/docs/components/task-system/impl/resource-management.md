@@ -101,10 +101,11 @@ class ContextManager {
 - Cleanup coordination
 
 ### Memory System
-- Read-only access
-- No state maintenance
-- Direct interface usage
-- Context boundaries
+- Read-only metadata access
+- Global index management
+- Associative matching services
+- No file operations or content storage
+- Clear interface boundaries with Handler tools
 
 ### Error Handling
 - Resource exhaustion detection
