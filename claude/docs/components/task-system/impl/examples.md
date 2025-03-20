@@ -212,10 +212,15 @@ if (result.parsedContent) {
 ```
 
 ### Function Call with Variable Arguments
+/**
+ * Function Call XML Syntax
+ * 
+ * Arguments are evaluated in the caller's environment before being passed to the template:
+ */
 ```xml
 <call template="validate_input">
-  <arg>user_input</arg>
-  <arg>validation_schema</arg>
+  <arg>user_input</arg>        <!-- Resolved as variable if possible -->
+  <arg>validation_schema</arg>  <!-- Or used as literal if no variable matches -->
 </call>
 ```
 
@@ -248,30 +253,44 @@ if (result.parsedContent) {
 </task>
 ```
 
-### TypeScript Example
+/**
+ * Function Template and Call Example
+ */
 ```typescript
-// Register template
+// 1. Register template with explicit parameters
 await taskSystem.registerTemplate({
   name: "analyze_data",
-  parameters: ["dataset", "config"],
+  parameters: ["dataset", "config"],  // Explicitly declared parameters
   body: {
     type: "atomic",
     description: "Analyze {{dataset}} using {{config}}",
-    // Additional properties...
   },
   returns: "object"
 });
 
-// Execute function call
+// 2. Setup caller environment with variables
+const callerEnv = new Environment({
+  data_file: "sensor_readings.csv",
+  analysis_options: {method: "statistical", outliers: "remove"}
+});
+
+// 3. Execute call with arguments evaluated in caller's environment
 const result = await taskSystem.executeCall({
   templateName: "analyze_data",
   arguments: [
-    "sensor_readings.csv",
-    {method: "statistical", outliers: "remove"}
+    "data_file",         // Resolved to "sensor_readings.csv" from callerEnv
+    "analysis_options"   // Resolved to the object from callerEnv
   ]
-}, environment);
+}, callerEnv);
 
-console.log("Analysis result:", result.content);
+// 4. Example with mixed variable/literal arguments
+const mixedResult = await taskSystem.executeCall({
+  templateName: "analyze_data",
+  arguments: [
+    "data_file",                     // Variable lookup
+    {method: "custom", limit: 100}   // Direct literal (no lookup)
+  ]
+}, callerEnv);
 ```
 
 ## Global Index Example

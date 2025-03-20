@@ -55,28 +55,28 @@ interface TaskSystem {
 ### Memory System Interface [Interface:Memory:3.0]
 ```typescript
 /**
- * Memory management interface focused on metadata
- * Uses read-only context model (no updateContext capability)
+ * Memory System Interface [Interface:Memory:3.0]
+ * Focused on metadata management and context retrieval
  */
-type FileMetadata = string;
-
-type GlobalIndex = Map<string, FileMetadata>;
-
-type FileMatch = [string, string | undefined];
-
-interface AssociativeMatchResult {
-    context: string;      // Unstructured data context
-    matches: FileMatch[]; // Relevant file matches
-}
-
 interface MemorySystem {
-    // Get global file metadata index
+    /**
+     * Get global file metadata index
+     * @returns Promise resolving to the global index
+     */
     getGlobalIndex(): Promise<GlobalIndex>;
     
-    // Update global file metadata index
+    /**
+     * Update global file metadata index
+     * @param index New index to set
+     * @returns Promise resolving when update is complete
+     */
     updateGlobalIndex(index: GlobalIndex): Promise<void>;
     
-    // Get relevant context for task execution
+    /**
+     * Get relevant context for a task
+     * @param input Context generation input
+     * @returns Promise resolving to associative match result
+     */
     getRelevantContextFor(input: ContextGenerationInput): Promise<AssociativeMatchResult>;
 }
 ```
