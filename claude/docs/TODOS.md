@@ -79,10 +79,10 @@ Tasks are organized into four categories:
    - Update type signatures and method names as needed
    - Ensure interfaces follow established patterns (Memory System is read-only, etc.)
 
-6. **"Rebuild-memory" or "clear-memory" flag in templates**
-   - Design XML syntax for context clearing
-   - Implement in the Evaluator component
-   - Document usage patterns and examples
+6. **Document context management patterns for common scenarios**
+   - Create comprehensive examples for context clearing and regeneration
+   - Update documentation with recommended settings for different use cases
+   - Ensure consistent guidance across all component documentation
 
 7. **Summary output handling in evaluator**
    - Implement mechanism for efficient summary outputs between tasks

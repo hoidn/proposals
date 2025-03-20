@@ -84,6 +84,8 @@ Clear separation between file metadata and content operations
 Update all cross-references consistently
 Document the final Memory System interface contract
 
+Note: The previously considered "rebuild-memory" and "clear-memory" flags have been determined to be redundant with the existing context management model and will not be implemented. The same functionality can be achieved through appropriate configuration of <inherit_context>, <accumulate_data>, and <fresh_context> settings.
+
 2. XML-to-AST Mapping
 Should be second because:
 

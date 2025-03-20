@@ -694,3 +694,75 @@ async function executeWithContextIntegration() {
   }
 }
 ```
+
+<!-- Example: Context Management Patterns -->
+
+<!-- Pattern 1: Clear All Context (Fresh Start) -->
+<task type="atomic">
+    <description>Start with completely fresh context</description>
+    <context_management>
+        <inherit_context>none</inherit_context>
+        <accumulate_data>false</accumulate_data>
+        <fresh_context>enabled</fresh_context>
+    </context_management>
+</task>
+
+<!-- Pattern 2: Rebuild Context While Preserving History -->
+<task type="sequential">
+    <description>Rebuild context while keeping step history</description>
+    <context_management>
+        <inherit_context>none</inherit_context>
+        <accumulate_data>true</accumulate_data>
+        <accumulation_format>notes_only</accumulation_format>
+        <fresh_context>enabled</fresh_context>
+    </context_management>
+    <steps>
+        <task>
+            <description>First step</description>
+        </task>
+        <task>
+            <description>Second step with fresh context but history from first step</description>
+        </task>
+    </steps>
+</task>
+
+<!-- Pattern 3: Complete Context Preservation -->
+<task type="sequential">
+    <description>Preserve all context</description>
+    <context_management>
+        <inherit_context>full</inherit_context>
+        <accumulate_data>true</accumulate_data>
+        <accumulation_format>full_output</accumulation_format>
+        <fresh_context>disabled</fresh_context>
+    </context_management>
+    <steps>
+        <task>
+            <description>First step</description>
+        </task>
+        <task>
+            <description>Second step with all context preserved</description>
+        </task>
+    </steps>
+</task>
+
+```typescript
+// Example of context pattern usage in TypeScript
+
+// Pattern 1: Clear All Context (Fresh Start)
+const clearContextResult = await taskSystem.executeTask(
+  "<task type='atomic'><description>Fresh context task</description><context_management><inherit_context>none</inherit_context><accumulate_data>false</accumulate_data><fresh_context>enabled</fresh_context></context_management></task>",
+  memorySystem
+);
+
+// Pattern 2: Rebuild Context While Preserving History
+const rebuildWithHistoryResult = await taskSystem.executeTask(
+  "<task type='sequential'><description>Sequential with history</description><context_management><inherit_context>none</inherit_context><accumulate_data>true</accumulate_data><fresh_context>enabled</fresh_context></context_management></task>",
+  memorySystem
+);
+
+// Pattern 3: Complete Context Preservation
+const preserveAllContextResult = await taskSystem.executeTask(
+  "<task type='sequential'><description>Preserve all context</description><context_management><inherit_context>full</inherit_context><accumulate_data>true</accumulate_data><fresh_context>disabled</fresh_context></context_management></task>",
+  memorySystem
+);
+```

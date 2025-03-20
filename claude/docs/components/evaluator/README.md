@@ -214,15 +214,11 @@ The existing plan outlines several optional or future features that involve the 
    - Collecting or storing extensive logs in `notes.debugLogs` or similar.  
    - Exposing partial steps or re-try decisions for advanced debugging.  
 
-2. **`rebuild_memory` or `clear_memory` Flags**  
-   - When tasks specify these, the Evaluator would create or discard certain environment data at the start of a sub-task.  
-   - This is relevant for tasks that explicitly want a fresh context (e.g., ignoring prior steps' context).  
-
-3. **Multi-Step or "Continuation" Protocol**  
+2. **Multi-Step or "Continuation" Protocol**  
    - The Evaluator might support tasks that require multiple interactions or "continuation steps" without losing context.  
    - This could involve storing partial states or sub-results in the environment and continuing in a new iteration.  
 
-4. **Agent Features** (Phase 4 in some documents)  
+3. **Agent Features** (Phase 4 in some documents)  
    - The Evaluator could handle conversation-like tasks with a "REPL" approach, or coordinate multiple LLM backends.  
    - This is out of scope for the MVP, but recognized as an extension point.
 

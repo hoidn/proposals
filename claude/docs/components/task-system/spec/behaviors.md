@@ -178,6 +178,15 @@ flowchart TD
 - File metadata accessed via GlobalIndex
 - Existing context preserved during task execution
 - Structure/parsing handled by associative memory tasks
+- Context clearing and regeneration handled through context_management settings
+- Three-dimensional model (inherit_context, accumulate_data, fresh_context) provides complete control
+- No additional flags or mechanisms needed for context operations
+
+#### Context Operation Patterns
+
+1. **Context Clearing**: Achieved by setting `inherit_context="none"` and `fresh_context="enabled"`
+2. **Context Regeneration**: Achieved through `fresh_context="enabled"` with appropriate inheritance settings
+3. **Complete Preservation**: Achieved with `inherit_context="full"`, `accumulate_data="true"`, and `fresh_context="disabled"`
 
 ### State Management
 - No complex file metadata tracking

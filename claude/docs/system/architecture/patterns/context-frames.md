@@ -35,6 +35,51 @@ The following constraints apply to context management settings:
 
 3. **Validation Errors**: Templates violating these constraints will fail validation with clear error messages
 
+### Common Context Management Patterns
+
+The three-dimensional context management model can be configured to achieve various behaviors:
+
+#### 1. Clear All Context (Fresh Start)
+```xml
+<context_management>
+  <inherit_context>none</inherit_context>
+  <accumulate_data>false</accumulate_data>
+  <fresh_context>enabled</fresh_context>
+</context_management>
+```
+This configuration:
+- Ignores any parent/inherited context
+- Doesn't accumulate previous results
+- Generates entirely fresh context through associative matching
+
+#### 2. Rebuild Context While Preserving History
+```xml
+<context_management>
+  <inherit_context>none</inherit_context>
+  <accumulate_data>true</accumulate_data>
+  <accumulation_format>notes_only</accumulation_format>
+  <fresh_context>enabled</fresh_context>
+</context_management>
+```
+This configuration:
+- Ignores parent/inherited context
+- Keeps accumulated outputs from previous steps
+- Generates fresh context in addition to accumulated data
+
+#### 3. Complete Context Preservation
+```xml
+<context_management>
+  <inherit_context>full</inherit_context>
+  <accumulate_data>true</accumulate_data>
+  <accumulation_format>full_output</accumulation_format>
+  <fresh_context>disabled</fresh_context>
+</context_management>
+```
+This configuration:
+- Preserves all parent context
+- Keeps complete outputs from previous steps
+- Doesn't generate additional context
+
 - **Subtype Awareness**: Context defaults depend on both operator type and subtype
   - Standard atomic tasks inherit context but don't generate fresh context
   - Subtasks don't inherit context but do generate fresh context
