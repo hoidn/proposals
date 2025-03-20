@@ -130,14 +130,48 @@ export interface EvaluationResult {
 }
 
 
+/**
+ * Lexical Environment for variable scoping
+ * Responsible only for variable bindings and lookups
+ */
 export interface Environment {
-    bindings: Record<string, any>;
-    outer?: Environment;
     /**
-     * Perform a lexical lookup for varName.
-     * Returns the value if found; otherwise, throws an error.
+     * Current variable bindings at this scope level
+     */
+    bindings: Record<string, any>;
+    
+    /**
+     * Reference to outer/parent environment for lexical lookup chain
+     */
+    outer?: Environment;
+    
+    /**
+     * Perform a lexical lookup for varName in this environment chain
+     * @param varName Variable name to look up
+     * @returns The variable value if found
+     * @throws Error if variable not found in this or any outer environment
      */
     find(varName: string): any;
+    
+    /**
+     * Create a new child environment with additional bindings
+     * @param bindings New variable bindings to add
+     * @returns A new Environment with the added bindings
+     */
+    extend(bindings: Record<string, any>): Environment;
+}
+
+/**
+ * Script task executor interface
+ */
+export interface ScriptExecutor {
+    /**
+     * Execute a script task
+     * @param scriptTask Script task definition
+     * @param env Environment for variable resolution
+     * @returns Promise resolving to script execution result
+     */
+    executeScriptTask(scriptTask: ScriptTask, env: Environment): Promise<ScriptTaskResult>;
 }
 
 
@@ -152,6 +186,9 @@ export interface TaskDefinition {
     astNode: ASTNode;                 // Parsed AST for the task
 }
 
+/**
+ * TaskLibrary manages the registration and retrieval of task templates
+ */
 export class TaskLibrary {
     private tasks: Map<string, TaskDefinition>;
 
@@ -159,6 +196,11 @@ export class TaskLibrary {
         this.tasks = new Map();
     }
 
+    /**
+     * Register a task template
+     * @param taskDef Task definition to register
+     * @throws Error if task with same name already exists
+     */
     public registerTask(taskDef: TaskDefinition): void {
         if (this.tasks.has(taskDef.name)) {
             throw new Error(`Task ${taskDef.name} is already registered.`);
@@ -166,12 +208,33 @@ export class TaskLibrary {
         this.tasks.set(taskDef.name, taskDef);
     }
 
+    /**
+     * Retrieve a task template by name
+     * Used primarily for function calls
+     * @param name Name of the task to retrieve
+     * @returns The task definition
+     * @throws Error if task not found
+     */
     public getTask(name: string): TaskDefinition {
         const taskDef = this.tasks.get(name);
         if (!taskDef) {
             throw new Error(`Task ${name} not found in TaskLibrary.`);
         }
         return taskDef;
+    }
+    
+    /**
+     * Find matching tasks based on description
+     * Used for template matching during task execution
+     * @param description Task description to match against
+     * @param context Optional context to aid matching
+     * @returns Array of matching tasks with scores
+     */
+    public findMatchingTasks(description: string, context?: any): Promise<Array<{
+        taskDef: TaskDefinition;
+        score: number;
+    }>> {
+        // Implementation details omitted
     }
 }
 ```typescript

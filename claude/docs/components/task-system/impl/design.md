@@ -184,13 +184,16 @@ function validateContextSettings(settings) {
 
 During task execution, the final merged configuration is passed to the Evaluator, which applies the settings accordingly.
 
-## Task/Template Matching
+## Task Template Matching
 
-The Task System uses a heuristic, associative matching process for atomic tasks. In this approach:
+Template matching is a selection process that occurs before and separate from execution:
 
-- **Heuristic Matching:** User-defined associative matching tasks compare a task's free-form description against available atomic task templates. There is no fixed metric; each matching task computes a similarity score based on fixed input/output conventions.
-- **Disable Context Option:** An optional "disable context" flag can be set in the task's `ContextGenerationInput` to omit inherited context entirely. This ensures that only the explicit task description and any previous outputs inform the matching process.
-- **Highest-Scoring Candidate:** The system evaluates all candidates and selects the template with the highest score. Composite tasks are built by sequencing multiple atomic task templates rather than by direct template matching.
+- **Selection Process**: Matches natural language task descriptions to appropriate templates
+- **Scoring Mechanism**: Uses associative matching to compute similarity scores
+- **Context Awareness**: May use task context to improve matching accuracy
+- **No Execution Connection**: Completely separate from execution environment or variable binding
+
+Template matching exclusively answers "which template should handle this task?" and has no role in variable resolution or execution.
 
 For further details on context handling and related design decisions, see [ADR 002 - Context Management](../../system/architecture/decisions/002-context-management.md), [ADR 005 - Context Handling](../../system/architecture/decisions/005-context-handling.md), and [ADR 14 - Operator Context Configuration](../../system/architecture/decisions/14-operator-ctx-config.md).
 
@@ -258,15 +261,23 @@ The Task System enforces resource limits via a per‑Handler turn counter and co
 ### Error Detection Mechanisms
 - Resource limit monitoring, progress tracking, output and XML structure validation, and input validation.
 
-### Environment Management
+## Variable and Parameter Management
 
-#### Parameter Passing
-The system implements direct parameter passing between tasks rather than using environment variables. This approach:
+The system maintains clear separation between two distinct mechanisms:
 
-1. Maintains clear data flow between components
-2. Improves debug visibility by making dependencies explicit
-3. Supports the `director_evaluator_loop` task type
-4. Enhances testability by reducing hidden state
+### 1. Lexical Environment
+- **Purpose**: Maintains DSL variable bindings and scoping
+- **Structure**: Chain of environments with parent references
+- **Operations**: Variable lookups, environment extension
+- **Scope**: Isolated between function calls
+
+### 2. Direct Parameter Passing
+- **Purpose**: Transfers data between caller and template
+- **Mechanism**: Arguments evaluated in caller's scope, bound to parameters in template's scope
+- **Execution**: Templates operate only on their parameters
+- **Isolation**: No implicit access between scopes
+
+This clean separation prevents unexpected variable leakage and ensures predictable execution.
 
 For Director-Evaluator loops, parameters are passed explicitly:
 ```typescript

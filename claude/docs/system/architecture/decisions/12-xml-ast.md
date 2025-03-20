@@ -114,13 +114,24 @@ interface ArgumentNode {
 - Validation for parameter count matching argument count
 - Proper error handling for missing templates or parameters
 
-### Argument Evaluation Strategy
-- For string values:
-  - Check if the string exists as a variable in the environment
-  - If present, use the variable's value
-  - If not present, treat as a literal value
-- For ASTNode values:
-  - Evaluate the node recursively in the current environment
+/**
+ * Argument Resolution Algorithm
+ * 
+ * 1. For each argument in function call:
+ *    a. If argument is string:
+ *       i. Try to resolve as variable in caller's environment
+ *       ii. If variable exists, use its value
+ *       iii. If not, use string as literal value
+ *    b. If argument is ASTNode:
+ *       i. Recursively evaluate node in caller's environment
+ * 
+ * 2. Create new environment with parameter-to-argument bindings:
+ *    a. Bind each parameter name to its corresponding evaluated argument
+ * 
+ * 3. Execute template body in new environment:
+ *    a. Template can only access explicitly passed parameters
+ *    b. No implicit access to caller's environment
+ */
 
 ### Evaluator Updates
 - Implement clean environment creation for each call

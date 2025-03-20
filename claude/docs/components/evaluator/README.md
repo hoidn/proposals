@@ -26,9 +26,14 @@ The **Evaluator** is the unified task-execution component of the system. It is r
 
 In many existing code examples (both TypeScript-like and Scheme-like), the system calls an `eval` or `apply` function that effectively belongs to the Evaluator domain. When direct execution fails, a decomposition or reparse step is triggered, also under the Evaluator's responsibility.
 
-## 3.1 Nested Environment Model Integration
+## 3.1 Lexical Environment Model
 
-The Environment class supports nested scopes via an "outer" reference. The Evaluator creates a global environment (globalEnv) that includes built-in variables along with an instance of TaskLibrary (e.g., globalEnv.bindings["taskLibrary"] = taskLibrary). A new child environment is created for each task or function call.
+The Environment class implements lexical scoping for DSL variables through nested environments. This is strictly for variable binding and lookup - completely separate from template matching or context management:
+
+- Maintains variable bindings at each scope level via `bindings` map
+- Supports variable lookup through parent scopes via `outer` reference
+- Creates child scopes with additional bindings via `extend` method
+- Resolves variables through lexical chain with `find` method
 
 ```typescript
 // Example Environment implementation
@@ -154,18 +159,20 @@ class FunctionCallNode implements FunctionCall {
 }
 ```
 
-## FunctionCall AST Node Evaluation
+## Function Call Processing
 
-The FunctionCall node represents a template invocation. When evaluated:
+Function calls use direct parameter passing with lexical isolation:
 
-1. **Template Lookup**: The Evaluator retrieves the template from the TaskLibrary
-2. **Argument Evaluation**: Each argument is evaluated in the caller's environment:
-   - String values are checked against environment variables
-   - If the string matches a variable name, the variable's value is used
-   - If not, the string is treated as a literal
-   - Nested AST nodes are recursively evaluated
-3. **Environment Creation**: A new environment is created with bindings from parameter names to argument values
-4. **Template Execution**: The template body is executed in this new environment
+1. **Template Lookup**: Retrieve template by name from TaskLibrary
+2. **Argument Resolution**: For each argument in the caller's environment:
+   - For string values: Try variable lookup first, fallback to literal value
+   - For AST nodes: Recursively evaluate in caller's environment
+3. **Fresh Environment Creation**: Create new environment with parameter bindings
+   - Parameters explicitly bound to evaluated argument values
+   - No implicit access to caller's variables
+4. **Isolated Execution**: Execute template in this clean environment
+
+This ensures templates can only access explicitly passed parameters, maintaining clear boundaries between caller and template scopes.
 
 This process maintains clean scope boundaries, preventing unintended variable access.
 
