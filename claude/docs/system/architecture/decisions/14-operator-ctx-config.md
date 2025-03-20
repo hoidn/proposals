@@ -69,12 +69,22 @@ XML templates can override these defaults:
 
 | Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
 |---------------|-----------------|-----------------|---------------------|--------------|
-| atomic        | full            | N/A             | N/A                 | enabled      |
-| sequential    | full            | true            | notes_only          | enabled      |
-| reduce        | full            | N/A             | N/A                 | enabled      |
+| atomic        | full            | N/A             | N/A                 | disabled     |
+| sequential    | full            | true            | notes_only          | disabled     |
+| reduce        | none            | N/A             | N/A                 | enabled      |
 | reduce.inner_task | full        | N/A             | N/A                 | disabled     |
-| reduce.reduction_task | full    | N/A             | N/A                 | enabled      |
+| reduce.reduction_task | full    | N/A             | N/A                 | disabled     |
 | script        | full            | N/A             | N/A                 | disabled     |
+
+### Validation Rules
+
+1. **Mutual Exclusivity**:
+   - `fresh_context="enabled"` and `inherit_context="full"` or `inherit_context="subset"` are mutually exclusive
+   - If `inherit_context` is set to "full" or "subset", then `fresh_context` must be "disabled"
+   - If `fresh_context` is "enabled", then `inherit_context` must be "none"
+
+2. **Invalid Combinations**:
+   - `inherit_context="none"` + `accumulate_data="false"` + `fresh_context="disabled"` results in no context at all, which should trigger a warning
 
 ### Implementation Process
 

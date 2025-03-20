@@ -20,6 +20,9 @@ We will standardize context management across all operators using a three-dimens
 2. Accumulation of outputs from previous steps
 3. Generation of fresh context through associative matching
 
+With one key constraint:
+- Fresh context generation (`fresh_context="enabled"`) is mutually exclusive with context inheritance (`inherit_context="full"` or `inherit_context="subset"`)
+
 This will be implemented through a unified XML schema structure that can be applied hierarchically within nested operators.
 
 ## Specification
@@ -58,6 +61,15 @@ This will be implemented through a unified XML schema structure that can be appl
 4. **fresh_context**:
    - `enabled`: Performs associative matching to generate new context from global data
    - `disabled`: No new context generation, uses only inherited/accumulated context
+
+### Context Management Constraints
+
+To simplify the system and prevent context duplication, these settings must follow one key constraint:
+
+- If `inherit_context` is set to "full" or "subset", then `fresh_context` must be "disabled"
+- If `fresh_context` is set to "enabled", then `inherit_context` must be "none"
+
+This constraint ensures that either a task inherits context from its parent (fully or partially) OR it generates fresh context via associative matching, but never both. This simplifies implementation and prevents potential duplication of context data.
 
 ### Application in Different Operators
 
@@ -114,11 +126,11 @@ This will be implemented through a unified XML schema structure that can be appl
 
 | Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
 |---------------|-----------------|-----------------|---------------------|--------------|
-| atomic        | full            | N/A             | N/A                 | enabled      |
-| sequential    | full            | true            | notes_only          | enabled      |
-| reduce        | full            | N/A             | N/A                 | enabled      |
+| atomic        | full            | N/A             | N/A                 | disabled     |
+| sequential    | full            | true            | notes_only          | disabled     |
+| reduce        | none            | N/A             | N/A                 | enabled      |
 | reduce.inner_task | full        | N/A             | N/A                 | disabled     |
-| reduce.reduction_task | full    | N/A             | N/A                 | enabled      |
+| reduce.reduction_task | full    | N/A             | N/A                 | disabled     |
 
 ### Validation Rules
 

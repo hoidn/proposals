@@ -422,6 +422,16 @@ The `<context_management>` element controls how context is managed during task e
 </context_management>
 ```
 
+### Context Management Constraints
+
+The following constraints apply to context management settings:
+
+1. **Mutual Exclusivity**: `fresh_context="enabled"` cannot be combined with `inherit_context="full"` or `inherit_context="subset"`
+   - If `inherit_context` is "full" or "subset", `fresh_context` must be "disabled"
+   - If `fresh_context` is "enabled", `inherit_context` must be "none"
+
+2. **Validation Errors**: Templates violating these constraints will fail validation with clear error messages
+
 Each operator type has specific default settings that apply when the `<context_management>` element is omitted:
 
 | Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |

@@ -369,10 +369,15 @@ For historical context and decision rationale, see [ADR 11: Subtask Spawning Mec
      - **accumulation_format**: Specifies whether to store "notes_only" or "full_output" when accumulating data.
      - **fresh_context**: Controls whether new context is generated via associative matching.
    
+   - **Constraint**: Fresh context generation (`fresh_context="enabled"`) is mutually exclusive with context inheritance (`inherit_context="full"` or `inherit_context="subset"`):
+     - If a task inherits context (full or subset), it must not generate fresh context
+     - If a task generates fresh context, it must not inherit context from its parent
+     - This simplifies the system by preventing potential context duplication
+   
    - Default settings for sequential tasks:
      | inherit_context | accumulate_data | accumulation_format | fresh_context |
      |-----------------|-----------------|---------------------|---------------|
-     | full            | true            | notes_only          | enabled       |
+     | full            | true            | notes_only          | disabled      |
    
    - These defaults can be overridden through an explicit XML structure:
    ```xml

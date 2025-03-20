@@ -78,13 +78,13 @@ const DEFAULT_CONTEXT_SETTINGS = {
     inheritContext: 'full',
     accumulateData: false,
     accumulationFormat: 'notes_only',
-    freshContext: 'enabled'
+    freshContext: 'disabled'
   },
   sequential: {
     inheritContext: 'full',
     accumulateData: true,
     accumulationFormat: 'notes_only',
-    freshContext: 'enabled'
+    freshContext: 'disabled'
   },
   reduce: {
     inheritContext: 'none',
@@ -113,14 +113,44 @@ function processTemplate(template) {
   
   // If context_management is present, merge with defaults
   if (template.contextManagement) {
-    return {
+    const mergedSettings = {
       ...defaults,
       ...template.contextManagement
     };
+    
+    // Validate mutual exclusivity constraint
+    if ((mergedSettings.inheritContext === 'full' || mergedSettings.inheritContext === 'subset') 
+        && mergedSettings.freshContext === 'enabled') {
+      throw new Error('Invalid context management configuration: fresh_context="enabled" cannot be combined with inherit_context="full" or inherit_context="subset"');
+    }
+    
+    return mergedSettings;
   }
   
   // Otherwise use defaults
   return defaults;
+}
+
+// Context Constraint Validation
+function validateContextSettings(settings) {
+  // Check for mutual exclusivity violation
+  if ((settings.inheritContext === 'full' || settings.inheritContext === 'subset') 
+      && settings.freshContext === 'enabled') {
+    return {
+      valid: false,
+      error: 'Context constraint violation: fresh_context="enabled" cannot be combined with inherit_context="full" or inherit_context="subset"'
+    };
+  }
+  
+  // Check for empty context warning
+  if (settings.inheritContext === 'none' && !settings.accumulateData && settings.freshContext === 'disabled') {
+    return {
+      valid: true,
+      warning: 'Warning: Task will execute with minimal context (no inheritance, no accumulation, no fresh context)'
+    };
+  }
+  
+  return { valid: true };
 }
 ```
 

@@ -55,9 +55,11 @@ Subtasks fully integrate with our three-dimensional context management model:
 ```
 
 Default settings for subtasks:
-- `inherit_context`: "full"
+- `inherit_context`: "none"
 - `accumulate_data`: "false" 
-- `fresh_context`: "disabled"
+- `fresh_context`: "enabled"
+
+These defaults follow the mutual exclusivity constraint: When `fresh_context` is "enabled", `inherit_context` must be "none".
 
 These defaults can be overridden in subtask templates.
 

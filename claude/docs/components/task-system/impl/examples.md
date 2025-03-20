@@ -170,10 +170,45 @@ if (result.parsedContent) {
     <description>Validate {{data}} against {{rules}}</description>
     <context_management>
       <inherit_context>none</inherit_context>
-      <fresh_context>disabled</fresh_context>
+      <fresh_context>enabled</fresh_context>
     </context_management>
   </task>
 </template>
+```
+
+### Context Management Mutual Exclusivity Examples
+
+```xml
+<!-- Valid: inherit_context="none" and fresh_context="enabled" -->
+<task type="atomic">
+  <description>Process data with fresh context only</description>
+  <context_management>
+    <inherit_context>none</inherit_context>
+    <accumulate_data>false</accumulate_data>
+    <fresh_context>enabled</fresh_context>
+  </context_management>
+</task>
+
+<!-- Valid: inherit_context="full" and fresh_context="disabled" -->
+<task type="atomic">
+  <description>Process data with inherited context only</description>
+  <context_management>
+    <inherit_context>full</inherit_context>
+    <accumulate_data>false</accumulate_data>
+    <fresh_context>disabled</fresh_context>
+  </context_management>
+</task>
+
+<!-- Invalid: inherit_context="full" and fresh_context="enabled" -->
+<!-- This would cause validation failure -->
+<task type="atomic">
+  <description>Invalid combination</description>
+  <context_management>
+    <inherit_context>full</inherit_context>
+    <accumulate_data>false</accumulate_data>
+    <fresh_context>enabled</fresh_context>
+  </context_management>
+</task>
 ```
 
 ### Function Call with Variable Arguments

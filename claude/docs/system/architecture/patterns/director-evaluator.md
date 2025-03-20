@@ -162,8 +162,10 @@ The Director-Evaluator pattern has specific default context management settings:
 | Task Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
 |-----------|-----------------|-----------------|---------------------|---------------|
 | director_evaluator_loop | none | true | notes_only | enabled |
-| director (component) | full | false | notes_only | enabled |
-| evaluator (component) | full | false | notes_only | enabled |
+| director (component) | full | false | notes_only | disabled |
+| evaluator (component) | full | false | notes_only | disabled |
+
+These defaults adhere to the mutual exclusivity constraint: when `inherit_context` is "full", `fresh_context` must be "disabled".
 
 These defaults can be overridden through explicit configuration:
 
@@ -171,7 +173,7 @@ These defaults can be overridden through explicit configuration:
 <task type="director_evaluator_loop">
   <description>Iterative refinement process</description>
   <context_management>
-    <inherit_context>subset</inherit_context>
+    <inherit_context>none</inherit_context>
     <accumulate_data>true</accumulate_data>
     <accumulation_format>full_output</accumulation_format>
     <fresh_context>enabled</fresh_context>

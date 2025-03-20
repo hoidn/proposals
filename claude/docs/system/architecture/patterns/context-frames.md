@@ -13,11 +13,19 @@ Each operator type has specific default context management settings:
 
 | Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
 |---------------|-----------------|-----------------|---------------------|---------------|
-| atomic        | full            | false           | notes_only          | enabled       |
-| sequential    | full            | true            | notes_only          | enabled       |
+| atomic        | full            | false           | notes_only          | disabled      |
+| sequential    | full            | true            | notes_only          | disabled      |
 | reduce        | none            | true            | notes_only          | enabled       |
 | script        | full            | false           | notes_only          | disabled      |
 | director_evaluator_loop | none  | true            | notes_only          | enabled       |
+
+### Context Management Constraints
+
+To simplify the system and prevent potential content duplication, the following constraint is enforced:
+
+- **Mutual Exclusivity**: `fresh_context="enabled"` and `inherit_context` being "full" or "subset" are mutually exclusive
+  - When a task inherits context (fully or partially), it should not generate fresh context
+  - When a task generates fresh context, it should not inherit context from its parent
 
 These defaults apply when no explicit context_management block is provided. When present, the explicit settings override the defaults:
 
