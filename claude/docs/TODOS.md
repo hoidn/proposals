@@ -148,9 +148,11 @@ Tasks are organized into four categories:
 
 ## Inconsistent ⚠️
 
-2. **Task-subtask context inheritance**
-   - Multiple conflicting descriptions exist
-   - Standardize on the approach defined in ADR 14
+~~2. **Task-subtask context inheritance**~~
+   ~~- Multiple conflicting descriptions exist~~
+   ~~- Standardize on the approach defined in ADR 14~~
+   
+   *Completed: Implemented atomic task subtypes with different context management defaults. Standard atomic tasks inherit context but don't generate fresh context, while subtasks don't inherit context but do generate fresh context.*
 
 ## Unclear ❓
 
