@@ -468,6 +468,16 @@ export interface SubtaskRequest {
     
     /** Optional subtype for atomic tasks */
     subtype?: string;
+  
+    /** Specific files to include in context */
+    file_paths?: string[];
+    
+    /** 
+     * Optional list of specific file paths to include in subtask context.
+     * Takes precedence over associative matching when provided.
+     * Only applicable when inherit_context is "subset".
+     */
+    file_paths?: string[];
 }
 
 /**

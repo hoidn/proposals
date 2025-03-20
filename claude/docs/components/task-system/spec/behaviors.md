@@ -252,6 +252,7 @@ The Task System implements a standardized approach to subtask spawning:
    - Checks nesting depth against maximum allowed (default: 5)
    - Performs cycle detection to prevent recursive spawning
    - Prepares context according to context management settings
+   - Prioritizes explicit file_paths when provided with inherit_context="subset"
 
 2. **Template Selection and Execution**
    - Uses the description and template_hints for associative matching
@@ -264,6 +265,21 @@ The Task System implements a standardized approach to subtask spawning:
    - Preserves partial results if the subtask fails
    - Maintains resource tracking across the subtask chain
    - Ensures proper cleanup of resources after completion
+
+### Explicit File Selection
+
+When creating subtasks, parent tasks can explicitly specify which files to include:
+
+```typescript
+// The file_paths field takes precedence over associative matching
+subtask_request = {
+  type: "atomic",
+  description: "Analyze specific modules",
+  inputs: { /* parameters */ },
+  context_management: { inherit_context: "subset" },
+  file_paths: ["/src/main.py", "/src/utils.py"]
+}
+```
 
 ### Context Management Defaults
 

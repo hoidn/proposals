@@ -568,6 +568,24 @@ if (result.status === "CONTINUATION" && result.notes.subtask_request) {
   
   console.log("Final result:", finalResult.content);
 }
+
+### Example with Explicit File Paths
+
+```typescript
+// Subtask with explicit files
+return {
+  status: "CONTINUATION",
+  notes: {
+    subtask_request: {
+      type: "atomic",
+      description: "Analyze code modules",
+      inputs: { analysis_depth: "detailed" },
+      context_management: { inherit_context: "subset" },
+      file_paths: ["/src/main.py", "/src/utils.py"]
+    }
+  }
+};
+```
 ```
 
 ### Error Handling Example
