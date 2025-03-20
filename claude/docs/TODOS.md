@@ -196,3 +196,12 @@ The critical path for completing the system involves:
 4. Advanced features (Phase 4)
 
 Items within Phase 1 should be completed first as they provide the foundation for all subsequent work. Within each phase, items are listed in priority order based on dependencies and impact.
+
+
+user story:
+make plan docs interactively (or with a prompt queue), write them to file; add them to heritable context; gen spec prompts; subtask -> try to impl spec prompt, up to 3 round of debugging; on failure return to parent task 
+CONTINUATION with failure notes; parent tries to debug (either itself or with full context subtask) or maybe something else. 
+bonus: failure notes get interpreted as lessons and are used to update plan or project_rules.md
+
+- does handler need a 'dumb' llm backend to prompt the main agent to continue?
+- how will git integration work?
