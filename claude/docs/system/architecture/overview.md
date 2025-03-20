@@ -152,19 +152,27 @@ See [Contract:Tasks:2.0] in system/contracts/protocols.md for complete specifica
 
 ## Delegation Mechanisms
 
-The system provides a unified tool interface with two implementation mechanisms:
+The system provides a unified tool interface with distinct implementation mechanisms:
 
-1. **Direct Tools**: Synchronous operations executed directly by the Handler.
+### Tool Interface
+What the LLM sees and interacts with:
+- Consistent tool-based invocation pattern for all operations
+- Unified parameter schemas and error handling
+- Standardized result format regardless of implementation
+
+### Implementation Mechanisms
+
+1. **Direct Tool Implementation**
    - Used for external interactions (files, APIs, scripts)
    - No continuation mechanism or complex context management
    - Executed directly by the Handler component
 
-2. **Subtask Tools**: Complex operations implemented via the CONTINUATION mechanism.
+2. **Subtask Tool Implementation**
    - Involve Memory System for context management
    - Use SubtaskRequest structure and CONTINUATION status
    - Follow the context management model defined in ADR 14
 
-Both types appear as tools to the LLM but are implemented differently based on their requirements.
+See [Pattern:ToolInterface:1.0] for a detailed explanation of this unified approach.
 
 ## Component Architecture
 

@@ -300,14 +300,21 @@ When evaluating sequential tasks, the Evaluator implements the Sequential Task M
 The Evaluator is responsible for tracking this history independent of the Handler's resource management and implementing the appropriate accumulation behavior based on the task's context_management configuration.
 
 For the complete specification of the Sequential Task Management pattern, including output tracking, preservation policies, and resource considerations, see `system/architecture/overview.md`.
-## Director-Evaluator Pattern Implementation
+## Subtask Spawning Implementation
 
-The Evaluator implements the Director-Evaluator pattern as defined in [Pattern:DirectorEvaluator:1.1]. This includes support for both the dynamic variant (using CONTINUATION status) and the static variant (using the director_evaluator_loop task type).
+The Evaluator implements the subtask tool mechanism as defined in [Pattern:ToolInterface:1.0], using the CONTINUATION status internally. From the LLM's perspective, these appear as tools but are implemented using the subtask spawning protocol.
 
 Key responsibilities of the Evaluator in this pattern:
-- Recognizing continuation requests from Director tasks
+- Handling CONTINUATION requests from subtask tool calls
 - Managing context according to the specified configuration
 - Coordinating script execution when required
 - Passing evaluation results back to the Director
 
-For complete implementation details, context management integration, and execution flow, refer to the canonical pattern definition in `system/architecture/patterns/director-evaluator.md`.
+## Tool Interface Integration
+
+When the LLM invokes a subtask-based tool:
+1. The Handler transforms this into a CONTINUATION with SubtaskRequest
+2. The Evaluator receives and processes this request
+3. Template selection occurs via associative matching
+4. Execution follows the subtask spawning protocol
+5. Results are returned to the parent task
