@@ -391,7 +391,11 @@ try {
           console.log(`Sequential task failed at step ${error.details.failedStep} of ${error.details.totalSteps}`);
           console.log('Completed steps:');
           error.details.partialResults.forEach(result => {
-            console.log(`- Step ${result.stepIndex}: ${result.output.substring(0, 50)}...`);
+            // With notes_only format, output might be null, so use notes instead
+            const summary = result.output ? 
+              `Output: ${result.output.substring(0, 50)}...` : 
+              `Notes: ${JSON.stringify(result.notes).substring(0, 50)}...`;
+            console.log(`- Step ${result.stepIndex}: ${summary}`);
           });
           
           // Sequential task recovery example
@@ -762,7 +766,7 @@ async function executeAnalyzeData(params) {
             <description>First step</description>
         </task>
         <task>
-            <description>Second step with fresh context but history from first step</description>
+            <description>Second step with fresh context but notes from first step</description>
         </task>
     </steps>
 </task>

@@ -53,7 +53,9 @@ The task template schema defines the structure for XML task template files and m
               <xs:element name="accumulation_format">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
+                    <!-- When 'full_output' is specified, both content and notes fields are preserved -->
                     <xs:enumeration value="full_output"/>
+                    <!-- When 'notes_only' is specified, only the notes field from each TaskResult is preserved -->
                     <xs:enumeration value="notes_only"/>
                   </xs:restriction>
                 </xs:simpleType>

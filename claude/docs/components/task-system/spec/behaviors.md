@@ -414,8 +414,8 @@ The `accumulation_format` setting in the task's `context_management` block contr
 </context_management>
 ```
 
-- `notes_only`: Only summary information from each step (default for memory efficiency)
-- `full_output`: Complete step outputs (with size limits)
+- `notes_only`: Only the notes field is preserved (default for memory efficiency)
+- `full_output`: Both content and notes fields are preserved (with size limits)
 
 #### Size Management
 

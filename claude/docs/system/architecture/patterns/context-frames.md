@@ -65,6 +65,7 @@ This configuration:
 - Ignores parent/inherited context
 - Keeps accumulated outputs from previous steps
 - Generates fresh context in addition to accumulated data
+- Specifically, preserves the notes field from previous steps
 
 #### 3. Complete Context Preservation
 ```xml
