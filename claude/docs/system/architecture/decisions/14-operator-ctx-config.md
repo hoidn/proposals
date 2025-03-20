@@ -67,23 +67,34 @@ XML templates can override these defaults:
 
 ### Standard Operator Defaults
 
-| Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
-|---------------|-----------------|-----------------|---------------------|--------------|
-| atomic        | full            | N/A             | N/A                 | disabled     |
-| sequential    | full            | true            | notes_only          | disabled     |
-| reduce        | none            | N/A             | N/A                 | enabled      |
-| reduce.inner_task | full        | N/A             | N/A                 | disabled     |
-| reduce.reduction_task | full    | N/A             | N/A                 | disabled     |
-| script        | full            | N/A             | N/A                 | disabled     |
+| Operator Type (Subtype) | inherit_context | accumulate_data | accumulation_format | fresh_context |
+|-------------------------|-----------------|-----------------|---------------------|---------------|
+| atomic (standard)       | full            | N/A             | N/A                 | disabled      |
+| atomic (subtask)        | none            | N/A             | N/A                 | enabled       |
+| sequential              | full            | true            | notes_only          | disabled      |
+| reduce                  | none            | N/A             | N/A                 | enabled       |
+| reduce.inner_task       | full            | N/A             | N/A                 | disabled      |
+| reduce.reduction_task   | full            | N/A             | N/A                 | disabled      |
+| script                  | full            | N/A             | N/A                 | disabled      |
 
 ### Validation Rules
 
 1. **Mutual Exclusivity**:
-   - `fresh_context="enabled"` and `inherit_context="full"` or `inherit_context="subset"` are mutually exclusive
+   - `fresh_context="enabled"` cannot be combined with `inherit_context="full"` or `inherit_context="subset"`
    - If `inherit_context` is set to "full" or "subset", then `fresh_context` must be "disabled"
    - If `fresh_context` is "enabled", then `inherit_context` must be "none"
 
-2. **Invalid Combinations**:
+2. **Subtype Context Rules**:
+   - The `subtype` attribute affects default context settings but not validation rules
+   - Explicit context settings in XML always override subtype-based defaults
+   - Mutual exclusivity constraint is enforced regardless of subtype
+
+3. **Default Selection Logic**:
+   - Context management defaults are determined by operator type + subtype
+   - For atomic tasks, defaults differ between "standard" and "subtask" subtypes
+   - For CONTINUATION-based subtasks, the "subtask" subtype is automatically applied
+
+4. **Invalid Combinations**:
    - `inherit_context="none"` + `accumulate_data="false"` + `fresh_context="disabled"` results in no context at all, which should trigger a warning
 
 ### Implementation Process

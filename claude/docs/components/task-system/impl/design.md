@@ -72,13 +72,28 @@
 The Task System implements a hybrid configuration approach with operator-specific defaults and explicit overrides:
 
 ```typescript
-// Default context management settings by operator type
+// Default context management settings by operator type and subtype
 const DEFAULT_CONTEXT_SETTINGS = {
   atomic: {
-    inheritContext: 'full',
-    accumulateData: false,
-    accumulationFormat: 'notes_only',
-    freshContext: 'disabled'
+    standard: {
+      inheritContext: 'full',
+      accumulateData: false,
+      accumulationFormat: 'notes_only',
+      freshContext: 'disabled'
+    },
+    subtask: {
+      inheritContext: 'none',
+      accumulateData: false,
+      accumulationFormat: 'notes_only',
+      freshContext: 'enabled'
+    },
+    // Default to standard if no subtype specified
+    default: {
+      inheritContext: 'full',
+      accumulateData: false,
+      accumulationFormat: 'notes_only',
+      freshContext: 'disabled'
+    }
   },
   sequential: {
     inheritContext: 'full',
@@ -109,7 +124,20 @@ const DEFAULT_CONTEXT_SETTINGS = {
 // Template processing with merged settings
 function processTemplate(template) {
   const operatorType = template.type;
-  const defaults = DEFAULT_CONTEXT_SETTINGS[operatorType];
+  
+  // Get defaults based on type and subtype
+  let defaults;
+  if (operatorType === 'atomic' && template.subtype) {
+    defaults = DEFAULT_CONTEXT_SETTINGS[operatorType][template.subtype] || 
+               DEFAULT_CONTEXT_SETTINGS[operatorType].default;
+  } else {
+    defaults = DEFAULT_CONTEXT_SETTINGS[operatorType];
+  }
+  
+  // Special case: For subtask requests via CONTINUATION, use subtask defaults
+  if (operatorType === 'atomic' && template.source === 'continuation') {
+    defaults = DEFAULT_CONTEXT_SETTINGS.atomic.subtask;
+  }
   
   // If context_management is present, merge with defaults
   if (template.contextManagement) {
@@ -180,6 +208,33 @@ flowchart TD
     G --> H[Compute similarity scores for each candidate]
     H --> I[Select highest-scoring atomic task template]
     I --> J[Return template for execution]
+```
+
+### Context Constraint Validation
+
+The system enforces a mutual exclusivity constraint between fresh context generation and context inheritance:
+
+```typescript
+function validateContextSettings(settings) {
+  // Check for mutual exclusivity violation
+  if ((settings.inheritContext === 'full' || settings.inheritContext === 'subset') 
+      && settings.freshContext === 'enabled') {
+    return {
+      valid: false,
+      error: 'Context constraint violation: fresh_context="enabled" cannot be combined with inherit_context="full" or inherit_context="subset"'
+    };
+  }
+  
+  // Check for empty context warning
+  if (settings.inheritContext === 'none' && !settings.accumulateData && settings.freshContext === 'disabled') {
+    return {
+      valid: true,
+      warning: 'Warning: Task will execute with minimal context (no inheritance, no accumulation, no fresh context)'
+    };
+  }
+  
+  return { valid: true };
+}
 ```
 
 ## Resource Management

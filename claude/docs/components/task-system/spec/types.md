@@ -2,7 +2,7 @@
 
 // Core task types used across the Task System.
 export type TaskType = "atomic" | "sequential" | "reduce" | "script" | "director_evaluator_loop";
-export type AtomicTaskSubtype = "standard" | "subtask";
+export type AtomicTaskSubtype = "standard" | "subtask" | "director" | "evaluator";
 
 // Task execution status.
 export type ReturnStatus = "COMPLETE" | "CONTINUATION" | "FAILED";
@@ -54,13 +54,7 @@ interface RevisedTaskResult {
 
 /**
  * Defines context management settings using the standardized three-dimensional model.
- * - inheritContext: Controls parent context inheritance
- *   - "full" for complete inheritance
- *   - "none" for no inheritance
- *   - "subset" for selective inheritance
- * - accumulateData: Controls whether outputs from prior steps are accumulated
- * - accumulationFormat: Specifies storage format for accumulated data
- * - freshContext: Controls whether new context is generated via associative matching
+ * Note: fresh_context="enabled" cannot be combined with inherit_context="full" or "subset"
  */
 export interface ContextManagement {
     inheritContext: 'full' | 'none' | 'subset';
@@ -68,6 +62,16 @@ export interface ContextManagement {
     accumulationFormat: 'full_output' | 'notes_only';
     freshContext: 'enabled' | 'disabled';
 }
+
+/**
+ * Default context management settings for subtasks
+ */
+export const SUBTASK_CONTEXT_DEFAULTS: ContextManagement = {
+    inheritContext: 'none',
+    accumulateData: false,
+    accumulationFormat: 'notes_only',
+    freshContext: 'enabled'
+};
 
 /**
  * Input structure for Memory System context requests

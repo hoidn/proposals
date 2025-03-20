@@ -36,6 +36,7 @@ interface SubtaskRequest {
     template_hints?: string[]; // Optional hints for template matching
     return_expectations?: string; // Expected output format
     max_depth?: number;     // Optional depth override
+    subtype?: string;       // Optional subtype for atomic tasks (defaults to "subtask")
 }
 ```
 
@@ -62,6 +63,24 @@ Default settings for subtasks:
 These defaults follow the mutual exclusivity constraint: When `fresh_context` is "enabled", `inherit_context` must be "none".
 
 These defaults can be overridden in subtask templates.
+
+### Subtask Context Management
+
+When creating a subtask request:
+
+1. The `subtype` field defaults to "subtask" for atomic tasks created via CONTINUATION
+2. Default context settings for subtasks are:
+   - `inherit_context`: "none"
+   - `accumulate_data`: "false"
+   - `fresh_context`: "enabled"
+
+3. These defaults can be overridden by explicitly specifying context_management settings
+4. All context settings must follow the mutual exclusivity constraint:
+   - If `inherit_context` is "full" or "subset", then `fresh_context` must be "disabled"
+   - If `fresh_context` is "enabled", then `inherit_context` must be "none"
+
+5. For atomic tasks with `subtype="subtask"`, context settings automatically follow subtask defaults
+   unless explicitly overridden
 
 ### 3. Data Flow Between Tasks
 

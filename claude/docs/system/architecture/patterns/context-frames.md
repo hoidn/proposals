@@ -9,23 +9,36 @@
 
 ### Operator Default Settings
 
-Each operator type has specific default context management settings:
+Each operator type and subtype combination has specific default context management settings:
 
-| Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
-|---------------|-----------------|-----------------|---------------------|---------------|
-| atomic        | full            | false           | notes_only          | disabled      |
-| sequential    | full            | true            | notes_only          | disabled      |
-| reduce        | none            | true            | notes_only          | enabled       |
-| script        | full            | false           | notes_only          | disabled      |
-| director_evaluator_loop | none  | true            | notes_only          | enabled       |
+| Operator Type (Subtype) | inherit_context | accumulate_data | accumulation_format | fresh_context |
+|-------------------------|-----------------|-----------------|---------------------|---------------|
+| atomic (standard)       | full            | false           | notes_only          | disabled      |
+| atomic (subtask)        | none            | false           | notes_only          | enabled       |
+| sequential              | full            | true            | notes_only          | disabled      |
+| reduce                  | none            | true            | notes_only          | enabled       |
+| script                  | full            | false           | notes_only          | disabled      |
+| director_evaluator_loop | none            | true            | notes_only          | enabled       |
 
 ### Context Management Constraints
 
-To simplify the system and prevent potential content duplication, the following constraint is enforced:
+The following constraints apply to context management settings:
 
-- **Mutual Exclusivity**: `fresh_context="enabled"` and `inherit_context` being "full" or "subset" are mutually exclusive
-  - When a task inherits context (fully or partially), it should not generate fresh context
-  - When a task generates fresh context, it should not inherit context from its parent
+1. **Mutual Exclusivity**: `fresh_context="enabled"` cannot be combined with `inherit_context="full"` or `inherit_context="subset"`
+   - If `inherit_context` is "full" or "subset", `fresh_context` must be "disabled"
+   - If `fresh_context` is "enabled", `inherit_context` must be "none"
+
+2. **Subtype-based Defaults**: Default context settings depend on both operator type and subtype
+   - Atomic tasks with "standard" subtype default to `inherit_context="full"` and `fresh_context="disabled"`
+   - Atomic tasks with "subtask" subtype default to `inherit_context="none"` and `fresh_context="enabled"`
+   - For CONTINUATION-based subtasks, the "subtask" subtype is automatically applied
+
+3. **Validation Errors**: Templates violating these constraints will fail validation with clear error messages
+
+- **Subtype Awareness**: Context defaults depend on both operator type and subtype
+  - Standard atomic tasks inherit context but don't generate fresh context
+  - Subtasks don't inherit context but do generate fresh context
+  - This distinction avoids duplication while supporting different use cases
 
 These defaults apply when no explicit context_management block is provided. When present, the explicit settings override the defaults:
 

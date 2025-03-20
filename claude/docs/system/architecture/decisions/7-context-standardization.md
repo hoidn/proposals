@@ -71,6 +71,15 @@ To simplify the system and prevent context duplication, these settings must foll
 
 This constraint ensures that either a task inherits context from its parent (fully or partially) OR it generates fresh context via associative matching, but never both. This simplifies implementation and prevents potential duplication of context data.
 
+### Subtype-Based Defaults
+
+For atomic tasks, defaults differ based on the subtype:
+
+- **standard**: Regular atomic tasks default to `inherit_context="full"` and `fresh_context="disabled"`
+- **subtask**: Tasks created via CONTINUATION default to `inherit_context="none"` and `fresh_context="enabled"`
+
+This distinction allows regular tasks to smoothly inherit context from their parent, while enabling subtasks to start with fresh, task-specific context.
+
 ### Application in Different Operators
 
 #### Atomic Tasks
@@ -124,13 +133,14 @@ This constraint ensures that either a task inherits context from its parent (ful
 
 ### Standard Defaults by Operator Type
 
-| Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
-|---------------|-----------------|-----------------|---------------------|--------------|
-| atomic        | full            | N/A             | N/A                 | disabled     |
-| sequential    | full            | true            | notes_only          | disabled     |
-| reduce        | none            | N/A             | N/A                 | enabled      |
-| reduce.inner_task | full        | N/A             | N/A                 | disabled     |
-| reduce.reduction_task | full    | N/A             | N/A                 | disabled     |
+| Operator Type (Subtype) | inherit_context | accumulate_data | accumulation_format | fresh_context |
+|-------------------------|-----------------|-----------------|---------------------|---------------|
+| atomic (standard)       | full            | N/A             | N/A                 | disabled      |
+| atomic (subtask)        | none            | N/A             | N/A                 | enabled       |
+| sequential              | full            | true            | notes_only          | disabled      |
+| reduce                  | none            | N/A             | N/A                 | enabled       |
+| reduce.inner_task       | full            | N/A             | N/A                 | disabled      |
+| reduce.reduction_task   | full            | N/A             | N/A                 | disabled      |
 
 ### Validation Rules
 
