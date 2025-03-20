@@ -207,3 +207,5 @@ bonus: failure notes get interpreted as lessons and are used to update plan or p
 
 - does handler need a 'dumb' llm backend to prompt the main agent to continue?
 - how will git integration work?
+- get rid of natural language -> xml path, just use natural language -> dsl. this avoids nested xml ugliness, clarifies the use of xml as formatting for a single prompt
+- option to pass list of file paths to subtask
