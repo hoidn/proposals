@@ -394,6 +394,14 @@ async function executeTaskWithDepthControl(
     });
   }
   
+  // Get context based on settings, with support for explicit file paths
+  const contextSettings = getContextSettings(request);
+  if (contextSettings.inheritContext === 'subset' && 
+      request.file_paths && request.file_paths.length > 0) {
+    // Use explicit file paths when provided
+    parentContext.context = await getContextForFiles(request.file_paths, parentContext);
+  }
+  
   // Execute subtask with incremented depth
   try {
     return await executeTask(request, {
@@ -430,6 +438,29 @@ const DEFAULT_SUBTASK_CONTEXT_SETTINGS = {
   accumulation_format: 'notes_only',
   fresh_context: 'enabled'
 };
+
+/**
+ * Retrieves context for specific file paths
+ * @param filePaths Array of file paths to include in context
+ * @param parentContext Parent execution context
+ * @returns Context containing only the specified files
+ */
+async function getContextForFiles(
+  filePaths: string[], 
+  parentContext: ExecutionContext
+): Promise<ExecutionContext> {
+  // Filter the parent context to only include the specified files
+  // This implementation assumes the memory system can retrieve specific files
+  const fileContexts = await Promise.all(
+    filePaths.map(path => memorySystem.getFileContext(path))
+  );
+  
+  // Combine the file contexts into a single context
+  return {
+    ...parentContext,
+    files: fileContexts.filter(Boolean) // Remove any null/undefined entries
+  };
+}
 
 function getContextSettings(request: SubtaskRequest): ContextSettings {
   // If context_management is provided in the request, merge with defaults
