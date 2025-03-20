@@ -373,6 +373,11 @@ For historical context and decision rationale, see [ADR 11: Subtask Spawning Mec
      - If a task inherits context (full or subset), it must not generate fresh context
      - If a task generates fresh context, it must not inherit context from its parent
      - This simplifies the system by preventing potential context duplication
+
+   - **Subtype-Based Defaults**: Default context settings are determined by both operator type and subtype:
+     - For atomic tasks with "standard" subtype: inherit_context="full", fresh_context="disabled"
+     - For atomic tasks with "subtask" subtype: inherit_context="none", fresh_context="enabled"
+     - This distinction allows different behavior for regular tasks vs. subtasks
    
    - Default settings for sequential tasks:
      | inherit_context | accumulate_data | accumulation_format | fresh_context |
