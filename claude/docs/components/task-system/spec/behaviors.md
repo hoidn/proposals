@@ -407,23 +407,26 @@ The Task System delegates **all context management execution** to the Evaluator 
 
 #### Partial Results Preservation
 
-The system preserves partial results for different task types:
+The system preserves partial results for different task types to provide diagnostic context:
 
 1. **Atomic Tasks**
    - Stores partial content in `notes.partialOutput`
    - Preserves as much of the generated output as possible
    - No structure guarantees for partial content
+   - Used for error reporting and diagnostics
 
 2. **Sequential Tasks**
    - Stores step-by-step outputs in `details.partialResults`
    - Includes metadata such as `failedStep` and `totalSteps`
    - Each step result includes `stepIndex`, `output`, and optional `notes`
+   - Provides execution trace for debugging purposes
 
 3. **Reduce Tasks**
    - Stores processed input results in `details.partialResults`
    - Includes the current accumulator state in `details.currentAccumulator`
    - Tracks processed inputs in `details.processedInputs`
    - Records the failed input index in `details.failedInputIndex`
+   - Enables detailed error analysis
 
 #### Format Control
 

@@ -384,20 +384,19 @@ try {
   const result = await taskSystem.executeTask(taskDefinition, memorySystem);
   console.log("Task completed successfully:", result.content);
 } catch (error) {
-  // Handle different error types with specific strategies
+  // Handle different error types with appropriate error handling
   if (error.type === 'RESOURCE_EXHAUSTION') {
     console.log(`Resource limit exceeded: ${error.resource}`);
     console.log('Usage metrics:', error.metrics);
     
-    // Resource exhaustion recovery strategy
-    const decomposedTask = await taskSystem.decomposeTask(taskDefinition);
-    // Continue with decomposed task...
+    // Error handling through standard mechanisms
+    console.error("Resource exhaustion error:", error);
     
   } else if (error.type === 'TASK_FAILURE') {
     // Handle different failure reasons
     switch (error.reason) {
       case 'subtask_failure':
-        // Sequential task partial results handling
+        // Sequential task partial results reporting
         if (error.details.failedStep !== undefined) {
           console.log(`Sequential task failed at step ${error.details.failedStep} of ${error.details.totalSteps}`);
           console.log('Completed steps:');
@@ -409,32 +408,24 @@ try {
             console.log(`- Step ${result.stepIndex}: ${summary}`);
           });
           
-          // Sequential task recovery example
-          const recoveryResult = await taskSystem.executeTask(
-            `Continue processing from step ${error.details.failedStep}`,
-            memorySystem,
-            { initialState: error.details.partialResults }
-          );
+          // Standard error handling
+          console.error("Sequential task failure:", error);
         }
-        // Reduce task partial results handling
+        // Reduce task partial results reporting
         else if (error.details.failedInputIndex !== undefined) {
           console.log(`Reduce task failed processing input ${error.details.failedInputIndex}`);
           console.log(`Processed ${error.details.processedInputs.length} of ${error.details.totalInputs} inputs`);
           console.log('Current accumulator state:', error.details.currentAccumulator);
           
-          // Reduce task recovery example
-          const recoveryResult = await taskSystem.executeReduceTaskWithState(
-            taskDefinition,
-            error.details.currentAccumulator,
-            inputsArray.slice(error.details.failedInputIndex)
-          );
+          // Standard error handling
+          console.error("Reduce task failure:", error);
         }
         break;
         
       case 'output_format_failure':
         console.log(`Output format validation failed: ${error.message}`);
         console.log(`Expected: ${error.details.expectedType}, Got: ${error.details.actualType}`);
-        // Format recovery strategy
+        console.error("Format validation failure:", error);
         break;
         
       // Other failure reasons

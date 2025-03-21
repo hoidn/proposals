@@ -207,22 +207,22 @@ function handleTaskError(error: TaskError) {
 ```
 
 ### 3.2 Planning Phase
-See [Component:Evaluator:1.0] for recovery planning.
+See [Component:Evaluator:1.0] for error handling.
 
-Based on error type and reason, the following recovery strategies may be employed:
-- **Resource Exhaustion**: Task decomposition or simplification
-- **Context Failures**: Alternative context retrieval strategies
-- **Validation Errors**: Format correction or simplification
-- **Subtask Failures**: Partial result utilization or alternative approach
+Based on error type and reason, the system will surface appropriate error information:
+- **Resource Exhaustion**: Complete resource metrics and context
+- **Context Failures**: Context-related error details
+- **Validation Errors**: Validation failure specifics
+- **Subtask Failures**: Error details including partial execution data
 
 ### 3.3 Execution Phase
 See [Protocol:Tasks:Reparse:1.0] for execution details.
 
-Recovery execution involves:
-- Preparing recovery context (including partial results if available)
-- Selecting appropriate recovery template
-- Executing recovery with appropriate resources
-- Monitoring recovery progress
+Error handling involves:
+- Preparing complete error context
+- Including relevant partial execution data
+- Surfacing errors through standard error flow
+- Providing detailed diagnostics
 
 - **Associative Matching Failures:** If an associative matching task encounters an error—such as insufficient context or partial output—it will automatically trigger a retry. These errors will include any partial output and, if available, an optional success score (recorded in the task's `notes` field) to support future adaptive behavior.
 
