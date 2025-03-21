@@ -292,6 +292,52 @@ The system maintains clear separation between two distinct mechanisms:
 
 This clean separation prevents unexpected variable leakage and ensures predictable execution.
 
+## Template Substitution Process
+
+The system implements a standardized template substitution process that resolves `{{variable_name}}` placeholders before task execution:
+
+### 1. Function-Based Templates
+- For templates with declared parameters (`<template name="example" params="param1,param2">`):
+- Substitution is limited to only the declared parameters
+- The template has no access to other variables in the parent scope
+- Example: `<description>Process {{param1}} with {{param2}}</description>`
+
+### 2. Standard Templates
+- For templates without explicit parameter declarations:
+- Substitution uses variables from the current lexical environment
+- Variables are resolved through the Environment.find() method
+- Example: `<description>Process {{data_file}} with {{options}}</description>`
+
+### Implementation Details
+
+The substitution process occurs in these stages:
+
+```typescript
+// Template substitution process
+function resolveTemplatePlaceholders(template: TaskTemplate, env: Environment): string {
+  // For function-based templates, only use declared parameters
+  if (template.parameters) {
+    return template.content.replace(/\{\{([^}]+)\}\}/g, (_, varName) => {
+      if (!template.parameters.includes(varName)) {
+        throw new Error(`Undefined parameter: ${varName}`);
+      }
+      return env.find(varName);
+    });
+  }
+  
+  // For standard templates, use full lexical environment
+  return template.content.replace(/\{\{([^}]+)\}\}/g, (_, varName) => {
+    try {
+      return env.find(varName);
+    } catch (e) {
+      throw new Error(`Undefined variable: ${varName}`);
+    }
+  });
+}
+```
+
+This process happens before the Handler constructs the LLM payload, ensuring all placeholders are resolved prior to execution.
+
 For Director-Evaluator loops, parameters are passed explicitly:
 ```typescript
 async function executeDirectorEvaluatorLoop(task, inputs) {

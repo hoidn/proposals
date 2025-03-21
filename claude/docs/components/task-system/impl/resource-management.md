@@ -145,10 +145,23 @@ class HandlerSession {
     this.turnCounter.increment(); // Increment turn counter for assistant responses
   }
   
-  constructPayload(): HandlerPayload {
+  /**
+   * Constructs a payload for the LLM, resolving all template placeholders
+   * @param task The task template to execute
+   * @param env The current lexical environment for variable resolution
+   * @returns A complete HandlerPayload with resolved variables
+   */
+  constructPayload(task: TaskTemplate, env: Environment): HandlerPayload {
+    // Resolve all template placeholders before constructing payload
+    const resolvedTaskPrompt = this.resolveTemplatePlaceholders(task.taskPrompt, env);
+    
     return {
       systemPrompt: this.systemPrompt,
-      messages: this.messages,
+      messages: [...this.messages, { 
+        role: "user", 
+        content: resolvedTaskPrompt,
+        timestamp: new Date()
+      }],
       context: this.contextManager.getCurrentContext(),
       tools: this.getAvailableTools(),
       metadata: {
@@ -156,6 +169,22 @@ class HandlerSession {
         resourceUsage: this.getResourceMetrics()
       }
     };
+  }
+  
+  /**
+   * Resolves template placeholders using appropriate variable scope
+   * @param template The template text containing placeholders
+   * @param env The environment for variable resolution
+   * @returns Template with all placeholders resolved
+   */
+  private resolveTemplatePlaceholders(template: string, env: Environment): string {
+    return template.replace(/\{\{([^}]+)\}\}/g, (_, varName) => {
+      try {
+        return String(env.find(varName));
+      } catch (e) {
+        throw new Error(`Undefined variable in template: ${varName}`);
+      }
+    });
   }
   
   getResourceMetrics(): ResourceMetrics {
