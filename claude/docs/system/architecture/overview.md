@@ -185,6 +185,7 @@ LLM interface and resource tracking component.
 - Abstracts provider-specific implementation details while maintaining consistent capabilities
 - Manages resource usage tracking (turns, tokens)
 - Handles LLM interactions and session management
+- Works with fully resolved content (no template variable substitution)
 
 ### Compiler [Component:Compiler:1.0]
 Task parsing and transformation component.
@@ -198,6 +199,9 @@ See [Contract:Integration:CompilerTask:1.0] for integration specification.
 ### Evaluator [Component:Evaluator:1.0]
 Execution control component.
 - Controls AST processing and execution
+- Manages all lexical environments and variable scoping
+- Performs all template variable substitution before Handler invocation
+- Handles different substitution rules for function vs. standard templates
 - Manages failure recovery
 - Tracks resource usage
 - Handles reparse requests
