@@ -179,10 +179,12 @@ All new node types (`TemplateNode`, `FunctionCallNode`, `ArgumentNode`) implemen
 When traversing the AST:
 - `TemplateNode` instances are not traversed directly (they exist in the TaskLibrary)
 - When a `FunctionCallNode` is encountered, the evaluator:
-  1. Looks up the template by name
+  1. Looks up the template by name in the TaskLibrary
   2. Evaluates all argument nodes in the current environment
   3. Creates a new environment with parameters bound to argument values
   4. Traverses and evaluates the template's body in this new environment
+
+A template's body can be any task type (atomic, sequential, reduce, etc.), allowing function-based templates to define both simple and complex operations. This enables function composition across all task types in the system, not just atomic tasks.
 
 ## Affected Documentation
 
