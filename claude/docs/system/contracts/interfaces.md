@@ -60,6 +60,13 @@ Handler:
  - For Anthropic models: Configures computer use tools (optional)
  - For other models: Uses appropriate file access mechanisms
  - Manages all direct interaction with file system
+ - Works with fully resolved content only, no template substitution
+
+Evaluator:
+ - Responsible for all template variable substitution (resolving {{variable_name}} placeholders)
+ - Ensures all templates are fully resolved before passing to Handler
+ - Applies different resolution rules for function vs. standard templates
+ - Detects and handles variable resolution errors
 
 #### Integration Points
  - Context flow from associative matching to task execution
