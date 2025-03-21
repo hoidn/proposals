@@ -213,4 +213,3 @@ bonus: failure notes get interpreted as lessons and are used to update plan or p
 ## Resolved Questions
 
 - ✓ RESOLVED: Template substitution is an Evaluator responsibility. The Evaluator resolves all {{variable_name}} placeholders before dispatching tasks to the Handler.
-- ✓ RESOLVED: Template substitution is an Evaluator responsibility. The Evaluator resolves all {{variable_name}} placeholders before dispatching tasks to the Handler.
