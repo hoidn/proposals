@@ -386,15 +386,15 @@ The Task System delegates **all context management execution** to the Evaluator 
 - Structural validation failure
 - Format validation errors
 - No semantic validation
-- Preserves partial outputs when useful
+- Preserves partial outputs for diagnostic purposes
 - Returns both output and notes sections
-- May trigger reparse task
+- Detailed error reporting with context
 
 #### Progress Failure
 - Handler detects stalled execution
 - Task-specific progress indicators
 - No internal progress tracking
-- May trigger alternative approach
+- Comprehensive error reporting
 - State preserved in error response
 - No automatic retry
 
