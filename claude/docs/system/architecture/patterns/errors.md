@@ -76,7 +76,11 @@ The system maintains a standardized approach for preserving partial results when
   reason: 'execution_halted',
   message: 'Task execution failed',
   notes: {
-    partialOutput: "Partial content generated before failure"
+    // Partial results directly included in notes, no separate partialOutput field
+    taskProgress: "Partial content generated before failure",
+    processingStage: "validation",
+    completionPercentage: 60
+    // Any other metadata as needed
   }
 }
 ```
@@ -93,12 +97,19 @@ The system maintains a standardized approach for preserving partial results when
     partialResults: [
       { 
         stepIndex: 0, 
-        output: "Data loaded successfully", 
-        notes: { recordCount: 1000 }
+        notes: { 
+          recordCount: 1000, 
+          status: "completed", 
+          result: "Data loaded successfully" 
+        }
       },
       { 
         stepIndex: 1, 
-        output: "Data transformed to required format"
+        notes: { 
+          transformType: "normalization", 
+          status: "completed", 
+          result: "Data transformed to required format" 
+        }
       }
     ]
   }
@@ -117,8 +128,20 @@ The system maintains a standardized approach for preserving partial results when
     processedInputs: [0, 1],
     currentAccumulator: { totalCount: 1500, averageValue: 42.3 },
     partialResults: [
-      { inputIndex: 0, result: "Processed metrics for server 1" },
-      { inputIndex: 1, result: "Processed metrics for server 2" }
+      { 
+        inputIndex: 0, 
+        notes: { 
+          status: "completed", 
+          result: "Processed metrics for server 1" 
+        }
+      },
+      { 
+        inputIndex: 1, 
+        notes: { 
+          status: "completed", 
+          result: "Processed metrics for server 2" 
+        }
+      }
     ]
   }
 }
@@ -126,20 +149,23 @@ The system maintains a standardized approach for preserving partial results when
 
 #### Storage Format Control
 The format of preserved partial results depends on the task's `accumulation_format` setting:
-- `notes_only`: Only the notes field is preserved from each step (default for all operator types)
-- `full_output`: Both content and notes fields are preserved (with reasonable size limits)
+- `minimal`: Only essential metadata is preserved from each step (default for all operator types)
+- `full`: Complete notes content is preserved (with reasonable size limits)
 
 ```typescript
 partialResults: [
   { 
     stepIndex: 0, 
-    output: null, 
-    notes: { recordCount: 1000 }
+    notes: { 
+      recordCount: 1000,
+      status: "completed"
+      // Other essential metadata
+    }
   }
 ]
 ```
 
-Each operator type has specific default settings for context management. For sequential tasks, the default `accumulation_format` is `notes_only`. These defaults apply when the `context_management` block is omitted. When present, explicit settings override the defaults, following the hybrid configuration approach.
+Each operator type has specific default settings for context management. For sequential tasks, the default `accumulation_format` is `minimal`. These defaults apply when the `context_management` block is omitted. When present, explicit settings override the defaults, following the hybrid configuration approach.
 
 #### Size Management
 To prevent memory issues:
@@ -159,7 +185,7 @@ When a task specifies an output format using `<output_format type="json" schema=
   details: {
     expectedType: "array",
     actualType: "object",
-    partialOutput: "..." // The original output
+    originalOutput: "..." // The original output
   }
 }
 ```

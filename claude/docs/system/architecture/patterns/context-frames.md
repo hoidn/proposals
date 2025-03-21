@@ -13,12 +13,12 @@ Each operator type and subtype combination has specific default context manageme
 
 | Operator Type (Subtype) | inherit_context | accumulate_data | accumulation_format | fresh_context |
 |-------------------------|-----------------|-----------------|---------------------|---------------|
-| atomic (standard)       | full            | false           | notes_only          | disabled      |
-| atomic (subtask)        | none            | false           | notes_only          | enabled       |
-| sequential              | full            | true            | notes_only          | disabled      |
-| reduce                  | none            | true            | notes_only          | enabled       |
-| script                  | full            | false           | notes_only          | disabled      |
-| director_evaluator_loop | none            | true            | notes_only          | enabled       |
+| atomic (standard)       | full            | false           | minimal             | disabled      |
+| atomic (subtask)        | none            | false           | minimal             | enabled       |
+| sequential              | full            | true            | minimal             | disabled      |
+| reduce                  | none            | true            | minimal             | enabled       |
+| script                  | full            | false           | minimal             | disabled      |
+| director_evaluator_loop | none            | true            | minimal             | enabled       |
 
 ### Context Management Constraints
 
@@ -57,7 +57,7 @@ This configuration:
 <context_management>
   <inherit_context>none</inherit_context>
   <accumulate_data>true</accumulate_data>
-  <accumulation_format>notes_only</accumulation_format>
+  <accumulation_format>minimal</accumulation_format>
   <fresh_context>enabled</fresh_context>
 </context_management>
 ```
@@ -65,14 +65,14 @@ This configuration:
 - Ignores parent/inherited context
 - Keeps accumulated outputs from previous steps
 - Generates fresh context in addition to accumulated data
-- Specifically, preserves the notes field from previous steps
+- Specifically, preserves essential metadata from previous steps
 
 #### 3. Complete Context Preservation
 ```xml
 <context_management>
   <inherit_context>full</inherit_context>
   <accumulate_data>true</accumulate_data>
-  <accumulation_format>full_output</accumulation_format>
+  <accumulation_format>full</accumulation_format>
   <fresh_context>disabled</fresh_context>
 </context_management>
 ```

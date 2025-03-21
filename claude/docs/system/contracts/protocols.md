@@ -54,10 +54,10 @@ The task template schema defines the structure for XML task template files and m
               <xs:element name="accumulation_format">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
-                    <!-- When 'full_output' is specified, both content and notes fields are preserved -->
-                    <xs:enumeration value="full_output"/>
-                    <!-- When 'notes_only' is specified, only the notes field from each TaskResult is preserved -->
-                    <xs:enumeration value="notes_only"/>
+                    <!-- When 'full' is specified, complete notes are preserved -->
+                    <xs:enumeration value="full"/>
+                    <!-- When 'minimal' is specified, only essential metadata is preserved -->
+                    <xs:enumeration value="minimal"/>
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
@@ -476,11 +476,11 @@ Each operator type has specific default settings that apply when the `<context_m
 
 | Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
 |---------------|-----------------|-----------------|---------------------|---------------|
-| atomic        | full            | false           | notes_only          | enabled       |
-| sequential    | full            | true            | notes_only          | enabled       |
-| reduce        | none            | true            | notes_only          | enabled       |
-| script        | full            | false           | notes_only          | disabled      |
-| director_evaluator_loop | none  | true            | notes_only          | enabled       |
+| atomic        | full            | false           | minimal             | enabled       |
+| sequential    | full            | true            | minimal             | enabled       |
+| reduce        | none            | true            | minimal             | enabled       |
+| script        | full            | false           | minimal             | disabled      |
+| director_evaluator_loop | none  | true            | minimal             | enabled       |
 
 When the `<context_management>` element is present, its settings override the operator defaults. Settings are merged during template loading, with explicit settings taking precedence over defaults.
 
