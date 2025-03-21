@@ -8,19 +8,28 @@
  - For XML processing details (parsing, validation, and fallback behavior), refer to [xml-processing.md](./xml-processing.md).
 
 ## Handler Implementation
+
 ### Session Management Strategy
-- One Handler per task execution
-- Create new Handler instance per executeTask call
-- Configure with immutable resource limits
-- Set system prompt during initialization
+- Handler creates a HandlerSession for each task execution
+- Session maintains complete conversation state and message history
+- Provider-agnostic HandlerPayload structure for LLM interactions
 - Clean session termination on completion
+- Tool-based approach for user input requests
   
 ### Resource Tracking Implementation
-- Turn counter per Handler
-- Context window size monitoring
-- Token usage tracking
-- Resource limit enforcement
-- No cross-Handler resource sharing
+- Turn counter integrated with HandlerSession
+- Turns incremented only for assistant messages
+- Context window tracks all messages and context
+- Token usage monitored across full conversation
+- Resource metrics available via session.getResourceMetrics()
+- Limits enforced during session operations
+
+### Payload Construction
+- HandlerPayload provides unified structure for LLM requests
+- Includes: systemPrompt, messages, context, tools, metadata
+- Provider-specific adapters transform to appropriate format
+- Session constructs payload via constructPayload() method
+- Full conversation history included in structured format
 
 ### Error Propagation Design
 - Standard error type system

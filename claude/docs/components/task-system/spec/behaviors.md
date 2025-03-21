@@ -35,17 +35,19 @@ The Task System is responsible for managing LLM task execution, including:
  - System-level error handling: [Pattern:Error:1.0]
 
 ### Interactive Sessions
-- Handler monitors LLM responses for input requests
-- No special task type or mode required
-- Agent controls when input is needed
+- Handler implements a standardized tool-based approach for user input requests
+- The system registers a `requestUserInput` tool during Handler initialization
 - Input Flow:
   ```
-  LLM Output -> Handler Detects Request -> onRequestInput Called -> 
-  User Input Received -> Continue Conversation
+  LLM -> Calls requestUserInput tool -> Handler detects tool call ->
+  onRequestInput called with prompt -> User input returned ->
+  Handler adds user message to session -> Conversation continues
   ```
-- Same resource tracking as normal conversation
-- Input interactions count against turn limits
-- Context window includes all interaction history
+- Sessions track all conversation turns and message history
+- User messages are added to the session but don't increment turn counters
+- Assistant messages increment turn counters and are tracked for resource limits
+- Context window includes full conversation history managed by HandlerSession
+- HandlerPayload includes all context, messages, and available tools
 
 ### XML Processing
 - Basic structural validation only

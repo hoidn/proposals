@@ -158,6 +158,54 @@ This pattern complements:
 3. **Error Propagation**: Error handling must be consistent across both mechanisms
 4. **Resource Tracking**: Both mechanisms must track resource usage appropriately
 
+### User Input Request Tool
+
+The system provides a standardized tool for requesting user input:
+
+```typescript
+// Standard tool for requesting user input
+const USER_INPUT_TOOL: ToolDefinition = {
+  name: "requestUserInput",
+  description: "Request input from the user when additional information is needed",
+  parameters: {
+    type: "object",
+    properties: {
+      prompt: {
+        type: "string",
+        description: "The question or prompt to show to the user"
+      }
+    },
+    required: ["prompt"]
+  }
+};
+
+// LLM usage
+const userAnswer = tools.requestUserInput({
+  prompt: "What file would you like to analyze?"
+});
+
+// Handler implementation
+class Handler implements IHandler {
+  constructor(config: HandlerConfig) {
+    // Register standard tools
+    this.registerDirectTool(USER_INPUT_TOOL.name, this.handleUserInputRequest.bind(this));
+  }
+  
+  private async handleUserInputRequest(params: {prompt: string}): Promise<{userInput: string}> {
+    if (!this.onRequestInput) {
+      throw new Error("No input request handler registered");
+    }
+    
+    const userInput = await this.onRequestInput(params.prompt);
+    this.session.addUserMessage(userInput);
+    
+    return { userInput };
+  }
+}
+```
+
+This standardized approach allows LLMs to consistently request user input across different providers while maintaining proper conversation tracking and resource management.
+
 ## Implementation Guidance
 
 1. Register direct tools during Handler initialization

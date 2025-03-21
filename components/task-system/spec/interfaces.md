@@ -122,40 +122,100 @@ interface HandlerConfig {
 }
 
 /**
+ * Payload structure for LLM interactions
+ * Provides a provider-agnostic representation of the LLM request
+ */
+interface HandlerPayload {
+  systemPrompt: string;
+  messages: Array<{
+    role: "user" | "assistant" | "system";
+    content: string;
+    timestamp?: Date;
+  }>;
+  context?: string;        // Context from Memory System
+  tools?: ToolDefinition[]; // Available tools
+  metadata?: {
+    model: string;
+    temperature?: number;
+    maxTokens?: number;
+    resourceUsage: ResourceMetrics;
+  };
+}
+
+/**
  * LLM interaction interface
  * Uses [Type:TaskSystem:ResourceMetrics:1.0], [Type:TaskSystem:ResourceLimits:1.0]
  */
 interface Handler {
     /**
      * Execute a prompt with the LLM
-     * @param systemPrompt - System-level context and instructions
-     * @param taskPrompt - Task-specific input
-     * @param options - Optional provider and model overrides
+     * @param payload - The HandlerPayload containing all interaction details
      * @returns Promise resolving to LLM response
      */
-    executePrompt(
-        systemPrompt: string,
-        taskPrompt: string,
-        options?: {
-            provider?: string;
-            model?: string;
-        }
-    ): Promise<string>;
+    executePrompt(payload: HandlerPayload): Promise<LLMResponse>;
+
+    /**
+     * Process LLM response and handle any tool calls
+     * @param response - The raw LLM response
+     * @returns Promise resolving to the processed content
+     */
+    processLLMResponse(response: LLMResponse): Promise<string>;
+
+    /**
+     * Register a direct tool that will be executed by the Handler
+     * @param name - Unique tool name
+     * @param handler - Function that implements the tool
+     */
+    registerDirectTool(name: string, handler: Function): void;
+
+    /**
+     * Register a subtask tool that will be implemented via CONTINUATION
+     * @param name - Unique tool name
+     * @param templateHints - Hints for template selection
+     */
+    registerSubtaskTool(name: string, templateHints: string[]): void;
 
     /**
      * Callback for handling agent input requests
-     * @param agentRequest - The agent's request for user input
+     * @param prompt - The prompt to display to the user
      * @returns Promise resolving to user's input
      */
-    onRequestInput: (agentRequest: string) => Promise<string>;
+    onRequestInput: (prompt: string) => Promise<string>;
     
     /**
-     * Get capabilities of the current provider
-     * @returns Object containing available tools and limits
+     * Create a new session for managing conversation state
+     * @param config - Configuration for the session
+     * @returns A new HandlerSession instance
      */
-    getProviderCapabilities(): {
-        availableTools: string[];
-        maxTokens: number;
-    };
+    createSession(config: HandlerConfig): HandlerSession;
+}
+
+/**
+ * Session for managing conversation state
+ */
+interface HandlerSession {
+    /**
+     * Add a user message to the conversation
+     * @param content - User message content
+     */
+    addUserMessage(content: string): void;
+    
+    /**
+     * Add an assistant message to the conversation
+     * @param content - Assistant message content
+     */
+    addAssistantMessage(content: string): void;
+    
+    /**
+     * Construct a payload for LLM interaction
+     * @returns The HandlerPayload for this session
+     */
+    constructPayload(): HandlerPayload;
+    
+    /**
+     * Get current resource metrics for this session
+     * @returns ResourceMetrics for turns and context window
+     */
+    getResourceMetrics(): ResourceMetrics;
 }
 ```

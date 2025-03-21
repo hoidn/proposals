@@ -271,6 +271,43 @@ Output validation ensures the result matches the specified type.
 
 The subtask spawning protocol defines how tasks can dynamically create and execute subtasks.
 
+## LLM Interaction Protocol [Protocol:LLMInteraction:1.0]
+
+The Handler-LLM interaction follows a standardized protocol using the `HandlerPayload` structure:
+
+```typescript
+interface HandlerPayload {
+  systemPrompt: string;
+  messages: Array<{
+    role: "user" | "assistant" | "system";
+    content: string;
+    timestamp?: Date;
+  }>;
+  context?: string;        // Context from Memory System
+  tools?: ToolDefinition[]; // Available tools
+  metadata?: {
+    model: string;
+    temperature?: number;
+    maxTokens?: number;
+    resourceUsage: ResourceMetrics;
+  };
+}
+```
+
+### Protocol Flow
+
+1. The Task System creates a Handler instance with configuration
+2. The Handler creates a HandlerSession to manage conversation state
+3. The Evaluator ensures all placeholders are substituted
+4. The Handler constructs a HandlerPayload via session.constructPayload()
+5. Provider-specific adapters transform the payload to appropriate formats
+6. LLM response is processed via handler.processLLMResponse()
+7. Tool calls (including user input requests) are handled
+8. Session state is updated with new messages
+9. Resource usage is tracked and limits enforced
+
+This standardized protocol ensures consistent handling of LLM interactions across different providers while maintaining proper conversation tracking and resource management.
+
 ### Request Structure
 
 ```typescript

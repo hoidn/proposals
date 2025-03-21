@@ -100,6 +100,93 @@ class ContextManager {
 - Limit enforcement
 - Cleanup coordination
 
+/**
+ * Implementation of session-based resource management
+ */
+class HandlerSession {
+  private systemPrompt: string;
+  private messages: Message[] = [];
+  private turnCounter: TurnCounter;
+  private contextManager: ContextManager;
+  private config: HandlerConfig;
+  
+  constructor(config: HandlerConfig) {
+    this.config = config;
+    this.systemPrompt = config.systemPrompt;
+    this.turnCounter = new TurnCounter({
+      limit: config.maxTurns,
+      used: 0,
+      lastTurnAt: new Date()
+    });
+    this.contextManager = new ContextManager({
+      limit: Math.floor(config.maxContextWindowFraction * this.getModelMaxTokens(config.defaultModel)),
+      used: 0,
+      peakUsage: 0
+    });
+  }
+  
+  addUserMessage(content: string): void {
+    this.messages.push({ 
+      role: "user", 
+      content, 
+      timestamp: new Date() 
+    });
+    this.contextManager.addContent(content);
+    // No turn increment for user messages
+  }
+  
+  addAssistantMessage(content: string): void {
+    this.messages.push({ 
+      role: "assistant", 
+      content, 
+      timestamp: new Date() 
+    });
+    this.contextManager.addContent(content);
+    this.turnCounter.increment(); // Increment turn counter for assistant responses
+  }
+  
+  constructPayload(): HandlerPayload {
+    return {
+      systemPrompt: this.systemPrompt,
+      messages: this.messages,
+      context: this.contextManager.getCurrentContext(),
+      tools: this.getAvailableTools(),
+      metadata: {
+        model: this.config.defaultModel,
+        resourceUsage: this.getResourceMetrics()
+      }
+    };
+  }
+  
+  getResourceMetrics(): ResourceMetrics {
+    return {
+      turns: this.turnCounter.getMetrics(),
+      context: this.contextManager.getMetrics()
+    };
+  }
+  
+  private getModelMaxTokens(model: string): number {
+    // Return model-specific token limits
+    // Implementation details omitted
+    const modelTokenLimits = {
+      "claude-3-opus": 200000,
+      "claude-3-sonnet": 180000,
+      "claude-3-haiku": 150000,
+      "gpt-4": 128000,
+      "gpt-4-turbo": 128000,
+      "gpt-3.5-turbo": 16000
+    };
+    
+    return modelTokenLimits[model] || 100000; // Default fallback
+  }
+  
+  private getAvailableTools(): ToolDefinition[] {
+    // Return registered tools
+    // Implementation details omitted
+    return []; // Placeholder - actual implementation would return registered tools
+  }
+}
+
 ### Memory System
 - Read-only metadata access
 - Global index management

@@ -27,19 +27,23 @@ The Handler is responsible for:
 
 #### Handler Responsibility
 - One Handler per task execution
-- Tracks resource usage:
-  * Turn counts
-  * Context window size
-  * Token usage
-  * Peak usage statistics
-- Enforces resource limits
+- Creates a HandlerSession to manage conversation state
+- Tracks resource usage through session:
+  * Turn counts (incremented for assistant messages)
+  * Message history (all user and assistant messages)
+  * Context window size (including all conversation history)
+  * Token usage and peak usage statistics
+- Enforces resource limits at session level
 - Manages clean termination
+- Structures complete interaction payload via HandlerPayload
 
-#### Isolation Requirements
-- No cross-Handler resource pooling
-- Per-session resource isolation
-- Clean resource release on completion
-- Independent Handler execution
+#### Session Management
+- Maintains complete conversation history
+- Tracks message timestamps and roles
+- Manages turn counting (assistant messages only)
+- Constructs provider-agnostic payloads
+- Provides resource metrics for monitoring
+- Enforces limits based on configuration
 
 ### Context Management
 
