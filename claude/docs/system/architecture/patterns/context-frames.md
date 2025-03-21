@@ -2,7 +2,7 @@
 
 ## Related Documents
 - Memory System ADR in [ADR:Memory:1.0]
-- Memory component in [Component:Memory:1.0]
+- Memory component in [Component:Memory:3.0]
 - Resource Management Pattern in [Pattern:ResourceManagement:1.0]
 
 ## Context Frame Operations

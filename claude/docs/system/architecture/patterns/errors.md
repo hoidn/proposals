@@ -348,4 +348,4 @@ try {
 
 ## 6. Related Patterns
 - [Pattern:ResourceManagement:1.0]
-- [Pattern:TaskExecution:1.0]
+- [Pattern:TaskExecution:2.0]

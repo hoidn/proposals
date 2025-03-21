@@ -27,7 +27,7 @@ The context window implementation provides:
 - Clean termination when limits are reached
 
 ### 1.3 Memory Resources
-**Implementation**: [Component:MemorySystem:1.0]
+**Implementation**: [Component:Memory:3.0]
 
 Memory resources are managed with:
 - Isolated memory contexts per session

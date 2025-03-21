@@ -98,7 +98,7 @@ Defines how errors propagate and recover across component boundaries.
 
 See [Interface:ErrorHandling:1.0] in system/contracts/interfaces.md for complete specification.
 
-### Resource Management [Pattern:Resource:2.0]
+### Resource Management [Pattern:ResourceManagement:1.0]
 Defines resource usage tracking and lifecycle across components.
 
 #### Core Principles
@@ -137,7 +137,7 @@ Defines resource usage tracking and lifecycle across components.
 - Resource Release: Coordinated cleanup and state invalidation
 - Error Handling: Resource exhaustion detection and preservation
 
-See [Contract:Resources:2.0] in system/contracts/resources.md for complete specification.
+See [Contract:Resources:1.0] in system/contracts/resources.md for complete specification.
 
 ### Task Execution [Pattern:TaskExecution:2.0]
 Defines how tasks are structured, executed, and managed.
@@ -222,7 +222,7 @@ Metadata management component.
 - NEVER performs file I/O operations - all file access is handled by Handler
 - Implements read-only context model (no context update capability)
 
-See [Contract:Integration:TaskMemory:2.0] for integration specification.
+See [Contract:Integration:TaskMemory:3.0] for integration specification.
 
 ## Component Integration
 
