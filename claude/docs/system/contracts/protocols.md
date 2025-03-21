@@ -22,6 +22,7 @@ The task template schema defines the structure for XML task template files and m
     <xs:complexType>
       <xs:sequence>
         <xs:element name="description" type="xs:string"/>
+        <xs:element name="provider" type="xs:string" minOccurs="0"/>
         <xs:element name="output_slot" type="xs:string" minOccurs="0"/>
         <xs:element name="input_source" type="xs:string" minOccurs="0"/>
         <xs:element name="output_format" minOccurs="0">

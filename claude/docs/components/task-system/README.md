@@ -106,6 +106,7 @@ Here's how the Task System would be instantiated:
 
 ```typescript
 const taskSystem = new TaskSystem({
+    provider: "anthropic",  // Default provider
     maxTurns: 10,
     maxContextWindowFraction: 0.8,
     systemPrompt: "Default system prompt"
@@ -115,6 +116,13 @@ const taskSystem = new TaskSystem({
 const result = await taskSystem.executeTask(
     "analyze data",
     memorySystem
+);
+
+// Execute with provider override
+const resultWithOverride = await taskSystem.executeTask(
+    "analyze data",
+    memorySystem,
+    { provider: "openai" }  // Override for this task
 );
 
 // Validate a template

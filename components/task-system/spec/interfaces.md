@@ -23,7 +23,11 @@ interface TaskSystem {
     executeTask(
         task: string,
         memory: MemorySystem,
-        taskType?: TaskType // Supports "atomic", "sequential", "reduce", and "script" tasks.
+        options?: {
+            taskType?: TaskType;
+            provider?: string;
+            model?: string;
+        }
     ): Promise<TaskResult>;
 
     // Validate a task template
@@ -87,10 +91,12 @@ interface MemorySystem {
  * Types specific to Handler interface
  */
 interface HandlerConfig {
+    provider: string;  // e.g., "anthropic", "openai"
     maxTurns: number;
     maxContextWindowFraction: number;
     defaultModel?: string;
     systemPrompt: string;
+    tools?: string[];  // Tool types needed ("file_access", "bash", etc.)
 }
 
 /**
@@ -102,11 +108,16 @@ interface Handler {
      * Execute a prompt with the LLM
      * @param systemPrompt - System-level context and instructions
      * @param taskPrompt - Task-specific input
+     * @param options - Optional provider and model overrides
      * @returns Promise resolving to LLM response
      */
     executePrompt(
         systemPrompt: string,
-        taskPrompt: string
+        taskPrompt: string,
+        options?: {
+            provider?: string;
+            model?: string;
+        }
     ): Promise<string>;
 
     /**
@@ -115,5 +126,14 @@ interface Handler {
      * @returns Promise resolving to user's input
      */
     onRequestInput: (agentRequest: string) => Promise<string>;
+    
+    /**
+     * Get capabilities of the current provider
+     * @returns Object containing available tools and limits
+     */
+    getProviderCapabilities(): {
+        availableTools: string[];
+        maxTokens: number;
+    };
 }
 ```

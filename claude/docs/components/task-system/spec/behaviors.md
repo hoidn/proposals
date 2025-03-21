@@ -232,11 +232,9 @@ See [Pattern:ToolInterface:1.0] for selection criteria and implementation detail
 - **Handler**: Performs ALL file I/O operations (reading, writing, deletion)
 
 ### Implementation Details
-- For Anthropic models: Handler configures and uses Anthropic's computer use tools
-  * computer_20250124 (or 20241022)
-  * text_editor_20250124 (or 20241022)
-  * bash_20250124 (or 20241022)
-- For other models: Handler uses appropriate alternative mechanisms
+- Handler configures and uses provider-appropriate tool mechanisms
+- Tool selection is determined by provider capabilities and task requirements
+- Each provider implementation handles the mapping of abstract tool types to provider-specific formats
 - All file content access is always handled by the Handler, never the Memory System
 - The Memory System provides only file paths that may be relevant (via associative matching)
 - Context Management System decides which files to read based on policy

@@ -94,7 +94,8 @@ interface ContextGenerationInput {
 interface TaskTemplate {
     readonly taskPrompt: string;      // Maps to <instructions> in schema
     readonly systemPrompt: string;    // Maps to <system> in schema
-    readonly model: string;           // Maps to <model> in schema
+    readonly provider?: string;       // Maps to <provider> in schema
+    readonly model?: string;          // Maps to <model> in schema
     readonly inputs?: Record<string, string>;
     readonly isManualXML?: boolean;   // Maps to <manual_xml> in schema
     readonly disableReparsing?: boolean; // Maps to <disable_reparsing> in schema

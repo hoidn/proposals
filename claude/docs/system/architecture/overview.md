@@ -181,8 +181,8 @@ The system consists of four core components working together to process, execute
 ### Handler [Component:Handler:1.0]
 LLM interface and resource tracking component.
 - Performs ALL file I/O operations (reading, writing, deletion)
-- For Anthropic models: Optionally configures computer use tools (bash, text editor)
-- For other models: Uses appropriate file access mechanisms
+- Supports multiple LLM providers with appropriate tool configurations
+- Abstracts provider-specific implementation details while maintaining consistent capabilities
 - Manages resource usage tracking (turns, tokens)
 - Handles LLM interactions and session management
 
