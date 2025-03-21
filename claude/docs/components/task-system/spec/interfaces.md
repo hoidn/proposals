@@ -141,8 +141,9 @@ interface HandlerConfig {
 interface Handler {
     /**
      * Execute a prompt with the LLM
-     * @param systemPrompt - System-level context and instructions
-     * @param taskPrompt - Task-specific input
+     * Note: All template substitution should be performed by the Evaluator before calling
+     * @param systemPrompt - System-level context and instructions (fully resolved)
+     * @param taskPrompt - Task-specific input (fully resolved)
      * @returns Promise resolving to LLM response
      */
     executePrompt(

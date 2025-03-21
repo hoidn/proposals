@@ -18,6 +18,10 @@ See [Component:TaskSystem:1.0] in components/task-system/README.md
 - Template Management: [Interface:TaskSystem:Templates:1.0]
 - XML Processing: [Contract:Tasks:TemplateSchema:1.0]
 
+#### Component Responsibilities
+- Evaluator: Responsible for all template variable substitution (resolving {{variable_name}} placeholders)
+- Handler: Works with fully resolved content only, no template substitution
+
 #### Resource Contracts
 See [Contract:Resources:1.0]
 

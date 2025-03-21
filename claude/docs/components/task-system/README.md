@@ -37,6 +37,8 @@ interface TaskSystem {
 
 The system supports several task types for different execution patterns. Atomic tasks provide direct LLM execution with resource tracking and output validation. Sequential tasks enable ordered execution with context management between steps. Reduce tasks handle iterative data processing with accumulator management. Script tasks support external command execution with output capture and evaluation flow integration.
 
+For all task types, the Evaluator is responsible for resolving template variables (e.g., `{{variable_name}}` placeholders) before passing fully-resolved content to the Handler for execution. This ensures consistent variable resolution across all task types and execution paths.
+
 All task types (atomic, sequential, reduce, script) can be defined as templates and functions in the TaskLibrary. However, template matching (the process of selecting an appropriate template based on a natural language description) applies only to atomic task templates. Composite tasks can be defined directly, defined as reusable templates, or assembled from matched atomic task templates.
 
 Each task type can specify its context management requirements through XML configuration:

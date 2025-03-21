@@ -146,20 +146,17 @@ class HandlerSession {
   }
   
   /**
-   * Constructs a payload for the LLM, resolving all template placeholders
-   * @param task The task template to execute
-   * @param env The current lexical environment for variable resolution
-   * @returns A complete HandlerPayload with resolved variables
+   * Constructs a payload for the LLM using fully resolved content
+   * @param task The resolved task template with all variables already substituted
+   * @returns A complete HandlerPayload ready for LLM submission
    */
-  constructPayload(task: TaskTemplate, env: Environment): HandlerPayload {
-    // Resolve all template placeholders before constructing payload
-    const resolvedTaskPrompt = this.resolveTemplatePlaceholders(task.taskPrompt, env);
-    
+  constructPayload(task: TaskTemplate): HandlerPayload {
+    // Note: All template variables should already be resolved by the Evaluator
     return {
       systemPrompt: this.systemPrompt,
       messages: [...this.messages, { 
         role: "user", 
-        content: resolvedTaskPrompt,
+        content: task.taskPrompt, // Already fully resolved
         timestamp: new Date()
       }],
       context: this.contextManager.getCurrentContext(),
@@ -171,21 +168,8 @@ class HandlerSession {
     };
   }
   
-  /**
-   * Resolves template placeholders using appropriate variable scope
-   * @param template The template text containing placeholders
-   * @param env The environment for variable resolution
-   * @returns Template with all placeholders resolved
-   */
-  private resolveTemplatePlaceholders(template: string, env: Environment): string {
-    return template.replace(/\{\{([^}]+)\}\}/g, (_, varName) => {
-      try {
-        return String(env.find(varName));
-      } catch (e) {
-        throw new Error(`Undefined variable in template: ${varName}`);
-      }
-    });
-  }
+  // resolveTemplatePlaceholders method has been removed
+  // Template substitution is now an Evaluator responsibility
   
   getResourceMetrics(): ResourceMetrics {
     return {

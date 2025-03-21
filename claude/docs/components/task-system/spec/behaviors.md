@@ -16,17 +16,25 @@ The Task System is responsible for managing LLM task execution, including:
    - Task templates are stored and validated against the XML schema defined in [Contract:Tasks:TemplateSchema:1.0].  
    - The system matches both natural language inputs and AST nodes to candidate templates (up to 5 candidates), using numeric scoring.
 
-2. **Handler Lifecycle:**  
+2. **Template Variable Substitution:**
+   - The Evaluator is solely responsible for all template variable substitution.
+   - This includes resolving all {{variable_name}} placeholders before passing tasks to Handlers.
+   - Different resolution rules apply for function templates vs. standard templates.
+   - Variable resolution errors are detected early and handled at the Evaluator level.
+
+3. **Handler Lifecycle:**  
    - A new Handler is created for each task execution with an immutable configuration.
    - The Handler enforces resource limits (turn counts, context window limits) as described in [Pattern:ResourceManagement:1.0].
+   - Handlers receive fully resolved content with no remaining template variables.
 
-3. **XML Processing:**  
+4. **XML Processing:**  
    - Basic structural validation is performed, with warnings generated for non‑critical issues.
    - In cases of partial XML parsing failure, the original content is preserved and error details are included in the task notes.
 
-4. **Error Handling:**  
-   - Errors such as RESOURCE_EXHAUSTION and TASK_FAILURE are surfaced according to the rules defined in [Pattern:Error:1.0].
+5. **Error Handling:**  
+   - Errors such as RESOURCE_EXHAUSTION, TASK_FAILURE, and template resolution failures are surfaced according to the rules defined in [Pattern:Error:1.0].
    - The Evaluator delegates error recovery (e.g., reparse tasks) and includes partial outputs when available.
+   - Template variable resolution errors are handled specifically with `template_resolution_failure` reason codes.
 
 ## See Also
 

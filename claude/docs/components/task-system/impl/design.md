@@ -294,7 +294,7 @@ This clean separation prevents unexpected variable leakage and ensures predictab
 
 ## Template Substitution Process
 
-The system implements a standardized template substitution process that resolves `{{variable_name}}` placeholders before task execution:
+The system implements a standardized template substitution process in the Evaluator component, which resolves `{{variable_name}}` placeholders before dispatching tasks to the Handler:
 
 ### 1. Function-Based Templates
 - For templates with declared parameters (`<template name="example" params="param1,param2">`):
@@ -308,56 +308,94 @@ The system implements a standardized template substitution process that resolves
 - Variables are resolved through the Environment.find() method
 - Example: `<description>Process {{data_file}} with {{options}}</description>`
 
-### Implementation Details
+### Implementation in Evaluator
 
-The substitution process occurs in these stages:
+The Evaluator has a formal substitution phase in its execution pipeline:
 
 ```typescript
-// Template substitution process
-function resolveTemplatePlaceholders(template: TaskTemplate, env: Environment): string {
-  // For function-based templates, only use declared parameters
-  if (template.parameters) {
-    return template.content.replace(/\{\{([^}]+)\}\}/g, (_, varName) => {
-      if (!template.parameters.includes(varName)) {
-        throw new Error(`Undefined parameter: ${varName}`);
-      }
-      return env.find(varName);
-    });
+// In Evaluator component
+async function executeTask(task: Task, environment: Environment): Promise<TaskResult> {
+  try {
+    // Process and resolve all template variables
+    const resolvedTask = resolveTemplateVariables(task, environment);
+    
+    // Execute task using Handler with fully resolved content
+    const result = await handler.executePrompt(
+      resolvedTask.systemPrompt,
+      resolvedTask.taskPrompt
+    );
+    
+    // Process and return results
+    return processResult(result, task);
+  } catch (error) {
+    if (error.message.includes('Variable resolution error')) {
+      return createTaskFailure(
+        'template_resolution_failure',
+        error.message,
+        { task: task.description }
+      );
+    }
+    throw error;
+  }
+}
+
+// Template variable resolution
+function resolveTemplateVariables(task: Task, env: Environment): Task {
+  const resolvedTask = {...task};
+  
+  if (task.isFunctionTemplate && task.parameters) {
+    // For function templates, create isolated environment with only parameters
+    const funcEnv = new Environment({});
+    for (const param of task.parameters) {
+      funcEnv.bindings[param] = env.find(param);
+    }
+    resolvedTask.taskPrompt = substituteVariables(task.taskPrompt, funcEnv);
+  } else {
+    // For standard templates, use the full environment
+    resolvedTask.taskPrompt = substituteVariables(task.taskPrompt, env);
   }
   
-  // For standard templates, use full lexical environment
-  return template.content.replace(/\{\{([^}]+)\}\}/g, (_, varName) => {
-    try {
-      return env.find(varName);
-    } catch (e) {
-      throw new Error(`Undefined variable: ${varName}`);
-    }
-  });
+  return resolvedTask;
 }
 ```
 
-This process happens before the Handler constructs the LLM payload, ensuring all placeholders are resolved prior to execution.
+The Evaluator handles variable resolution before passing fully resolved content to the Handler. This ensures all placeholders are substituted prior to LLM execution, with appropriate error handling for missing variables.
 
 For Director-Evaluator loops, parameters are passed explicitly:
 ```typescript
+// Director-Evaluator Loop with Evaluator handling template substitution
 async function executeDirectorEvaluatorLoop(task, inputs) {
-  // Execute director with current inputs
-  const directorOutput = await executeTask(
-    task.director,
-    {
-      ...inputs,
-      feedback: previousEvaluation?.feedback,
-      current_iteration: currentIteration
-    }
+  // In the Evaluator component:
+  
+  // 1. Prepare director inputs
+  const directorInputs = {
+    ...inputs,
+    feedback: previousEvaluation?.feedback,
+    current_iteration: currentIteration
+  };
+  
+  // 2. Resolve all template variables in the director task
+  const resolvedDirectorTask = resolveTemplateVariables(task.director, directorInputs);
+  
+  // 3. Execute director with fully resolved content
+  const directorOutput = await handler.executePrompt(
+    resolvedDirectorTask.systemPrompt,
+    resolvedDirectorTask.taskPrompt
   );
   
-  // Execute evaluator with director's result
-  const evaluationResult = await executeTask(
-    task.evaluator,
-    {
-      solution: directorOutput.content,
-      original_prompt: inputs.original_prompt
-    }
+  // 4. Prepare evaluator inputs
+  const evaluatorInputs = {
+    solution: directorOutput.content,
+    original_prompt: inputs.original_prompt
+  };
+  
+  // 5. Resolve all template variables in the evaluator task
+  const resolvedEvaluatorTask = resolveTemplateVariables(task.evaluator, evaluatorInputs);
+  
+  // 6. Execute evaluator with fully resolved content
+  const evaluationResult = await handler.executePrompt(
+    resolvedEvaluatorTask.systemPrompt,
+    resolvedEvaluatorTask.taskPrompt
   );
   
   // Resume loop with new parameters

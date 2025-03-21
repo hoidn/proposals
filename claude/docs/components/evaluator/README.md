@@ -84,7 +84,34 @@ This ensures proper variable scoping where templates can only access their expli
 
 ## Context and Template Matching
 
-Before executing tasks, the Evaluator ensures that all placeholder substitutions (e.g., `{{variable_name}}`) are completed, so that work is performed on fully resolved inputs. Associative matching tasks follow this substitution rule, operating on the final, substituted task description.
+## Template Substitution
+
+The Evaluator is solely responsible for resolving all template variables before passing tasks to the Handler. This template substitution phase occurs after task selection but before execution:
+
+```typescript
+// Template substitution in Evaluator
+function resolveTemplateVariables(task: Task, env: Environment): Task {
+  // Create a copy to avoid modifying the original
+  const resolvedTask = {...task};
+  
+  // Apply appropriate substitution rules based on task type
+  if (task.isFunctionTemplate && task.parameters) {
+    // For function templates, create isolated environment with only parameters
+    const funcEnv = new Environment({});
+    for (const param of task.parameters) {
+      funcEnv.bindings[param] = env.find(param);
+    }
+    resolvedTask.taskPrompt = substituteVariables(task.taskPrompt, funcEnv);
+  } else {
+    // For standard templates, use the full environment
+    resolvedTask.taskPrompt = substituteVariables(task.taskPrompt, env);
+  }
+  
+  return resolvedTask;
+}
+```
+
+The Evaluator ensures that all placeholder substitutions (e.g., `{{variable_name}}`) are completed before dispatching to the Handler, ensuring all execution happens with fully resolved inputs. This includes resolving variables in both direct templates and function templates, with different resolution rules for each type. Associative matching tasks operate on the final, substituted task description.
 
 Furthermore, the Evaluator extracts an optional success score from the task result's `notes` field. This score, if present, is intended to support future adaptive matching and error-handling strategies.
 
