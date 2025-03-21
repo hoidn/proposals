@@ -191,12 +191,13 @@ During task execution, the final merged configuration is passed to the Evaluator
 
 Template matching is a selection process that occurs before and separate from execution:
 
-- **Selection Process**: Matches natural language task descriptions to appropriate templates
+- **Selection Process**: Matches natural language task descriptions to appropriate atomic task templates
 - **Scoring Mechanism**: Uses associative matching to compute similarity scores
 - **Context Awareness**: May use task context to improve matching accuracy
 - **No Execution Connection**: Completely separate from execution environment or variable binding
+- **Scope Limitation**: Applies only to atomic task templates, not composite task templates
 
-Template matching exclusively answers "which template should handle this task?" and has no role in variable resolution or execution.
+Template matching exclusively answers "which atomic task template should handle this task?" and has no role in variable resolution or execution. While the TaskLibrary can store templates for any task type (atomic, sequential, reduce, etc.), only atomic task templates participate in the template matching process.
 
 For further details on context handling and related design decisions, see [ADR 002 - Context Management](../../system/architecture/decisions/002-context-management.md), [ADR 005 - Context Handling](../../system/architecture/decisions/005-context-handling.md), and [ADR 14 - Operator Context Configuration](../../system/architecture/decisions/14-operator-ctx-config.md).
 

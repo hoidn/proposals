@@ -34,13 +34,26 @@ interface TaskSystem {
     validateTask(task: TaskDefinition): boolean;
     
     // Find matching tasks for input
+    /**
+     * findMatchingTasks
+     *
+     * Finds matching templates based on a provided input string.
+     *
+     * Note: Matching applies *only* to atomic task templates. The function evaluates the input
+     * against atomic task templates using a heuristic scoring mechanism.
+     * 
+     * @param input - The natural language task description.
+     * @param context - The MemorySystem instance providing context data.
+     * @returns An array of matching atomic task templates with their associated scores.
+     */
     findMatchingTasks(
         input: string,
         context: MemorySystem
     ): Promise<Array<{
         task: TaskDefinition;
         score: number;
-        taskType: TaskType;    // Now limited to atomic, sequence, reduce
+        taskType: "atomic"; // Only atomic tasks participate in matching
+        subtype?: AtomicTaskSubtype;
     }>>;
     
     // Register a task definition

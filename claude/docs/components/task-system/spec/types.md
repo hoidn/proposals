@@ -88,8 +88,12 @@ interface ContextGenerationInput {
 }
 
 /**
- * Note: Only atomic tasks have their own templates.
- * Composite tasks are constructed by combining multiple atomic task templates.
+ * Task Template Interface
+ * 
+ * Any task type (atomic, sequential, reduce, script, etc.) can be defined as a template.
+ * However, only atomic task templates participate in the template matching process.
+ * Composite tasks can be either defined directly, defined as templates, or 
+ * constructed by combining multiple atomic task templates.
  */
 interface TaskTemplate {
     readonly taskPrompt: string;      // Maps to <instructions> in schema
@@ -99,7 +103,8 @@ interface TaskTemplate {
     readonly inputs?: Record<string, string>;
     readonly isManualXML?: boolean;   // Maps to <manual_xml> in schema
     readonly disableReparsing?: boolean; // Maps to <disable_reparsing> in schema
-    readonly atomicSubtype?: AtomicTaskSubtype;
+    readonly taskType?: TaskType;     // The type of task this template defines
+    readonly atomicSubtype?: AtomicTaskSubtype; // Only for atomic task templates
 }
 ```
 
