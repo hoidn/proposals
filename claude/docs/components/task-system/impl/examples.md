@@ -32,39 +32,50 @@ if (!result.outputs.some(output => output.wasXMLParsed)) {
 }
 ```
 
-## Template Management
+## Task Management
 ```typescript
-const template: TaskTemplate = {
-  taskPrompt: `<task>
-    <task_instructions>Process data using specific format</description>
-    <inputs>
-      <input name="raw_data">
-        <task_instructions>Load and validate input data</description>
-        <expected_output>
-          Validated data in standard format:
-          - Field validations complete
-          - Type conversions applied
-          - Missing values handled
-        </expected_output>
-      </input>
-    </inputs>
-    <expected_output>
-      Processed data meeting format requirements:
-      - Correct structure
-      - Valid field types
-      - Complete required fields
-    </expected_output>
-  </task>`,
-  systemPrompt: "Follow strict XML format",
-  isManualXML: true,
-  disableReparsing: true
+const taskDef: TaskDefinition = {
+  name: "process_data",
+  type: "atomic",
+  provider: "anthropic",
+  model: "claude-3-sonnet",
+  body: {
+    type: "atomic",
+    content: `<task>
+      <description>Process data using specific format</description>
+      <inputs>
+        <input name="raw_data">
+          <description>Load and validate input data</description>
+          <expected_output>
+            Validated data in standard format:
+            - Field validations complete
+            - Type conversions applied
+            - Missing values handled
+          </expected_output>
+        </input>
+      </inputs>
+      <expected_output>
+        Processed data meeting format requirements:
+        - Correct structure
+        - Valid field types
+        - Complete required fields
+      </expected_output>
+    </task>`
+  },
+  metadata: {
+    isManualXML: true,
+    disableReparsing: true
+  }
 };
 
-// Validate template
-const validation = taskSystem.validateTemplate(template);
+// Register the task
+await taskSystem.registerTask(taskDef);
+
+// Validate task
+const validation = taskSystem.validateTask(taskDef);
 
 if (!validation.valid) {
-  console.warn('Template validation warnings:', validation.warnings);
+  console.warn('Task validation warnings:', validation.warnings);
 }
 
 // Find matching tasks
@@ -76,8 +87,8 @@ const matches = await taskSystem.findMatchingTasks(
 console.log('Found matching tasks:', 
   matches.map(m => ({
     score: m.score,
-    type: m.taskType,
-    template: m.template.taskPrompt
+    type: m.task.type,
+    name: m.task.name
   }))
 );
 ```
@@ -161,19 +172,17 @@ if (result.parsedContent) {
 }
 ```
 
-## Template Definition and Function Calling
+## Task Definition and Function Calling
 
-### Basic Template Definition
+### Basic Function-Style Task Definition
 ```xml
-<template name="validate_input" params="data,rules">
-  <task type="atomic">
-    <description>Validate {{data}} against {{rules}}</description>
-    <context_management>
-      <inherit_context>none</inherit_context>
-      <fresh_context>enabled</fresh_context>
-    </context_management>
-  </task>
-</template>
+<task name="validate_input" type="atomic" parameters="data,rules">
+  <description>Validate {{data}} against {{rules}}</description>
+  <context_management>
+    <inherit_context>none</inherit_context>
+    <fresh_context>enabled</fresh_context>
+  </context_management>
+</task>
 ```
 
 ### Context Management Mutual Exclusivity Examples
@@ -215,23 +224,21 @@ if (result.parsedContent) {
 /**
  * Function Call XML Syntax
  * 
- * Arguments are evaluated in the caller's environment before being passed to the template:
+ * Arguments are evaluated in the caller's environment before being passed to the task:
  */
 ```xml
-<call template="validate_input">
+<call task="validate_input">
   <arg>user_input</arg>        <!-- Resolved as variable if possible -->
   <arg>validation_schema</arg>  <!-- Or used as literal if no variable matches -->
 </call>
 ```
 
-### Template with Return Type
+### Function-Style Task with Return Type
 ```xml
-<template name="extract_metrics" params="log_data" returns="object">
-  <task type="atomic">
-    <description>Extract performance metrics from {{log_data}}</description>
-    <output_format type="json" schema="object" />
-  </task>
-</template>
+<task name="extract_metrics" type="atomic" parameters="log_data" returns="object">
+  <description>Extract performance metrics from {{log_data}}</description>
+  <output_format type="json" schema="object" />
+</task>
 ```
 
 ### Complex Function Composition
@@ -241,11 +248,11 @@ if (result.parsedContent) {
     <task>
       <description>Load input data</description>
     </task>
-    <call template="validate_input">
+    <call task="validate_input">
       <arg>loaded_data</arg>
       <arg>{"required": ["name", "email"], "format": {"email": "email"}}</arg>
     </call>
-    <call template="process_validated_data">
+    <call task="process_validated_data">
       <arg>validation_result</arg>
       <arg>processing_options</arg>
     </call>
@@ -254,18 +261,20 @@ if (result.parsedContent) {
 ```
 
 /**
- * Function Template and Call Example
+ * Function-Style Task and Call Example
  */
 ```typescript
-// 1. Register template with explicit parameters
-await taskSystem.registerTemplate({
+// 1. Register function-style task with explicit parameters
+await taskSystem.registerTask({
   name: "analyze_data",
+  type: "atomic",
   parameters: ["dataset", "config"],  // Explicitly declared parameters
   body: {
     type: "atomic",
-    description: "Analyze {{dataset}} using {{config}}",
+    content: "Analyze {{dataset}} using {{config}}",
   },
-  returns: "object"
+  returns: "object",
+  provider: "anthropic"
 });
 
 // 2. Setup caller environment with variables
@@ -276,7 +285,7 @@ const callerEnv = new Environment({
 
 // 3. Execute call with arguments evaluated in caller's environment
 const result = await taskSystem.executeCall({
-  templateName: "analyze_data",
+  taskName: "analyze_data",  // Changed from templateName to taskName
   arguments: [
     "data_file",         // Resolved to "sensor_readings.csv" from callerEnv
     "analysis_options"   // Resolved to the object from callerEnv
@@ -285,7 +294,7 @@ const result = await taskSystem.executeCall({
 
 // 4. Example with mixed variable/literal arguments
 const mixedResult = await taskSystem.executeCall({
-  templateName: "analyze_data",
+  taskName: "analyze_data",  // Changed from templateName to taskName
   arguments: [
     "data_file",                     // Variable lookup
     {method: "custom", limit: 100}   // Direct literal (no lookup)

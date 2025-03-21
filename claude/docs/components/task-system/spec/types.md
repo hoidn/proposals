@@ -185,15 +185,22 @@ export interface ScriptExecutor {
 
 export interface TaskDefinition {
     name: string;                     // Unique task identifier
-    isatomic: boolean;
     type: TaskType;                   // e.g., "atomic" or "sequential"
     subtype?: string;                 // Optional subtype, e.g., "director", "evaluator", etc.
-    metadata?: Record<string, any>;   // Parameter schemas, return specs, etc.
-    astNode: ASTNode;                 // Parsed AST for the task
+    provider?: string;                // Optional LLM provider
+    model?: string;                   // Optional LLM model
+    
+    // Function template aspects (optional)
+    parameters?: string[];            // Parameter names in order (if function template)
+    returns?: string;                 // Optional return type information
+    
+    // Common elements
+    body: ASTNode;                    // Task implementation
+    metadata?: Record<string, any>;   // Additional metadata
 }
 
 /**
- * TaskLibrary manages the registration and retrieval of task templates
+ * TaskLibrary manages the registration and retrieval of task definitions
  */
 export class TaskLibrary {
     private tasks: Map<string, TaskDefinition>;
@@ -203,7 +210,7 @@ export class TaskLibrary {
     }
 
     /**
-     * Register a task template
+     * Register a task definition
      * @param taskDef Task definition to register
      * @throws Error if task with same name already exists
      */
@@ -213,10 +220,10 @@ export class TaskLibrary {
         }
         this.tasks.set(taskDef.name, taskDef);
     }
-
+    
     /**
-     * Retrieve a task template by name
-     * Used primarily for function calls
+     * Retrieve a task definition by name
+     * Used for execution and function calling
      * @param name Name of the task to retrieve
      * @returns The task definition
      * @throws Error if task not found
@@ -231,13 +238,13 @@ export class TaskLibrary {
     
     /**
      * Find matching tasks based on description
-     * Used for template matching during task execution
+     * Used for task matching during execution
      * @param description Task description to match against
      * @param context Optional context to aid matching
      * @returns Array of matching tasks with scores
      */
     public findMatchingTasks(description: string, context?: any): Promise<Array<{
-        taskDef: TaskDefinition;
+        task: TaskDefinition;
         score: number;
     }>> {
         // Implementation details omitted
@@ -512,23 +519,13 @@ export interface ScriptExecution {
     inputs: Record<string, string>;
 }
 
-/**
- * Represents a function template definition
- */
-export interface TemplateNode extends ASTNode {
-    type: "template";
-    name: string;
-    parameters: string[];  // Parameter names in order
-    body: TaskNode;        // The actual task implementation
-    returns?: string;      // Optional return type information
-}
 
 /**
  * Represents a function call expression
  */
 export interface FunctionCallNode extends ASTNode {
     type: "call";
-    templateName: string;
+    taskName: string;
     arguments: ArgumentNode[];  // Evaluated in caller's environment
 }
 

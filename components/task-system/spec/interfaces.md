@@ -30,18 +30,27 @@ interface TaskSystem {
         }
     ): Promise<TaskResult>;
 
-    // Validate a task template
-    validateTemplate(template: TaskTemplate): boolean;
+    // Validate a task definition
+    validateTask(task: TaskDefinition): boolean;
     
-    // Find matching task templates for input
+    // Find matching tasks for input
     findMatchingTasks(
         input: string,
         context: MemorySystem
     ): Promise<Array<{
-        template: TaskTemplate;
+        task: TaskDefinition;
         score: number;
         taskType: TaskType;    // Now limited to atomic, sequence, reduce
     }>>;
+    
+    // Register a task definition
+    registerTask(taskDef: TaskDefinition): Promise<void>;
+    
+    // Execute a function-style task call
+    executeCall(call: {
+        taskName: string;
+        arguments: any[];
+    }, env?: Environment): Promise<any>;
     
     /**
      * Parse and validate task output against declared format
