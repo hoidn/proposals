@@ -209,4 +209,8 @@ bonus: failure notes get interpreted as lessons and are used to update plan or p
 - how will git integration work?
 - get rid of natural language -> xml path, just use natural language -> dsl. this avoids nested xml ugliness, clarifies the use of xml as formatting for a single prompt
 - option to pass list of file paths to subtask
-- should template substitution happen in the evaluator instead of in the handler?
+
+## Resolved Questions
+
+- ✓ RESOLVED: Template substitution is an Evaluator responsibility. The Evaluator resolves all {{variable_name}} placeholders before dispatching tasks to the Handler.
+- ✓ RESOLVED: Template substitution is an Evaluator responsibility. The Evaluator resolves all {{variable_name}} placeholders before dispatching tasks to the Handler.

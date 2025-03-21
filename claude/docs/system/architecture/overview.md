@@ -154,6 +154,11 @@ See [Contract:Tasks:2.0] in system/contracts/protocols.md for complete specifica
 
 The system provides a unified tool interface with distinct implementation mechanisms:
 
+### Template Substitution Delegation
+- The Evaluator is solely responsible for all template variable substitution
+- Handlers receive fully resolved content with no remaining template variables
+- This separation ensures clean component boundaries and single responsibility
+
 ### Tool Interface
 What the LLM sees and interacts with:
 - Consistent tool-based invocation pattern for all operations
@@ -185,6 +190,7 @@ LLM interface and resource tracking component.
 - Abstracts provider-specific implementation details while maintaining consistent capabilities
 - Manages resource usage tracking (turns, tokens)
 - Handles LLM interactions and session management
+- Works with fully resolved content (no template variable substitution)
 - Works with fully resolved content (no template variable substitution)
 
 ### Compiler [Component:Compiler:1.0]

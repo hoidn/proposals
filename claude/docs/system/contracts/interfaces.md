@@ -22,6 +22,12 @@ See [Component:TaskSystem:1.0] in components/task-system/README.md
 - Evaluator: Responsible for all template variable substitution (resolving {{variable_name}} placeholders)
 - Handler: Works with fully resolved content only, no template substitution
 
+### Template Substitution Responsibility
+- The Evaluator is exclusively responsible for all template variable substitution
+- This includes resolving all {{variable_name}} placeholders and input bindings
+- Handlers receive fully resolved content with no remaining template variables
+- This separation ensures clean component boundaries and single responsibility
+
 #### Resource Contracts
 See [Contract:Resources:1.0]
 
