@@ -37,3 +37,5 @@ For detailed specifications, see:
 - [Interface:Handler:1.0] in `/components/handler/spec/interfaces.md`
 - [Pattern:ResourceManagement:1.0] in `/system/architecture/patterns/resource-management.md`
 - [Pattern:ToolInterface:1.0] in `/system/architecture/patterns/tool-interface.md`
+
+For a comprehensive map of all system documentation, see [Documentation Guide](/system/docs-guide.md).
