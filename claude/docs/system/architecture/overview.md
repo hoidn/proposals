@@ -213,7 +213,7 @@ Execution control component.
 - Tracks resource usage
 - Handles reparse requests
 
-See [Contract:Integration:EvaluatorTask:1.0] for integration specification.
+See [Contract:Integration:EvaluatorTask:1.0] for integration specification and [Component:Evaluator:1.0](../../components/evaluator/README.md) for complete documentation.
 
 ### Task System [Component:TaskSystem:1.0]
 Task execution and management component.
