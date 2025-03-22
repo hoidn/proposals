@@ -227,6 +227,8 @@ flowchart TD
   * bash_20250124 (or 20241022)
 - All file content access is always handled by the Handler, never the Memory System
 
+Note: The Memory System (version 3.0) follows a read-only context model with no updateContext capability.
+
 ### Context Management
 - Context accessed via async getRelevantContextFor
 - File metadata accessed via GlobalIndex

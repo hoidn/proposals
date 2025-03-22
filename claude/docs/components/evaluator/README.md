@@ -154,7 +154,7 @@ flowchart TD
    - Not purely "owns" resource tracking (that's part of the Handler), but integrates with it. The Evaluator is aware of usage or limit errors and decides whether to attempt decomposition or fail outright.  
 
 4. **Context and Environment Handling**  
-   - In multi-step or operator-based tasks (sequential, reduce, etc.), the Evaluator ensures the proper propagation of parameters and context. Every new task or function call execution uses direct parameter passing between tasks rather than relying on environment variables. The Evaluator leverages the Memory System for associative context retrieval but does not manage file content directly.
+   - In multi-step or operator-based tasks (sequential, reduce, etc.), the Evaluator ensures the proper propagation of parameters and context. Every new task or function call execution uses direct parameter passing between tasks rather than relying on environment variables. The Evaluator leverages Memory System 3.0 for associative context retrieval (following its read-only context model) but does not manage file content directly.
 
 5. **Integration with Task System**  
    - The Task System may call the Evaluator with a structured or partially structured task. The Evaluator then "executes" it by walking its representation (e.g., an AST or an XML-based operator chain).  

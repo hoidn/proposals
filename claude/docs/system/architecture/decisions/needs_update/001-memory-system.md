@@ -5,7 +5,7 @@
 The memory system needs to manage short-term task context and maintain a global index of file metadata, while delegating file access to direct tool usage. This ADR captures key decisions about responsibilities and interfaces.
 
 ## Related Documents
-- See [Component:Memory:2.0] in components/memory/api/interfaces.md for interface specification
+- See [Component:Memory:3.0] in components/memory/api/interfaces.md for interface specification
 - See [Component:TaskSystem:1.0] in components/task-system/README.md for task execution details
 - See [Interface:Handler:Tools:1.0] for file access tools
 
@@ -18,7 +18,7 @@ The memory system needs to manage short-term task context and maintain a global 
    - Manages global file metadata index
    - Delegates file access to Handler tools
    - Does not handle file content storage or retrieval
-   - Provides read-only context access (no updateContext)
+   - Follows read-only context model (no updateContext capability)
 
 2. **Memory Organization**
    - Working Memory includes only data context from associative matching

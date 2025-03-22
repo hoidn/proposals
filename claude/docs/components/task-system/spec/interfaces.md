@@ -91,7 +91,9 @@ export interface Environment {
 }
 
 // Handler interface details are maintained in external documentation.
- * Memory management interface focused on metadata
+ * Memory System interface - Version 3.0
+ * Provides metadata management and context retrieval
+ * Follows a read-only context model (no updateContext capability)
  */
 type FileMetadata = string;
 
@@ -110,6 +112,9 @@ interface MemorySystem {
     
     // Update global file metadata index
     updateGlobalIndex(index: GlobalIndex): Promise<void>;
+    
+    // Retrieve context using associative matching
+    getRelevantContextFor(input: ContextGenerationInput): Promise<AssociativeMatchResult>;
 }
 ```
 

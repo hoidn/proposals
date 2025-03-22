@@ -230,7 +230,7 @@ Metadata management component.
 - Supplies metadata for file-based lookup and partial matching
 - Does NOT store file content, perform file operations, track resources, or rank matches
 - NEVER performs file I/O operations - all file access is handled by Handler
-- Implements read-only context model (no context update capability)
+- Follows read-only context model (no updateContext capability)
 
 See [Contract:Integration:TaskMemory:3.0] for integration specification.
 

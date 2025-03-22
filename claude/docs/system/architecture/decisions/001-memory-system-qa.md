@@ -1,7 +1,7 @@
 # Memory System Architecture Q&A
 
 ## Related Documents
-- Memory component specification in [Component:Memory:2.0]
+- Memory component specification in [Component:Memory:3.0]
 - Handler interface in [Interface:Handler:ResourceMonitoring:1.0]
 - Memory Task Example in components/task-system/impl/examples.md
 - Context Frame Pattern in [Pattern:ContextFrame:1.0]
