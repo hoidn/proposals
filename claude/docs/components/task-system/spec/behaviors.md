@@ -17,10 +17,8 @@ The Task System is responsible for managing LLM task execution, including:
    - The system matches both natural language inputs and AST nodes to candidate templates (up to 5 candidates), using numeric scoring.
 
 2. **Template Variable Substitution:**
-   - The Evaluator is solely responsible for all template variable substitution.
-   - This includes resolving all {{variable_name}} placeholders before passing tasks to Handlers.
-   - Different resolution rules apply for function templates vs. standard templates.
-   - Variable resolution errors are detected early and handled at the Evaluator level.
+   - The Evaluator is solely responsible for all template variable substitution as defined in [Spec:EvaluatorBehaviors:1.0](../../evaluator/spec/behaviors.md).
+   - Handlers receive fully resolved content with no remaining template variables.
 
 3. **Handler Lifecycle:**  
    - A new Handler is created for each task execution with an immutable configuration.

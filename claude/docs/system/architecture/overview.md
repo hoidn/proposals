@@ -204,16 +204,9 @@ Task parsing and transformation component.
 See [Contract:Integration:CompilerTask:1.0] for integration specification.
 
 ### Evaluator [Component:Evaluator:1.0]
-Execution control component.
-- Controls AST processing and execution
-- Manages all lexical environments and variable scoping
-- Performs all template variable substitution before Handler invocation
-- Handles different substitution rules for function vs. standard templates
-- Manages failure recovery
-- Tracks resource usage
-- Handles reparse requests
+Execution control component responsible for AST processing, template variable substitution, and execution control.
 
-See [Contract:Integration:EvaluatorTask:1.0] for integration specification and [Component:Evaluator:1.0](../../components/evaluator/README.md) for complete documentation.
+See [Component:Evaluator:1.0](../../components/evaluator/README.md) for complete documentation including responsibilities, implementation details, and integration specifications.
 
 ### Task System [Component:TaskSystem:1.0]
 Task execution and management component.

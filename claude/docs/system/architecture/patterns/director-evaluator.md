@@ -38,7 +38,7 @@ This pattern follows a three-phase flow:
    - Uses a `<context_management>` block with `inherit_context` set to `subset` and `accumulate_data` enabled to incorporate only the relevant context.
    - Executes the evaluation subtask—which may include invoking the specified bash script via the Handler or Evaluator—and feeds its results back to the parent task.
 
-For implementation details of the dynamic director-evaluator pattern, see [Implementation:DynamicDirectorEvaluator:1.0] in `/components/evaluator/impl/director-evaluator.md`.
+For implementation details of the dynamic director-evaluator pattern, see [Implementation:DynamicDirectorEvaluator:1.0](../../../components/evaluator/impl/director-evaluator.md).
 
 ### Static Variant (Director-Evaluator Loop)
 
@@ -84,7 +84,7 @@ The static variant uses a dedicated task type with a standardized structure:
 </task>
 ```
 
-For implementation details of the static director-evaluator loop, see [Implementation:StaticDirectorEvaluator:1.0] in `/components/task-system/impl/director-evaluator.md`.
+For implementation details of the static director-evaluator loop, see [Implementation:StaticDirectorEvaluator:1.0](../../../components/task-system/impl/director-evaluator.md).
 
 ### Parameter Passing
 
@@ -151,7 +151,7 @@ When a script execution step is included:
 - The Evaluator considers both the original output and script results
 - As a tool call, script execution does not use the continuation mechanism
 
-For implementation details of script execution integration, see [Implementation:ScriptExecution:1.0] in `/components/handler/impl/script-execution.md`.
+For implementation details of script execution integration, see [Implementation:ScriptExecution:1.0](../../../components/handler/impl/script-execution.md).
 
 ## Relationship to Subtask Spawning
 

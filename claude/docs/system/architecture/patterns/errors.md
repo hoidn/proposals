@@ -115,13 +115,13 @@ Error detection now includes identifying:
 - Output format validation failures
 
 ### 3.2 Planning Phase
-See [Component:Evaluator:1.0] for error handling.
+See [Component:Evaluator:1.0](../../../components/evaluator/README.md) and [Spec:EvaluatorBehaviors:1.0](../../../components/evaluator/spec/behaviors.md) for the canonical definition of error handling responsibilities.
 
-Based on error type and reason, the system will surface appropriate error information:
-- **Resource Exhaustion**: Complete resource metrics and context
-- **Context Failures**: Context-related error details
-- **Validation Errors**: Validation failure specifics
-- **Subtask Failures**: Error details including partial execution data
+The Evaluator is responsible for surfacing appropriate error information based on error type and reason, including:
+- Resource exhaustion details
+- Context-related failures
+- Validation errors
+- Subtask failures with partial execution data
 
 ### 3.3 Execution Phase
 See [Protocol:Tasks:Reparse:1.0] for execution details.
