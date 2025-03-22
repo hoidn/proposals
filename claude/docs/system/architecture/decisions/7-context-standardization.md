@@ -20,6 +20,9 @@ We will standardize context management across all operators using a three-dimens
 2. Accumulation of outputs from previous steps
 3. Generation of fresh context through associative matching
 
+Additionally, we will support an orthogonal file-specific context mechanism:
+4. Explicit file inclusion via `file_paths` that overrides standard context retrieval mechanisms
+
 With one key constraint:
 - Fresh context generation (`fresh_context="enabled"`) is mutually exclusive with context inheritance (`inherit_context="full"` or `inherit_context="subset"`)
 
@@ -42,6 +45,22 @@ This will be implemented through a unified XML schema structure that can be appl
     <fresh_context>enabled|disabled</fresh_context>
 </context_management>
 ```
+
+### Explicit File Path Specification
+
+In addition to the standard context management model, tasks can explicitly specify files to include in their context:
+
+```xml
+<file_paths>
+    <path>./src/main.py</path>
+    <path>/absolute/path/file.txt</path>
+</file_paths>
+```
+
+This feature operates orthogonally to the three-dimensional context model:
+- Specified files are always included in the context, regardless of other settings
+- When combined with `inherit_context="subset"`, the specified files become the subset
+- When combined with `fresh_context="enabled"`, associative matching still runs but specified files are forcibly included
 
 ### Semantics
 

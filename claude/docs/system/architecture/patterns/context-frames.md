@@ -35,6 +35,34 @@ The following constraints apply to context management settings:
 
 3. **Validation Errors**: Templates violating these constraints will fail validation with clear error messages
 
+### File Paths as Orthogonal Context Control
+
+In addition to the three-dimensional context model, the system supports direct file specification through the `file_paths` feature:
+
+- **Purpose**: Explicitly include specific files in task context
+- **Behavior**: Operates outside the standard three-dimensional model
+- **Priority**: Files specified via `file_paths` are always included in context, regardless of other settings
+- **Integration**: Works alongside other context management settings
+
+```xml
+<task type="atomic">
+  <description>Task with specific file context</description>
+  <context_management>
+    <inherit_context>none</inherit_context>
+    <fresh_context>disabled</fresh_context>
+  </context_management>
+  <file_paths>
+    <path>./src/main.py</path>
+    <path>/absolute/path/file.txt</path>
+  </file_paths>
+</task>
+```
+
+When `file_paths` is combined with other context settings:
+
+- With `inherit_context="subset"`: Specified files become the subset (replacing associative matching-based subset selection)
+- With `fresh_context="enabled"`: Specified files are forcibly included while associative matching still runs for additional context
+
 ### Common Context Management Patterns
 
 The three-dimensional context management model can be configured to achieve various behaviors:

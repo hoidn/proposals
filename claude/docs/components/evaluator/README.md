@@ -274,13 +274,21 @@ The Evaluator coordinates the execution of tasks—represented in AST or XML-bas
 - **Metacircular Evaluator Examples:** See the "Evaluator" sketches in `misc/textonly.tex.md`  
 - **Future Expansions:** Refer to Implementation Plan phases in `implementation.md` (root-level or system docs).
 
-## Dual Context Tracking
+## Context Management Implementation
 
-The Evaluator manages all three dimensions of the context management model:
+The Evaluator manages all dimensions of the context management model:
 
+### Standard Three-Dimensional Model
 1. **Inherited Context**: The parent task's context, controlled by `inherit_context` setting ("full", "none", or "subset").
 2. **Accumulated Data**: The step-by-step outputs collected during sequential execution, controlled by `accumulate_data` setting.
 3. **Fresh Context**: New context generated via associative matching, controlled by `fresh_context` setting.
+
+### Explicit File Inclusion
+In addition to the standard model, the Evaluator supports explicit file inclusion through the `file_paths` feature:
+- Files specified via `file_paths` are always included in context
+- This operates orthogonally to the three-dimensional model
+- File retrieval is delegated to Handler tools
+- File content is formatted with XML tags indicating source paths
 
 These dimensions are configured through the standardized context management XML structure:
 ```xml
@@ -336,6 +344,19 @@ Key responsibilities of the Evaluator in this pattern:
 - Managing context according to the specified configuration
 - Coordinating script execution when required
 - Passing evaluation results back to the Director
+
+When creating subtasks with explicit file paths:
+```typescript
+// The file_paths field takes precedence over associative matching
+subtask_request = {
+  type: "atomic",
+  description: "Analyze specific modules",
+  inputs: { /* parameters */ },
+  context_management: { inherit_context: "subset" },
+  file_paths: ["/src/main.py", "/src/utils.py"]
+}
+```
+The Evaluator ensures these files are fetched and included in the subtask's context before execution.
 
 ## Tool Interface Integration
 

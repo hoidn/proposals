@@ -41,7 +41,7 @@ For all task types, the Evaluator is responsible for resolving template variable
 
 All task types (atomic, sequential, reduce, script) can be defined as templates and functions in the TaskLibrary. However, template matching (the process of selecting an appropriate template based on a natural language description) applies only to atomic task templates. Composite tasks can be defined directly, defined as reusable templates, or assembled from matched atomic task templates.
 
-Each task type can specify its context management requirements through XML configuration:
+Each task type can specify its context management requirements and explicit file paths through XML configuration:
 
 ```xml
 <task>
@@ -50,7 +50,12 @@ Each task type can specify its context management requirements through XML confi
         <inherit_context>none|full|subset</inherit_context>
         <accumulate_data>true|false</accumulate_data>
         <accumulation_format>notes_only|full_output</accumulation_format>
+        <fresh_context>enabled|disabled</fresh_context>
     </context_management>
+    <file_paths>
+        <path>./src/main.py</path>
+        <path>/absolute/path/file.txt</path>
+    </file_paths>
     <inputs>
         <input name="input_name" from="source_var"/>
     </inputs>
@@ -127,6 +132,12 @@ const resultWithOverride = await taskSystem.executeTask(
     "analyze data",
     memorySystem,
     { provider: "openai" }  // Override for this task
+);
+
+// Execute task with specific file paths
+const resultWithFiles = await taskSystem.executeTask(
+    "<task type='atomic'><description>Analyze files</description><file_paths><path>./src/main.py</path></file_paths></task>",
+    memorySystem
 );
 
 // Validate a template

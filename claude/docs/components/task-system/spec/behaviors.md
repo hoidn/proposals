@@ -414,6 +414,41 @@ The Task System delegates **all context management execution** to the Evaluator 
 4. The Handler remains focused on resource tracking (turns, tokens).
 5. No direct context accumulation logic occurs in the Task System itself.
 
+## File Paths Feature
+
+The system supports an orthogonal file selection mechanism through the `file_paths` feature:
+
+### Feature Behavior
+- Available on all atomic tasks (both direct and subtasks)
+- Operates outside the standard three-dimensional context model
+- Specified files are always included in the context, regardless of other settings
+- Files are fetched by the Handler before task execution
+
+### Implementation Details
+- Files are retrieved using Handler tools
+- Both absolute paths and paths relative to repo root are supported
+- Files are presented in the context with XML tags indicating their paths
+- Invalid paths generate warnings but don't prevent task execution
+
+### Integration with Context Management
+- When used with `inherit_context="subset"`, specified files become the subset
+- When used with `fresh_context="enabled"`, specified files are forcibly included while associative matching still runs
+- The feature does not replace or disable other context management settings
+
+### XML Representation
+```xml
+<task type="atomic">
+  <description>Task description</description>
+  <context_management>
+    <!-- Standard context management settings -->
+  </context_management>
+  <file_paths>
+    <path>./src/main.py</path>
+    <path>/absolute/path/file.txt</path>
+  </file_paths>
+</task>
+```
+
 ## Error Handling
 
 ### Error Detection and Response

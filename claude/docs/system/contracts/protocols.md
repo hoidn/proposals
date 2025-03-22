@@ -72,6 +72,13 @@ The task template schema defines the structure for XML task template files and m
             </xs:sequence>
           </xs:complexType>
         </xs:element>
+        <xs:element name="file_paths" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="path" type="xs:string" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
         <xs:element name="steps">
           <xs:complexType>
             <xs:sequence>
@@ -327,6 +334,14 @@ interface SubtaskRequest {
   };
   max_depth?: number;                  // Override default max nesting depth
   subtype?: string;                    // Optional subtype for atomic tasks
+  
+  /**
+   * Optional list of specific file paths to include in subtask context.
+   * Takes precedence over associative matching when provided.
+   * Paths can be absolute or relative to repo root.
+   * Invalid paths will generate warnings but execution will continue.
+   */
+  file_paths?: string[];
 }
 ```
 

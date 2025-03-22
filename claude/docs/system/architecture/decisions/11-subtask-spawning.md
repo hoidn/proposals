@@ -37,6 +37,7 @@ interface SubtaskRequest {
     return_expectations?: string; // Expected output format
     max_depth?: number;     // Optional depth override
     subtype?: string;       // Optional subtype for atomic tasks (defaults to "subtask")
+    file_paths?: string[];  // Optional list of specific files to include in context
 }
 ```
 
@@ -63,6 +64,26 @@ Default settings for subtasks:
 These defaults follow the mutual exclusivity constraint: When `fresh_context` is "enabled", `inherit_context` must be "none".
 
 These defaults can be overridden in subtask templates.
+
+### Explicit File Selection
+
+When creating subtasks, parent tasks can explicitly specify which files to include:
+
+```typescript
+// The file_paths field takes precedence over associative matching
+subtask_request = {
+  type: "atomic",
+  description: "Analyze specific modules",
+  inputs: { /* parameters */ },
+  context_management: { inherit_context: "subset" },
+  file_paths: ["/src/main.py", "/src/utils.py"]
+}
+```
+
+This feature:
+- Creates a special file-specific context mode outside the standard three-dimensional model
+- Always includes specified files in the context, regardless of other settings
+- Takes precedence over associative matching when determining context subset
 
 ### Subtask Context Management
 

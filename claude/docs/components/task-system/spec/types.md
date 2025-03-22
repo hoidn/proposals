@@ -47,6 +47,26 @@ export interface TaskResult {
 }
 
 /**
+ * Base task definition interface
+ */
+export interface BaseTaskDefinition {
+    description: string;
+    type: TaskType;
+    subtype?: string;
+    
+    /**
+     * Specific files to include in task context.
+     * These files will always be included regardless of other context settings.
+     * Paths can be absolute or relative to repo root.
+     * Invalid paths will generate warnings but execution will continue.
+     */
+    file_paths?: string[];
+    
+    context_management?: ContextManagement;
+    inputs?: Record<string, any>;
+}
+
+/**
  * Represents a sequential task which has its own context management block
  * and multiple steps of subtasks.
  */

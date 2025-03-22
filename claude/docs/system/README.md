@@ -171,22 +171,25 @@ A powerful approach for iterative refinement:
 
 This can be done with either a static (predefined) or dynamic (continuation-based) approach.
 
-### 2. Context Management (Three-Dimensional Model)
-The system uses a standardized three-dimensional context management model that controls:
+### 2. Context Management
+
+The system provides comprehensive context control through a three-dimensional model and explicit file selection:
+
+#### Three-Dimensional Context Model
 - **inherit_context**: Controls parent context inheritance with values "full" (complete inheritance), "none" (no inheritance), or "subset" (selective inheritance based on relevance).
 - **accumulate_data**: Controls whether outputs from prior steps are accumulated (true/false).
 - **accumulation_format**: When accumulating data, specifies whether to include "notes_only" or "full_output".
 - **fresh_context**: Controls whether new context is fetched via associative matching ("enabled"/"disabled").
 
-This model is configured via a standardized XML structure:
+#### Explicit File Selection
+In addition to the standard context model, tasks can explicitly specify files to include in their context:
 ```xml
-<context_management>
-    <inherit_context>full|none|subset</inherit_context>
-    <accumulate_data>true|false</accumulate_data>
-    <accumulation_format>notes_only|full_output</accumulation_format>
-    <fresh_context>enabled|disabled</fresh_context>
-</context_management>
+<file_paths>
+  <path>./src/main.py</path>
+  <path>/absolute/path/file.txt</path>
+</file_paths>
 ```
+This feature operates orthogonally to the three-dimensional model, ensuring specified files are always included regardless of other settings.
 
 Each operator type has sensible defaults while allowing explicit overrides through template XML.
 

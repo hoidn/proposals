@@ -793,3 +793,68 @@ const preserveAllContextResult = await taskSystem.executeTask(
   memorySystem
 );
 ```
+
+## File Paths Examples
+
+### Atomic Task with File Paths
+
+```xml
+<!-- Example: Atomic Task with File Paths -->
+<task type="atomic">
+    <description>Analyze the main source files</description>
+    <context_management>
+        <inherit_context>none</inherit_context>
+        <fresh_context>disabled</fresh_context>
+    </context_management>
+    <file_paths>
+        <path>./src/main.py</path>
+        <path>./src/utils.py</path>
+    </file_paths>
+</task>
+```
+
+### TypeScript Usage Example
+
+```typescript
+// Execute atomic task with specific file paths
+const result = await taskSystem.executeTask(
+  "<task type='atomic'><description>Analyze source files</description><file_paths><path>./src/main.py</path><path>./src/utils.py</path></file_paths></task>",
+  memorySystem
+);
+
+// Create subtask request with file paths
+return {
+  status: "CONTINUATION",
+  notes: {
+    subtask_request: {
+      type: "atomic",
+      description: "Analyze specific modules",
+      inputs: { level: "detailed" },
+      context_management: { inherit_context: "subset" },
+      file_paths: ["./src/main.py", "./src/utils.py"]
+    }
+  }
+};
+```
+
+### Combining File Paths with Context Management
+
+```xml
+<!-- Example: Combining File Paths with fresh_context -->
+<task type="atomic">
+    <description>Analyze code with base context and specific files</description>
+    <context_management>
+        <inherit_context>none</inherit_context>
+        <fresh_context>enabled</fresh_context>
+    </context_management>
+    <file_paths>
+        <path>./src/main.py</path>
+        <path>./src/utils.py</path>
+    </file_paths>
+</task>
+```
+
+This combination:
+1. Doesn't inherit any parent context
+2. Explicitly includes the specified files
+3. Uses associative matching to find additional relevant context

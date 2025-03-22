@@ -130,6 +130,63 @@ const DEFAULT_CONTEXT_SETTINGS = {
   }
 };
 
+// File Path Processing
+function processFilePaths(task: TaskDefinition, context: TaskContext): Promise<TaskContext> {
+  if (!task.file_paths || task.file_paths.length === 0) {
+    return Promise.resolve(context);
+  }
+  
+  return fetchAndAddFiles(task.file_paths, context);
+}
+
+async function fetchAndAddFiles(filePaths: string[], context: TaskContext): Promise<TaskContext> {
+  const fileContents: Array<{path: string, content: string}> = [];
+  const warnings: string[] = [];
+  
+  // Process each file path
+  for (const path of filePaths) {
+    try {
+      // Resolve relative paths to absolute
+      const absolutePath = resolvePath(path);
+      
+      // Fetch file content using Handler tools
+      const content = await handler.tools.readFile(absolutePath);
+      
+      fileContents.push({ path: absolutePath, content });
+    } catch (error) {
+      warnings.push(`Warning: Failed to read file ${path}: ${error.message}`);
+    }
+  }
+  
+  // Format file contents with XML tags
+  const formattedContent = fileContents.map(fc => 
+    `<file path="${fc.path}">\n${fc.content}\n</file>`
+  ).join('\n\n');
+  
+  // Add to context
+  const enhancedContext = {
+    ...context,
+    fileContent: (context.fileContent || '') + formattedContent
+  };
+  
+  // Store warnings
+  if (warnings.length > 0) {
+    enhancedContext.warnings = (enhancedContext.warnings || []).concat(warnings);
+  }
+  
+  return enhancedContext;
+}
+
+function resolvePath(path: string): string {
+  if (path.startsWith('/')) {
+    // Already absolute
+    return path;
+  }
+  
+  // Resolve relative to repo root
+  return joinPath(REPO_ROOT, path);
+}
+
 // Template processing with merged settings
 function processTemplate(template) {
   const operatorType = template.type;
