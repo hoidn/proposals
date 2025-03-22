@@ -520,13 +520,11 @@ export interface SubtaskRequest {
     /** Optional subtype for atomic tasks */
     subtype?: string;
   
-    /** Specific files to include in context */
-    file_paths?: string[];
-    
     /** 
-     * Optional list of specific file paths to include in subtask context.
-     * Takes precedence over associative matching when provided.
-     * Only applicable when inherit_context is "subset".
+     * Specific files to include in subtask context.
+     * These files will always be included regardless of other context settings.
+     * Paths can be absolute or relative to repo root.
+     * Invalid paths will generate warnings but execution will continue.
      */
     file_paths?: string[];
 }

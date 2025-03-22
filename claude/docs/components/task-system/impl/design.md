@@ -249,6 +249,29 @@ function validateContextSettings(settings) {
   
   return { valid: true };
 }
+
+async function getContextForTask(task: TaskDefinition, parentContext: ExecutionContext): Promise<ExecutionContext> {
+  // Start with base context according to inherit_context setting
+  let context = getBaseContext(task.context_management?.inherit_context, parentContext);
+  
+  // If file_paths is specified, fetch those files
+  if (task.file_paths && task.file_paths.length > 0) {
+    context = await fetchAndAddFiles(task.file_paths, context);
+  }
+  
+  // If fresh_context is enabled, still do associative matching
+  if (task.context_management?.fresh_context === 'enabled') {
+    const freshContext = await memorySystem.getRelevantContextFor({
+      taskText: task.description,
+      inheritedContext: context.inherit_context === 'none' ? undefined : context
+    });
+    
+    // Combine fresh context with existing context
+    context = combineContexts(context, freshContext);
+  }
+  
+  return context;
+}
 ```
 
 During task execution, the final merged configuration is passed to the Evaluator, which applies the settings accordingly.
