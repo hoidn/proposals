@@ -391,4 +391,7 @@ const result = await taskSystem.executeCall({
 - [Evaluator](../components/evaluator/README.md)
 - [Memory System](../components/memory/README.md)
 - [Compiler](../components/compiler/README.md)
+  - [API Interfaces](../components/compiler/api/interfaces.md)
+  - [Implementation Design](../components/compiler/impl/design.md)
+  - [Specification](../components/compiler/spec/types.md)
 - Handler Tools

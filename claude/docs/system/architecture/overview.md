@@ -201,7 +201,7 @@ Task parsing and transformation component.
 - Handles task transformation
 - Manages template validation
 
-See [Contract:Integration:CompilerTask:1.0] for integration specification.
+See [Compiler README](../../components/compiler/README.md) for complete documentation including responsibilities, implementation details, and integration specifications.
 
 ### Evaluator [Component:Evaluator:1.0]
 Execution control component responsible for AST processing, template variable substitution, and execution control.
