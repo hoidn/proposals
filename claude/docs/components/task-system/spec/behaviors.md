@@ -108,10 +108,54 @@ Example error structure for output_format_failure:
   details: {
     expectedType: "array",
     actualType: "object",
-    partialOutput: "..." // The original output
+    content: "..." // The original output is now in content field
   }
 }
 ```
+
+## Output Structure
+
+The Task System uses a simplified output structure:
+
+### Atomic Tasks
+- `content`: Contains all output (complete or partial)
+- `notes`: Contains only metadata (never content)
+- `status` indicates completion:
+  * `COMPLETE`: Content is final
+  * `FAILED`: Content may be partial
+  * `CONTINUATION`: Content is intermediate
+
+### Sequential Tasks
+- Structure preserves step outputs with proper separation:
+  ```typescript
+  partialResults: [
+    {
+      stepIndex: number,
+      content: string,      // Step output
+      metadata: {           // Step metadata
+        status: string,
+        [key: string]: any
+      }
+    }
+  ]
+  ```
+
+### Reduce Tasks
+- Structure preserves processed inputs with proper separation:
+  ```typescript
+  processedResults: [
+    {
+      inputIndex: number,
+      content: string,      // Processing output
+      metadata: {           // Processing metadata
+        status: string,
+        [key: string]: any
+      }
+    }
+  ]
+  ```
+
+This structure maintains clear separation between content and metadata at all levels.
 
 ### Task Template Matching
 

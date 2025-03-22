@@ -69,21 +69,32 @@ Progress failures occur when a task cannot advance despite resources being avail
 
 The system maintains a standardized approach for preserving partial results when multi-step operations fail:
 
+### Error Output Structure
+
 #### Atomic Tasks
 ```typescript
+// Successful atomic task
 {
-  type: 'TASK_FAILURE',
-  reason: 'execution_halted',
-  message: 'Task execution failed',
+  content: "Complete task output",
+  status: "COMPLETE", 
   notes: {
-    // Partial results directly included in notes, no separate partialOutput field
-    taskProgress: "Partial content generated before failure",
-    processingStage: "validation",
+    dataUsage: "Resource usage statistics",
+    successScore: 0.95
+  }
+}
+
+// Failed atomic task
+{
+  content: "Partial output generated before failure",  // Partial content in content field
+  status: "FAILED",
+  notes: {
+    dataUsage: "Resource usage statistics",
+    executionStage: "validation",
     completionPercentage: 60
-    // Any other metadata as needed
   }
 }
 ```
+Task status (`COMPLETE` vs `FAILED`) indicates whether content is complete or partial.
 
 #### Sequential Tasks
 ```typescript
@@ -97,18 +108,18 @@ The system maintains a standardized approach for preserving partial results when
     partialResults: [
       { 
         stepIndex: 0, 
+        content: "Data loaded successfully: 1000 records",
         notes: { 
           recordCount: 1000, 
-          status: "completed", 
-          result: "Data loaded successfully" 
+          status: "completed"
         }
       },
       { 
         stepIndex: 1, 
+        content: "Data transformed to required format",
         notes: { 
           transformType: "normalization", 
-          status: "completed", 
-          result: "Data transformed to required format" 
+          status: "completed"
         }
       }
     ]
@@ -130,16 +141,20 @@ The system maintains a standardized approach for preserving partial results when
     partialResults: [
       { 
         inputIndex: 0, 
+        content: "Processed metrics for server 1",
         notes: { 
-          status: "completed", 
-          result: "Processed metrics for server 1" 
+          status: "completed",
+          serverName: "server-01",
+          metricsCount: 250
         }
       },
       { 
         inputIndex: 1, 
+        content: "Processed metrics for server 2",
         notes: { 
-          status: "completed", 
-          result: "Processed metrics for server 2" 
+          status: "completed",
+          serverName: "server-02",
+          metricsCount: 180
         }
       }
     ]
@@ -149,10 +164,11 @@ The system maintains a standardized approach for preserving partial results when
 
 #### Storage Format Control
 The format of preserved partial results depends on the task's `accumulation_format` setting:
-- `minimal`: Only essential metadata is preserved from each step (default for all operator types)
-- `full`: Complete notes content is preserved (with reasonable size limits)
+- `notes_only`: Only the notes field is preserved (default for memory efficiency)
+- `full_output`: Both content and notes fields are preserved (with size limits)
 
 ```typescript
+// With accumulation_format="notes_only"
 partialResults: [
   { 
     stepIndex: 0, 
@@ -160,6 +176,18 @@ partialResults: [
       recordCount: 1000,
       status: "completed"
       // Other essential metadata
+    }
+  }
+]
+
+// With accumulation_format="full_output"
+partialResults: [
+  { 
+    stepIndex: 0,
+    content: "Complete step output text",
+    notes: { 
+      recordCount: 1000,
+      status: "completed"
     }
   }
 ]

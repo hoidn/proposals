@@ -379,57 +379,19 @@ console.log('Retrieved context:', memoryResult.content);
 
 ---
 
-// Unified error handling example showing different task types
+// Example of error handling with simplified structure
 try {
   const result = await taskSystem.executeTask(taskDefinition, memorySystem);
+  // Success case: content is complete
   console.log("Task completed successfully:", result.content);
 } catch (error) {
-  // Handle different error types with appropriate error handling
   if (error.type === 'RESOURCE_EXHAUSTION') {
     console.log(`Resource limit exceeded: ${error.resource}`);
-    console.log('Usage metrics:', error.metrics);
-    
-    // Error handling through standard mechanisms
-    console.error("Resource exhaustion error:", error);
-    
   } else if (error.type === 'TASK_FAILURE') {
-    // Handle different failure reasons
-    switch (error.reason) {
-      case 'subtask_failure':
-        // Sequential task partial results reporting
-        if (error.details.failedStep !== undefined) {
-          console.log(`Sequential task failed at step ${error.details.failedStep} of ${error.details.totalSteps}`);
-          console.log('Completed steps:');
-          error.details.partialResults.forEach(result => {
-            // With notes_only format, output might be null, so use notes instead
-            const summary = result.output ? 
-              `Output: ${result.output.substring(0, 50)}...` : 
-              `Notes: ${JSON.stringify(result.notes).substring(0, 50)}...`;
-            console.log(`- Step ${result.stepIndex}: ${summary}`);
-          });
-          
-          // Standard error handling
-          console.error("Sequential task failure:", error);
-        }
-        // Reduce task partial results reporting
-        else if (error.details.failedInputIndex !== undefined) {
-          console.log(`Reduce task failed processing input ${error.details.failedInputIndex}`);
-          console.log(`Processed ${error.details.processedInputs.length} of ${error.details.totalInputs} inputs`);
-          console.log('Current accumulator state:', error.details.currentAccumulator);
-          
-          // Standard error handling
-          console.error("Reduce task failure:", error);
-        }
-        break;
-        
-      case 'output_format_failure':
-        console.log(`Output format validation failed: ${error.message}`);
-        console.log(`Expected: ${error.details.expectedType}, Got: ${error.details.actualType}`);
-        console.error("Format validation failure:", error);
-        break;
-        
-      // Other failure reasons
-    }
+    // Access partial content directly from content field
+    console.log(`Partial output before failure: ${error.content}`);
+    console.log(`Execution stage: ${error.notes.executionStage || "unknown"}`);
+    console.log(`Completion: ${error.notes.completionPercentage || 0}%`);
   }
 }
 
