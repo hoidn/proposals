@@ -109,6 +109,11 @@ See [Pattern:ToolInterface:1.0] for complete details on this approach.
 
 The Task System integrates with several core components. It uses the Memory System for context access and management, Handler Tools for file and system operations, the Compiler for task parsing and transformation, and the Evaluator for error recovery and task decomposition. These integrations enable comprehensive task execution while maintaining clean component boundaries.
 
+For detailed implementation of key patterns, see:
+- Error handling: [Implementation:ErrorTypes:1.0] in `/components/task-system/impl/error-handling.md`
+- Subtask tools: [Implementation:SubtaskTools:1.0] in `/components/task-system/impl/subtask-tools.md`
+- Director-Evaluator: [Implementation:StaticDirectorEvaluator:1.0] in `/components/task-system/impl/director-evaluator.md`
+
 ## Usage
 
 Here's how the Task System would be instantiated:

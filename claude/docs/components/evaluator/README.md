@@ -26,124 +26,15 @@ The **Evaluator** is the unified task-execution component of the system. It is r
 
 In many existing code examples (both TypeScript-like and Scheme-like), the system calls an `eval` or `apply` function that effectively belongs to the Evaluator domain. When direct execution fails, a decomposition or reparse step is triggered, also under the Evaluator's responsibility.
 
-## 3.1 Lexical Environment Model
-
-The Environment class implements lexical scoping for DSL variables through nested environments. This is strictly for variable binding and lookup - completely separate from template matching or context management:
-
-- Maintains variable bindings at each scope level via `bindings` map
-- Supports variable lookup through parent scopes via `outer` reference
-- Creates child scopes with additional bindings via `extend` method
-- Resolves variables through lexical chain with `find` method
-
-```typescript
-// Example Environment implementation
-class Env implements Environment {
-    constructor(public bindings: Record<string, any> = {}, public outer?: Environment) {}
-    find(varName: string): any {
-        return (varName in this.bindings)
-            ? this.bindings[varName]
-            : this.outer ? this.outer.find(varName) : throw new Error(`Variable ${varName} not found`);
-    }
-    extend(bindings: Record<string, any>): Environment {
-        return new Env(bindings, this);
-    }
-}
-```
-
-## Nested Environment Model for Function Templates
-
-Function calls create new environments with parameter bindings:
-
-```typescript
-// Function call evaluation
-function evaluateFunctionCall(call: FunctionCallNode, env: Environment): Promise<any> {
-  // 1. Lookup the template in the TaskLibrary
-  const template = env.find("taskLibrary").get(call.templateName);
-  
-  // 2. Evaluate all arguments in the caller's environment
-  const argValues = await Promise.all(
-    call.arguments.map(arg => evaluateArgument(arg, env))
-  );
-  
-  // 3. Create a new environment with parameter bindings
-  const funcEnv = env.extend({});
-  for (let i = 0; i < template.parameters.length; i++) {
-    funcEnv.bindings[template.parameters[i]] = argValues[i];
-  }
-  
-  // 4. Evaluate the template body in the new environment
-  return evaluateTask(template.body, funcEnv);
-}
-```
-
-This ensures proper variable scoping where templates can only access their explicitly declared parameters, not the caller's entire environment.
-
 ## Responsibilities and Role
-
-1. **AST Execution Controller**  
-
-## Context and Template Matching
-
-## Template Substitution
-
-The Evaluator is solely responsible for resolving all template variables before passing tasks to the Handler. This template substitution phase occurs after task selection but before execution:
-
-```typescript
-// Template substitution in Evaluator
-function resolveTemplateVariables(task: Task, env: Environment): Task {
-  // Create a copy to avoid modifying the original
-  const resolvedTask = {...task};
-  
-  // Apply appropriate substitution rules based on task type
-  if (task.isFunctionTemplate && task.parameters) {
-    // For function templates, create isolated environment with only parameters
-    const funcEnv = new Environment({});
-    for (const param of task.parameters) {
-      funcEnv.bindings[param] = env.find(param);
-    }
-    resolvedTask.taskPrompt = substituteVariables(task.taskPrompt, funcEnv);
-  } else {
-    // For standard templates, use the full environment
-    resolvedTask.taskPrompt = substituteVariables(task.taskPrompt, env);
-  }
-  
-  return resolvedTask;
-}
-```
-
-The Evaluator ensures that all placeholder substitutions (e.g., `{{variable_name}}`) are completed before dispatching to the Handler, ensuring all execution happens with fully resolved inputs. This includes resolving variables in both direct templates and function templates, with different resolution rules for each type. Associative matching tasks operate on the final, substituted task description.
-
-Furthermore, the Evaluator extracts an optional success score from the task result's `notes` field. This score, if present, is intended to support future adaptive matching and error-handling strategies.
-
-For more details on context handling and the disable context option implemented for atomic tasks, see [ADR 002 - Context Management](../../system/architecture/decisions/002-context-management.md) and [ADR 005 - Context Handling](../../system/architecture/decisions/005-context-handling.md).
-
-#### Evaluator Coordination Diagram
-
-```mermaid
-flowchart TD
-    A[Task Submission]
-    B[Placeholder Substitution Completed]
-    C[Prepare ContextGenerationInput]
-    D[Invoke MemorySystem.getRelevantContextFor]
-    E[Receive AssociativeMatchResult]
-    F[Compute Matching Scores]
-    G[Select Highest-Scoring Template]
-    H[Extract Optional Success Score from Notes]
-    I[Pass Template for Execution]
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-    G --> H
-    H --> I
-```
 
 1. **AST Execution Controller**  
    - Orchestrates the step-by-step or operator-by-operator execution of tasks represented as an AST.
    - Calls out to the Handler for LLM-specific interactions and resource tracking (e.g. turn counts, context window checks).
    - Interacts with the Compiler when re-parsing or decomposition is required.
+
+For detailed implementation of key patterns, see:
+- Director-Evaluator: [Implementation:DynamicDirectorEvaluator:1.0] in `/components/evaluator/impl/director-evaluator.md`
 
 2. **Failure Recovery**  
    - Detects or receives error signals when tasks fail or exceed resources.  
@@ -160,31 +51,14 @@ flowchart TD
    - The Task System may call the Evaluator with a structured or partially structured task. The Evaluator then "executes" it by walking its representation (e.g., an AST or an XML-based operator chain).  
    - On error or partial success, the Evaluator can signal the Task System to orchestrate higher-level recovery or store partial results.  
 
-## 3.3 FunctionCall AST Node for DSL Function Calling
+## Lexical Environment Model
 
-The FunctionCall node is used to invoke a task functionally by looking up its definition in the TaskLibrary. When a FunctionCall is evaluated, the Evaluator:
-- Uses env.find("taskLibrary") to retrieve the registry;
-- Looks up the task by its funcName;
-- Creates a child environment (e.g., new Env({}, env));
-- Binds the parameters from task_def.metadata to the evaluated arguments;
-- And finally calls taskDef.astNode.eval(newEnv) to get the result.
+The Environment class implements lexical scoping for DSL variables through nested environments. This is strictly for variable binding and lookup - completely separate from template matching or context management:
 
-```typescript
-// Example FunctionCall evaluation
-class FunctionCallNode implements FunctionCall {
-    constructor(public funcName: string, public args: ASTNode[]) {}
-    async eval(env: Environment): Promise<any> {
-        const taskLibrary = env.find("taskLibrary")["taskLibrary"];
-        const taskDef = taskLibrary.getTask(this.funcName);
-        const funcEnv = new Env({}, env);
-        const parameters: string[] = taskDef.metadata?.parameters || [];
-        for (let i = 0; i < parameters.length && i < this.args.length; i++) {
-            funcEnv.bindings[parameters[i]] = await this.args[i].eval(env);
-        }
-        return await taskDef.astNode.eval(funcEnv);
-    }
-}
-```
+- Maintains variable bindings at each scope level via `bindings` map
+- Supports variable lookup through parent scopes via `outer` reference
+- Creates child scopes with additional bindings via `extend` method
+- Resolves variables through lexical chain with `find` method
 
 ## Function Call Processing
 
@@ -203,76 +77,15 @@ This ensures templates can only access explicitly passed parameters, maintaining
 
 This process maintains clean scope boundaries, preventing unintended variable access.
 
-### Argument Resolution Strategy
+## Template Substitution
 
-For string arguments, a two-step resolution occurs:
-```typescript
-function resolveArgument(arg: string, env: Environment): any {
-  // First try to find it as a variable in the environment
-  try {
-    return env.find(arg);
-  } catch (e) {
-    // If not found as a variable, treat as a literal
-    return arg;
-  }
-}
-```
-This allows for passing both variable references and literal values as function arguments.
+The Evaluator is solely responsible for resolving all template variables before passing tasks to the Handler. This template substitution phase occurs after task selection but before execution.
 
-## Metacircular Approach
+The Evaluator ensures that all placeholder substitutions (e.g., `{{variable_name}}`) are completed before dispatching to the Handler, ensuring all execution happens with fully resolved inputs. This includes resolving variables in both direct templates and function templates, with different resolution rules for each type. Associative matching tasks operate on the final, substituted task description.
 
-Documentation (especially in `misc/textonly.tex.md`) sometimes refers to the system's evaluator as a "metacircular evaluator," meaning:
-> The interpreter (Evaluator) uses LLM-based operations as its basic building blocks, while the LLM also uses the DSL or AST from the evaluator for self-decomposition tasks.
+Furthermore, the Evaluator extracts an optional success score from the task result's `notes` field. This score, if present, is intended to support future adaptive matching and error-handling strategies.
 
-In practice, this means:  
-- The Evaluator calls an LLM to run "atomic" tasks or to do "decomposition."  
-- The LLM might generate or refine structured XML tasks that, in turn, the Evaluator must interpret again.  
-- This cycle repeats until the tasks can be successfully executed without exceeding resource or output constraints.
-
-Because of this, the Evaluator is partially "self-hosting": it leverages the same LLM to break down tasks that can't be executed directly.  
-
----
-
-## Potential Future Enhancements
-
-The existing plan outlines several optional or future features that involve the Evaluator:
-
-1. **Advanced Debug Logging** (Phase 3 in the Implementation Plan)  
-   - Collecting or storing extensive logs in `notes.debugLogs` or similar.  
-   - Exposing partial steps or re-try decisions for advanced debugging.  
-
-2. **Multi-Step or "Continuation" Protocol**  
-   - The Evaluator might support tasks that require multiple interactions or "continuation steps" without losing context.  
-   - This could involve storing partial states or sub-results in the environment and continuing in a new iteration.  
-
-3. **Agent Features** (Phase 4 in some documents)  
-   - The Evaluator could handle conversation-like tasks with a "REPL" approach, or coordinate multiple LLM backends.  
-   - This is out of scope for the MVP, but recognized as an extension point.
-
----
-
-## Known Open Questions
-
-1. **Partial Results**  
-   - Some references (e.g., "Phase 2: Expanded Context Management") mention partial-result handling if sub-tasks fail mid-operator. It is not yet finalized how the Evaluator will pass partial data up or whether to discard it.  
-
-2. **Context Generation Errors**  
-   - The error taxonomy may or may not include a dedicated "CONTEXT_GENERATION_FAILURE." Currently, the Evaluator might treat it as a generic `TASK_FAILURE` or trigger reparse.  
-
-3. **Inheritance on Map/Reduce**  
-   - It is hinted that "inherit_context" might become relevant for parallel or reduce operators. The Evaluator's role in distributing or discarding environment data for sub-tasks is still being discussed.
-
----
-
-## Summary
-
-The Evaluator coordinates the execution of tasks—represented in AST or XML-based form—by calling LLM operations, handling resource usage signals, managing sub-task context, and recovering from errors. It serves as the system's "control loop" for deciding whether tasks can be executed directly or require alternative approaches (like decomposition).  
-
-*For further details:*  
-- **System-Level Descriptions:** See `system/architecture/overview.md`  
-- **Error Patterns & Recovery:** See `system/architecture/patterns/errors.md`, `misc/errorspec.md`  
-- **Metacircular Evaluator Examples:** See the "Evaluator" sketches in `misc/textonly.tex.md`  
-- **Future Expansions:** Refer to Implementation Plan phases in `implementation.md` (root-level or system docs).
+For more details on context handling and the disable context option implemented for atomic tasks, see [ADR 002 - Context Management](../../system/architecture/decisions/002-context-management.md) and [ADR 005 - Context Handling](../../system/architecture/decisions/005-context-handling.md).
 
 ## Context Management Implementation
 
@@ -319,10 +132,6 @@ When executing a sequential task step with `<inherit_context>none</inherit_conte
 
 This design ensures that only the Evaluator initiates associative matching, preventing confusion about which component is responsible for cross-step data retrieval. The Memory System remains a service that simply provides matches upon request.
 
----
-
----
-
 ## Sequential Task History
 
 When evaluating sequential tasks, the Evaluator implements the Sequential Task Management pattern [Pattern:SequentialTask:2.0] as defined in the system architecture. This includes:
@@ -335,6 +144,7 @@ When evaluating sequential tasks, the Evaluator implements the Sequential Task M
 The Evaluator is responsible for tracking this history independent of the Handler's resource management and implementing the appropriate accumulation behavior based on the task's context_management configuration.
 
 For the complete specification of the Sequential Task Management pattern, including output tracking, preservation policies, and resource considerations, see `system/architecture/overview.md`.
+
 ## Subtask Spawning Implementation
 
 The Evaluator implements the subtask tool mechanism as defined in [Pattern:ToolInterface:1.0], using the CONTINUATION status internally. From the LLM's perspective, these appear as tools but are implemented using the subtask spawning protocol.
@@ -345,18 +155,7 @@ Key responsibilities of the Evaluator in this pattern:
 - Coordinating script execution when required
 - Passing evaluation results back to the Director
 
-When creating subtasks with explicit file paths:
-```typescript
-// The file_paths field takes precedence over associative matching
-subtask_request = {
-  type: "atomic",
-  description: "Analyze specific modules",
-  inputs: { /* parameters */ },
-  context_management: { inherit_context: "subset" },
-  file_paths: ["/src/main.py", "/src/utils.py"]
-}
-```
-The Evaluator ensures these files are fetched and included in the subtask's context before execution.
+When creating subtasks with explicit file paths, the Evaluator ensures these files are fetched and included in the subtask's context before execution.
 
 ## Tool Interface Integration
 

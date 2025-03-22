@@ -38,6 +38,8 @@ This pattern follows a three-phase flow:
    - Uses a `<context_management>` block with `inherit_context` set to `subset` and `accumulate_data` enabled to incorporate only the relevant context.
    - Executes the evaluation subtask—which may include invoking the specified bash script via the Handler or Evaluator—and feeds its results back to the parent task.
 
+For implementation details of the dynamic director-evaluator pattern, see [Implementation:DynamicDirectorEvaluator:1.0] in `/components/evaluator/impl/director-evaluator.md`.
+
 ### Static Variant (Director-Evaluator Loop)
 
 The static variant uses a dedicated task type with a standardized structure:
@@ -82,6 +84,8 @@ The static variant uses a dedicated task type with a standardized structure:
 </task>
 ```
 
+For implementation details of the static director-evaluator loop, see [Implementation:StaticDirectorEvaluator:1.0] in `/components/task-system/impl/director-evaluator.md`.
+
 ### Parameter Passing
 
 The Director-Evaluator loop uses direct parameter passing rather than environment variables:
@@ -98,60 +102,9 @@ flowchart LR
 
 All task results follow a consistent base structure with extensions for specific needs:
 
-```typescript
-// Base task result structure
-interface TaskResult {
-    content: string;
-    status: "COMPLETE" | "CONTINUATION" | "WAITING" | "FAILED";
-    notes: {
-        [key: string]: any;
-    };
-}
-
-// Specialized structure for evaluator feedback
-interface EvaluationResult extends TaskResult {
-    notes: {
-        success: boolean;        // Whether the evaluation passed
-        feedback: string;        // Human-readable feedback message
-        details?: {              // Optional structured details
-            metrics?: Record<string, number>; // Optional evaluation metrics
-            violations?: string[];            // Specific validation failures
-            suggestions?: string[];           // Suggested improvements
-            [key: string]: any;               // Extension point
-        };
-        scriptOutput?: {         // Present when script execution is involved
-            stdout: string;      // Standard output from script
-            stderr: string;      // Standard error output from script
-            exitCode: number;    // Exit code from script
-        };
-    };
-}
-```
-
-### Example Workflow
-
-Below is a conceptual example (in pseudocode) illustrating the updated director-evaluator flow. In this scenario, the Director task returns a result with `status: 'CONTINUATION'` and an embedded `evaluation_request`:
-
-```typescript
-// Example TaskResult returned by the Director task
-const taskResult: TaskResult = {
-    content: "Initial solution output...",
-    status: 'CONTINUATION',
-    notes: {
-        evaluation_request: {
-            type: "bash_script",
-            criteria: ["validate", "log"],
-            target: "run_analysis.sh"
-        }
-    }
-};
-```
-
-Upon receiving this result, the Evaluator:
-1. Uses the `evaluation_request` details (including the target string) to perform associative matching and select an appropriate evaluation task template.
-2. Dynamically spawns an evaluation subtask (the Child Task) with a `<context_management>` block set to inherit a subset of context.
-3. If necessary, invokes the specified bash script callback via the Handler or its own mechanism.
-4. Feeds the evaluation results back to the Director, allowing the overall task to continue.
+- Base task result structure includes content, status, and notes
+- Specialized structure for evaluator feedback includes success flag, feedback message, and optional details
+- Script execution results include stdout, stderr, and exit code
 
 ## Integration with the Unified Architecture
 
@@ -167,20 +120,7 @@ The Director-Evaluator pattern has specific default context management settings:
 
 These defaults adhere to the mutual exclusivity constraint: when `inherit_context` is "full", `fresh_context` must be "disabled".
 
-These defaults can be overridden through explicit configuration:
-
-```xml
-<task type="director_evaluator_loop">
-  <description>Iterative refinement process</description>
-  <context_management>
-    <inherit_context>none</inherit_context>
-    <accumulate_data>true</accumulate_data>
-    <accumulation_format>full_output</accumulation_format>
-    <fresh_context>enabled</fresh_context>
-  </context_management>
-  <!-- other elements -->
-</task>
-```
+These defaults can be overridden through explicit configuration in the task XML.
 
 The Director-Evaluator pattern fully embraces the hybrid configuration approach and integrates with the three-dimensional context management model:
 
@@ -210,6 +150,8 @@ When a script execution step is included:
 - Results are passed to the Evaluator for processing
 - The Evaluator considers both the original output and script results
 - As a tool call, script execution does not use the continuation mechanism
+
+For implementation details of script execution integration, see [Implementation:ScriptExecution:1.0] in `/components/handler/impl/script-execution.md`.
 
 ## Relationship to Subtask Spawning
 

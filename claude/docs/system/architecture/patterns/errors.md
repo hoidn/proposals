@@ -37,19 +37,16 @@ Related to [Contract:Tasks:TemplateSchema:1.0]
 
 Task failures now include a standardized `reason` field for more specific categorization:
 
-```typescript
-type TaskFailureReason = 
-  | 'context_retrieval_failure'    // Failure to retrieve context data
-  | 'context_matching_failure'     // Failure in associative matching algorithm 
-  | 'context_parsing_failure'      // Failure to parse or process retrieved context
-  | 'xml_validation_failure'       // Output doesn't conform to expected XML schema
-  | 'output_format_failure'        // Output doesn't meet format requirements
-  | 'execution_timeout'            // Task execution exceeded time limits
-  | 'execution_halted'             // Task execution was deliberately terminated
-  | 'subtask_failure'              // A subtask failed, causing parent task failure
-  | 'input_validation_failure'     // Input data didn't meet requirements
-  | 'unexpected_error';            // Catch-all for truly unexpected errors
-```
+- 'context_retrieval_failure': Failure to retrieve context data
+- 'context_matching_failure': Failure in associative matching algorithm 
+- 'context_parsing_failure': Failure to parse or process retrieved context
+- 'xml_validation_failure': Output doesn't conform to expected XML schema
+- 'output_format_failure': Output doesn't meet format requirements
+- 'execution_timeout': Task execution exceeded time limits
+- 'execution_halted': Task execution was deliberately terminated
+- 'subtask_failure': A subtask failed, causing parent task failure
+- 'input_validation_failure': Input data didn't meet requirements
+- 'unexpected_error': Catch-all for truly unexpected errors
 
 Task failures also include a structured details object that may contain error-specific information such as:
 - partial_context: Any partial context that was retrieved before failure
@@ -57,6 +54,8 @@ Task failures also include a structured details object that may contain error-sp
 - violations: Specific validation rule violations
 - partialResults: Results from steps that completed before failure
 - failedStep: Index of the step that failed in a sequential task
+
+For implementation details of error type structures, see [Implementation:ErrorTypes:1.0] in `/components/task-system/impl/error-handling.md`.
 
 ### 2.3 Failure to Make Progress
 Progress failures occur when a task cannot advance despite resources being available:
@@ -72,126 +71,18 @@ The system maintains a standardized approach for preserving partial results when
 ### Error Output Structure
 
 #### Atomic Tasks
-```typescript
-// Successful atomic task
-{
-  content: "Complete task output",
-  status: "COMPLETE", 
-  notes: {
-    dataUsage: "Resource usage statistics",
-    successScore: 0.95
-  }
-}
-
-// Failed atomic task
-{
-  content: "Partial output generated before failure",  // Partial content in content field
-  status: "FAILED",
-  notes: {
-    dataUsage: "Resource usage statistics",
-    executionStage: "validation",
-    completionPercentage: 60
-  }
-}
-```
 Task status (`COMPLETE` vs `FAILED`) indicates whether content is complete or partial.
 
 #### Sequential Tasks
-```typescript
-{
-  type: 'TASK_FAILURE',
-  reason: 'subtask_failure',
-  message: 'Sequential task "Process Dataset" failed at step 3',
-  details: {
-    failedStep: 2,
-    totalSteps: 5,
-    partialResults: [
-      { 
-        stepIndex: 0, 
-        content: "Data loaded successfully: 1000 records",
-        notes: { 
-          recordCount: 1000, 
-          status: "completed"
-        }
-      },
-      { 
-        stepIndex: 1, 
-        content: "Data transformed to required format",
-        notes: { 
-          transformType: "normalization", 
-          status: "completed"
-        }
-      }
-    ]
-  }
-}
-```
+When a sequential task fails, the error includes details about which step failed and preserves the results from completed steps.
 
 #### Reduce Tasks
-```typescript
-{
-  type: 'TASK_FAILURE',
-  reason: 'subtask_failure',
-  message: 'Reduce task "Aggregate metrics" failed processing input 2',
-  details: {
-    failedInputIndex: 2,
-    totalInputs: 5,
-    processedInputs: [0, 1],
-    currentAccumulator: { totalCount: 1500, averageValue: 42.3 },
-    partialResults: [
-      { 
-        inputIndex: 0, 
-        content: "Processed metrics for server 1",
-        notes: { 
-          status: "completed",
-          serverName: "server-01",
-          metricsCount: 250
-        }
-      },
-      { 
-        inputIndex: 1, 
-        content: "Processed metrics for server 2",
-        notes: { 
-          status: "completed",
-          serverName: "server-02",
-          metricsCount: 180
-        }
-      }
-    ]
-  }
-}
-```
+For reduce tasks, the error includes information about which input failed processing, the current accumulator state, and results from successfully processed inputs.
 
 #### Storage Format Control
 The format of preserved partial results depends on the task's `accumulation_format` setting:
 - `notes_only`: Only the notes field is preserved (default for memory efficiency)
 - `full_output`: Both content and notes fields are preserved (with size limits)
-
-```typescript
-// With accumulation_format="notes_only"
-partialResults: [
-  { 
-    stepIndex: 0, 
-    notes: { 
-      recordCount: 1000,
-      status: "completed"
-      // Other essential metadata
-    }
-  }
-]
-
-// With accumulation_format="full_output"
-partialResults: [
-  { 
-    stepIndex: 0,
-    content: "Complete step output text",
-    notes: { 
-      recordCount: 1000,
-      status: "completed"
-    }
-  }
-]
-```
 
 Each operator type has specific default settings for context management. For sequential tasks, the default `accumulation_format` is `minimal`. These defaults apply when the `context_management` block is omitted. When present, explicit settings override the defaults, following the hybrid configuration approach.
 
@@ -203,20 +94,7 @@ To prevent memory issues:
 
 ### 2.5 Output Format Validation
 
-When a task specifies an output format using `<output_format type="json" schema="...">`, validation failures result in:
-
-```typescript
-{
-  type: 'TASK_FAILURE',
-  reason: 'output_format_failure',
-  message: 'Expected output of type "array" but got "object"',
-  details: {
-    expectedType: "array",
-    actualType: "object",
-    originalOutput: "..." // The original output
-  }
-}
-```
+When a task specifies an output format using `<output_format type="json" schema="...">`, validation failures result in a structured error that includes the expected type, actual type, and original output.
 
 This error occurs when:
 1. The task specifies an output format with `type="json"`
@@ -235,30 +113,6 @@ Error detection now includes identifying:
 - Context matching failures
 - Context parsing failures
 - Output format validation failures
-
-```typescript
-function handleTaskError(error: TaskError) {
-  if (error.type === 'RESOURCE_EXHAUSTION') {
-    // Handle resource exhaustion based on resource type
-    handleResourceExhaustion(error);
-  } else if (error.type === 'TASK_FAILURE') {
-    // Handle task failure based on reason
-    if (error.reason.startsWith('context_')) {
-      // Handle context-related failures
-      handleContextFailure(error);
-    } else if (error.reason === 'subtask_failure') {
-      // Handle subtask failures, potentially using partial results
-      handleSubtaskFailure(error);
-    } else if (error.reason === 'output_format_failure') {
-      // Handle output validation failures
-      handleOutputFormatFailure(error);
-    } else {
-      // Handle other failures
-      handleGeneralFailure(error);
-    }
-  }
-}
-```
 
 ### 3.2 Planning Phase
 See [Component:Evaluator:1.0] for error handling.
@@ -293,60 +147,13 @@ flowchart TD
 
 ### Subtask Failure Handling
 
-When a subtask fails, the system provides a standardized error structure that preserves context and enables recovery:
-
-```typescript
-{
-  type: 'TASK_FAILURE',
-  reason: 'subtask_failure',
-  message: 'Subtask "Process complex data" failed',
-  details: {
-    subtaskRequest: {
-      type: 'atomic',
-      description: 'Process complex data',
-      inputs: { /* original inputs */ }
-    },
-    subtaskError: {
-      type: 'TASK_FAILURE',
-      reason: 'execution_halted',
-      message: 'Failed to process data format'
-    },
-    nestingDepth: 2,
-    partialOutput: "Partial processing results before failure"
-  }
-}
-```
-
-This standardized structure provides several benefits:
+When a subtask fails, the system provides a standardized error structure that preserves context and enables recovery. This standardized structure provides several benefits:
 1. Complete error context preservation
 2. Clear indication of which subtask failed
 3. Access to the original subtask request for potential retry
 4. Preservation of partial results for recovery
 
-Example of parent task handling subtask failures:
-```typescript
-try {
-  const result = await taskSystem.executeTask(complexTask);
-} catch (error) {
-  if (error.type === 'TASK_FAILURE' && error.reason === 'subtask_failure') {
-    console.log(`Subtask failed: ${error.details.subtaskRequest.description}`);
-    
-    // Access the original subtask request for potential retry
-    const modifiedRequest = {
-      ...error.details.subtaskRequest,
-      description: `Retry: ${error.details.subtaskRequest.description} with simplified approach`
-    };
-    
-    // Use partial results if available
-    if (error.details.partialOutput) {
-      console.log(`Using partial output: ${error.details.partialOutput}`);
-    }
-    
-    // Attempt recovery with modified request
-    const recoveryResult = await taskSystem.executeTask(modifiedRequest);
-  }
-}
-```
+For implementation details of error recovery mechanisms, see [Implementation:ErrorRecovery:1.0] in `/components/task-system/impl/error-handling.md`.
 
 ### 3.4 Validation Phase
 Recovery validation includes:
@@ -359,40 +166,12 @@ Recovery validation includes:
 See components/task-system/impl/examples.md for concrete examples.
 
 ### Context Retrieval Failure Example
-```typescript
-// Memory System's file index is corrupted or unavailable
-const error = {
-  type: 'TASK_FAILURE',
-  reason: 'context_retrieval_failure',
-  message: 'Failed to access memory system index',
-  details: { error: 'Index corruption detected' }
-};
-
-// Recovery involves alternative context strategy
-const recovery = await evaluator.recoverFromContextFailure(error);
-```
+When the Memory System's file index is corrupted or unavailable, recovery involves alternative context strategy.
 
 ### Sequential Task Failure Example
-```typescript
-try {
-  const result = await taskSystem.executeTask(
-    "process data in multiple steps",
-    memorySystem
-  );
-} catch (error) {
-  if (error.type === 'TASK_FAILURE' && error.reason === 'subtask_failure') {
-    console.log(`Failed at step ${error.details.failedStep} of ${error.details.totalSteps}`);
-    
-    // Access partial results from completed steps
-    error.details.partialResults.forEach(result => {
-      console.log(`Step ${result.stepIndex} output: ${result.output}`);
-    });
-    
-    // Potentially use partial results for recovery
-    const recoveryResult = await evaluator.recoverWithPartialResults(error);
-  }
-}
-```
+When a sequential task fails, the system provides access to partial results from completed steps, which can be used for recovery.
+
+For concrete implementation examples, see [Implementation:ErrorExamples:1.0] in `/components/task-system/impl/error-handling.md`.
 
 ## 5. Known Limitations
 - **Recovery Depth**: Limited to prevent infinite loops

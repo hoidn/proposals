@@ -44,6 +44,8 @@ result = tools.analyzeData({
 })
 ```
 
+For implementation details of direct tools, see [Implementation:DirectTools:1.0] in `/components/handler/impl/tool-execution.md`.
+
 ### How It's Implemented
 
 Behind the interface, tools operate differently:
@@ -61,26 +63,7 @@ Behind the interface, tools operate differently:
    - Depth tracking and cycle detection
    - Examples: data analysis, creative generation, complex reasoning
 
-## Implementation Details
-
-### Handler Responsibilities
-
-The Handler component exposes both types of tools through a unified registry:
-
-```typescript
-interface ToolRegistry {
-  registerDirectTool(name: string, handler: Function): void;
-  registerSubtaskTool(name: string, templateHints: string[]): void;
-  
-  // Called by LLM through tool interface
-  invokeTool(name: string, params: any): Promise<any>;
-}
-```
-
-When a tool is invoked:
-1. Handler determines tool type (direct or subtask)
-2. For direct tools: executes immediately and returns result
-3. For subtask tools: creates CONTINUATION with SubtaskRequest and yields
+For implementation details of subtask tools, see [Implementation:SubtaskTools:1.0] in `/components/task-system/impl/subtask-tools.md`.
 
 ## Subtask Results as Tool Responses
 
@@ -110,53 +93,6 @@ flowchart TD
 5. Parent LLM continues execution with the tool result in its conversation history
 
 This approach eliminates the need for the LLM to understand continuation concepts - it simply sees its tool call and the corresponding response.
-
-### Task System Integration
-
-For subtask tools, the Task System:
-1. Receives CONTINUATION status with subtask_request
-2. Selects appropriate template using associative matching
-3. Executes subtask with context management
-4. Returns result to parent task
-
-## Usage Examples
-
-### Direct Tool Example
-
-```typescript
-// LLM invocation
-const fileContent = tools.readFile("data.csv");
-
-// Implementation (synchronous via Handler)
-async function readFile(path: string): Promise<string> {
-  return await fs.readFile(path, 'utf8');
-}
-```
-
-### Subtask Tool Example
-
-```typescript
-// LLM invocation
-const analysis = tools.analyzeData({
-  "data": fileContent,
-  "method": "statistical"
-});
-
-// Implementation (asynchronous via CONTINUATION)
-async function analyzeData(params: any): Promise<any> {
-  return {
-    status: "CONTINUATION",
-    notes: {
-      subtask_request: {
-        type: "atomic",
-        description: `Analyze data using ${params.method} method`,
-        inputs: { data: params.data, method: params.method },
-        template_hints: ["data_analysis", "statistics"]
-      }
-    }
-  };
-}
-```
 
 ## Selection Criteria
 
@@ -189,56 +125,6 @@ This pattern complements:
 
 ### User Input Request Tool
 
-The system provides a standardized tool for requesting user input:
+The system provides a standardized tool for requesting user input when additional information is needed from the user during task execution.
 
-```typescript
-// Standard tool for requesting user input
-const USER_INPUT_TOOL: ToolDefinition = {
-  name: "requestUserInput",
-  description: "Request input from the user when additional information is needed",
-  parameters: {
-    type: "object",
-    properties: {
-      prompt: {
-        type: "string",
-        description: "The question or prompt to show to the user"
-      }
-    },
-    required: ["prompt"]
-  }
-};
-
-// LLM usage
-const userAnswer = tools.requestUserInput({
-  prompt: "What file would you like to analyze?"
-});
-
-// Handler implementation
-class Handler implements IHandler {
-  constructor(config: HandlerConfig) {
-    // Register standard tools
-    this.registerDirectTool(USER_INPUT_TOOL.name, this.handleUserInputRequest.bind(this));
-  }
-  
-  private async handleUserInputRequest(params: {prompt: string}): Promise<{userInput: string}> {
-    if (!this.onRequestInput) {
-      throw new Error("No input request handler registered");
-    }
-    
-    const userInput = await this.onRequestInput(params.prompt);
-    this.session.addUserMessage(userInput);
-    
-    return { userInput };
-  }
-}
-```
-
-This standardized approach allows LLMs to consistently request user input across different providers while maintaining proper conversation tracking and resource management.
-
-## Implementation Guidance
-
-1. Register direct tools during Handler initialization
-2. Define subtask tools in the TaskLibrary with template hints
-3. Implement invocation routing in the Handler
-4. Ensure consistent error handling in both paths
-5. Provide clear documentation of available tools to the LLM
+For implementation details of user input tools, see [Implementation:UserInputTools:1.0] in `/components/handler/impl/tool-execution.md`.
