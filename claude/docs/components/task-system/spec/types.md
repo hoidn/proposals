@@ -536,7 +536,7 @@ export interface SubtaskRequest {
 export interface SubtaskFailureError extends TaskError {
     type: 'TASK_FAILURE';
     reason: 'subtask_failure';
-    content?: string;  // Partial content from subtask if available
+    message: string;
     details: {
         /** The original subtask request */
         subtaskRequest: SubtaskRequest;
@@ -574,4 +574,35 @@ export interface FunctionCallNode extends ASTNode {
 export interface ArgumentNode extends ASTNode {
     type: "argument";
     value: string | ASTNode;  // String for variables/literals, ASTNode for nested
+}
+
+/**
+ * Handler session interface for managing conversation state
+ */
+export interface HandlerSession {
+    /**
+     * Add a user message to the session
+     */
+    addUserMessage(content: string): void;
+    
+    /**
+     * Add an assistant message to the session
+     */
+    addAssistantMessage(content: string): void;
+    
+    /**
+     * Add a tool response to the session
+     * Used for adding subtask results as tool responses
+     */
+    addToolResponse(toolName: string, content: string): void;
+    
+    /**
+     * Construct a payload for the LLM with current session state
+     */
+    constructPayload(systemPrompt: string, userMessage: string): any;
+    
+    /**
+     * Get resource metrics for the session
+     */
+    getResourceMetrics(): ResourceMetrics;
 }

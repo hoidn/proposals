@@ -11,6 +11,19 @@ import { MemorySystem } from "../../memory/api/interfaces";
  * Provides methods to execute tasks, validate templates, and find matching templates.
  */
 export interface TaskSystem {
+    /**
+     * Execute a task, automatically handling continuations via tool responses
+     * 
+     * If a task returns CONTINUATION status with a subtask_request:
+     * 1. The subtask is executed
+     * 2. The result is added as a tool response to the parent's session
+     * 3. The parent task continues execution with the tool result available
+     * 
+     * @param task - The task to execute
+     * @param memory - The Memory System instance
+     * @param taskType - Optional task type override
+     * @returns Promise resolving to the final task result
+     */
     executeTask(
         task: string,
         memory: MemorySystem,
@@ -164,6 +177,14 @@ interface Handler {
      * @param templateHints - Hints for template selection
      */
     registerSubtaskTool(name: string, templateHints: string[]): void;
+
+    /**
+     * Add a tool response to the session
+     * Used for adding subtask results to parent tasks
+     * @param toolName - Name of the tool that produced the response
+     * @param response - The tool response content
+     */
+    addToolResponse(toolName: string, response: string): void;
 
     /**
      * Callback for handling agent input requests

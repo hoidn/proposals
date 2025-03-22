@@ -517,20 +517,50 @@ async function processComplexTask(input: string): Promise<TaskResult> {
   };
 }
 
-// Task System handling
-const result = await taskSystem.executeTask("process complex data");
+// Example of subtask tool execution
+async function executeWithSubtasks() {
+  // Create a Handler with session preservation
+  const handler = new Handler(handlerConfig);
+  
+  // Register subtask tool
+  handler.registerSubtaskTool("analyzeData", ["data_analysis", "statistical"]);
+  
+  // Execute the task (internal handling of continuations)
+  const result = await taskSystem.executeTask("process complex data", memorySystem);
+  
+  // TaskSystem automatically:
+  // 1. Detects CONTINUATION status
+  // 2. Executes the subtask
+  // 3. Adds result as tool response to parent's session
+  // 4. Continues parent execution
+  
+  console.log("Final result:", result.content);
+}
 
-// If result is a continuation with subtask request
-if (result.status === "CONTINUATION" && result.notes.subtask_request) {
-  const subtaskRequest = result.notes.subtask_request;
-  const subtaskResult = await taskSystem.executeSubtask(subtaskRequest, result);
+// Example of what happens internally in taskSystem.executeTask
+async function internalTaskSystemFlow(task, context) {
+  // Get or create a Handler
+  const handler = this.getHandlerForTask(task);
   
-  // Resume parent task with subtask result
-  const finalResult = await taskSystem.resumeTask(result, {
-    subtask_result: subtaskResult
-  });
+  // Execute the initial prompt
+  const result = await handler.executePrompt(task.taskPrompt);
   
-  console.log("Final result:", finalResult.content);
+  // Check for continuation
+  if (result.status === "CONTINUATION" && result.notes?.subtask_request) {
+    // Execute the subtask
+    const subtaskResult = await this.executeSubtask(result.notes.subtask_request);
+    
+    // Add subtask result as a tool response to parent's session
+    handler.addToolResponse(
+      this.getToolNameFromRequest(result.notes.subtask_request),
+      subtaskResult.content
+    );
+    
+    // Continue parent execution
+    return handler.executePrompt("Continue based on the tool results.");
+  }
+  
+  return result;
 }
 
 ### Example with Explicit File Paths
@@ -555,45 +585,21 @@ return {
 ### Error Handling Example
 
 ```typescript
+// Simplified error handling example
 try {
-  // Execute task that might spawn subtasks
   const result = await taskSystem.executeTask("analyze complex document");
   console.log("Analysis complete:", result.content);
 } catch (error) {
-  // Check if this is a subtask failure
-  if (error.type === 'TASK_FAILURE' && error.reason === 'subtask_failure') {
-    console.log(`Subtask failed: ${error.details.subtaskRequest.description}`);
+  // Standard error types without complex partial results
+  if (error.type === 'RESOURCE_EXHAUSTION') {
+    console.log(`Resource limit exceeded: ${error.resource}`);
+  } else if (error.type === 'TASK_FAILURE') {
+    console.log(`Task failed: ${error.message}`);
     
-    // Access the original subtask request
-    const originalRequest = error.details.subtaskRequest;
-    
-    // Access the specific subtask error
-    const subtaskError = error.details.subtaskError;
-    console.log(`Subtask error: ${subtaskError.message}`);
-    
-    // Use partial results if available
-    if (error.details.partialOutput) {
-      console.log(`Partial output available: ${error.details.partialOutput}`);
-      
-      // Attempt recovery with modified request
-      const modifiedRequest = {
-        ...originalRequest,
-        description: `Retry: ${originalRequest.description} with simplified approach`,
-        inputs: {
-          ...originalRequest.inputs,
-          use_partial_results: error.details.partialOutput
-        }
-      };
-      
-      try {
-        const recoveryResult = await taskSystem.executeSubtask(modifiedRequest);
-        console.log("Recovery successful:", recoveryResult.content);
-      } catch (recoveryError) {
-        console.error("Recovery failed:", recoveryError.message);
-      }
+    // If this was a subtask failure, the error contains the original request
+    if (error.reason === 'subtask_failure') {
+      console.log(`Failed subtask: ${error.details.subtaskRequest.description}`);
     }
-  } else {
-    console.error("Task failed:", error.message);
   }
 }
 ```

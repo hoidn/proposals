@@ -313,10 +313,11 @@ The Task System implements a standardized approach to subtask spawning:
    - Executes the subtask with appropriate resource tracking
 
 3. **Result Handling**
-   - Passes the complete TaskResult back to the parent task
-   - Preserves partial results if the subtask fails
-   - Maintains resource tracking across the subtask chain
-   - Ensures proper cleanup of resources after completion
+   - Adds subtask result as a tool response to parent's Handler session
+   - Parent task continues execution with the tool result in its conversation history
+   - No special resumption methods or partial results tracking needed
+   - Handler session remains preserved throughout the subtask execution
+   - From the LLM's perspective, subtasks appear as normal tool calls and responses
 
 ### Explicit File Selection
 
@@ -348,6 +349,8 @@ These defaults can be overridden through explicit configuration in the SubtaskRe
 
 ### Error Handling
 
+The system uses standard error types (`RESOURCE_EXHAUSTION`, `TASK_FAILURE`) without complex partial results tracking. Errors contain essential information needed for debugging without overengineering the error structure. The parent task receives clear error information and can implement appropriate recovery strategies based on error type and context.
+
 When a subtask fails, a standardized error structure is generated:
 
 ```typescript
@@ -366,13 +369,12 @@ When a subtask fails, a standardized error structure is generated:
       reason: 'execution_halted',
       message: 'Failed to process data'
     },
-    nestingDepth: 2,
-    partialOutput: "Partial processing results"
+    nestingDepth: 2
   }
 }
 ```
 
-This structure preserves the complete error context, allowing the parent task to implement recovery strategies if needed.
+This structure provides the essential error context, allowing the parent task to implement recovery strategies if needed.
 
 ## Context Management Delegation
 

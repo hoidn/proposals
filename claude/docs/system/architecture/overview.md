@@ -346,14 +346,20 @@ The system implements a standardized subtask spawning mechanism that enables dyn
 3. **Data Flow**
    ```mermaid
    flowchart LR
-       A[Parent Task] -->|"TaskResult{status:CONTINUATION,\n notes:{subtask_request}}"| B[Task System]
-       B -->|"Template Selection\n& Direct Input Passing"| C[Subtask]
-       C -->|"TaskResult"| D[Task System]
-       D -->|"Resume with\n{subtask_result:TaskResult}"| A
+       A[Parent LLM] -->|"tools.analyzeData({...})"| B[Handler]
+       B -->|CONTINUATION with subtask_request| C[Task System]
+       C -->|Execute subtask| D[Subtask LLM]
+       D -->|Result| C
+       C -->|Add as tool response| B
+       B -->|Continue with tool result| A
    ```
-   - Direct parameter passing (not environment variables) ensures clear data dependencies
-   - Parent task receives subtask result as a parameter when execution resumes
-   - All data flow is explicit and traceable
+   - Parent tasks make tool calls that require complex processing
+   - Handler returns CONTINUATION status with subtask_request
+   - Task System executes subtask independently
+   - Subtask result is added as a tool response to parent's session
+   - Parent continues execution with the tool result in conversation history
+   - From the LLM's perspective, this appears as a normal tool call and response
+   - No special resumption methods or complex continuation mechanisms required
 
 4. **Context Integration**
    - Subtasks have default context management settings:

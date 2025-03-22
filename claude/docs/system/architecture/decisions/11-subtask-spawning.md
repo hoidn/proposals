@@ -127,15 +127,30 @@ async function executeTask(task, inputs, depth = 0) {
         return createMaxDepthError();
     }
     
-    const result = await executeTaskWithLLM(task, inputs);
+    // Get or create Handler for this task
+    const handler = getHandlerForTask(task);
+    
+    // Execute initial prompt
+    const result = await handler.executePrompt(task, inputs);
     
     if (result.status === "CONTINUATION" && result.notes?.subtask_request) {
         const subtaskRequest = result.notes.subtask_request;
         const subtaskTemplate = await findMatchingTemplate(subtaskRequest);
+        
+        // Execute subtask with incremented depth
         const subtaskResult = await executeTask(subtaskTemplate, subtaskRequest.inputs, depth + 1);
         
-        // Resume original task with subtask results
-        return executeTask(task, {...inputs, subtask_result: subtaskResult}, depth);
+        // Add subtask result as a tool response to parent's Handler session
+        handler.addToolResponse(
+            getToolNameFromRequest(subtaskRequest),
+            subtaskResult.content
+        );
+        
+        // Continue parent task execution with the tool response in its history
+        return handler.executePrompt(
+            task,
+            "Continue based on the tool results."
+        );
     }
     
     return result;
@@ -346,6 +361,12 @@ The Subtask Spawning mechanism and Director-Evaluator Loop are complementary fea
 - Direct parameter passing improves clarity and debugging
 - Template hints enable flexible subtask selection
 - Structured error handling improves recovery options
+- The simplified tool-response based approach offers several advantages:
+  - No special resumption methods required
+  - Parent Handler session preserved throughout execution
+  - From the LLM's perspective, subtask results appear as regular tool responses
+  - Cleaner error handling with standard patterns
+  - More intuitive control flow with clearer component boundaries
 
 ### Negative
 - Increased implementation complexity
