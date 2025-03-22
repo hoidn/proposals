@@ -16,12 +16,16 @@ This document defines the resource management strategy for the task execution sy
 2. **Working Memory:** The active computation space (task‑specific context) managed through Environment objects; cleared after task completion.
 3. **Context Frames:** Capture complete execution environments (bindings and working memory) using a minimal‑context extension pattern.
 
+For implementation details of memory hierarchy, see [Implementation:MemoryHierarchy:1.0] in `/components/handler/impl/resource-tracking.md`.
+
 ### Resource Tracking
 
 The Handler is responsible for:
  - Tracking turn counts and enforcing limits.
  - Monitoring context window usage (tokens) with warning thresholds (e.g. 80%) and hard limits.
  - Reporting resource metrics for error handling.
+
+For implementation details of resource tracking, see [Implementation:ResourceTracking:1.0] in `/components/handler/impl/resource-tracking.md`.
 
 ### Resource Tracking
 
