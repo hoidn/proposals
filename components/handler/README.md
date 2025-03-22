@@ -138,3 +138,69 @@ const scriptResult = await handler.executeScript(
   30 // timeout in seconds
 );
 ```
+# Handler Component [Component:Handler:1.0]
+
+## Purpose
+
+The Handler component is responsible for LLM interface management and resource tracking. It serves as the bridge between the Task System and various LLM providers, ensuring consistent interaction patterns and resource usage monitoring.
+
+## Related Documents
+
+- [Pattern:ResourceManagement:1.0](../../system/architecture/patterns/resource-management.md)
+- [Pattern:ToolInterface:1.0](../../system/architecture/patterns/tool-interface.md)
+- [Contract:LLMInteraction:1.0](../../system/contracts/protocols.md)
+
+## Component Overview
+
+The Handler component:
+
+- Performs ALL file I/O operations (reading, writing, deletion)
+- Supports multiple LLM providers with appropriate tool configurations
+- Abstracts provider-specific implementation details while maintaining consistent capabilities
+- Manages resource usage tracking (turns, tokens)
+- Handles LLM interactions and session management
+- Works with fully resolved content (no template variable substitution)
+
+## Directory Structure
+
+- `api/`: Public interfaces for external components
+- `impl/`: Implementation details for resource tracking, tool execution, etc.
+- `spec/`: Specifications for behaviors, interfaces, and types
+
+## Integration Points
+
+- **Task System**: Creates Handler instances with configuration
+- **Evaluator**: Provides fully resolved content for LLM interaction
+- **Memory System**: Provides context that Handler presents to LLMs
+
+## Resource Management
+
+The Handler implements resource tracking according to [Pattern:ResourceManagement:1.0]:
+
+- One Handler per task execution
+- Isolated resource tracking per session
+- Clear limit enforcement
+- Warning thresholds at 80%
+- Clean termination on exhaustion
+
+For implementation details, see [Implementation:ResourceTracking:1.0](./impl/resource-tracking.md).
+
+## Tool Interface
+
+The Handler provides a unified tool interface according to [Pattern:ToolInterface:1.0]:
+
+- Direct tools for synchronous operations
+- User input request tools for interactive sessions
+- Tool response handling for subtask results
+
+For implementation details, see [Implementation:DirectTools:1.0](./impl/tool-execution.md) and [Implementation:UserInputTools:1.0](./impl/tool-execution.md).
+
+## Script Execution
+
+The Handler supports script execution for the Director-Evaluator pattern:
+
+- Command execution with input/output handling
+- Timeout enforcement
+- Error handling and result formatting
+
+For implementation details, see [Implementation:ScriptExecution:1.0](./impl/script-execution.md).

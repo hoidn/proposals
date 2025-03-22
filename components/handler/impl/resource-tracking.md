@@ -1,75 +1,109 @@
-# Resource Tracking Implementation
+# Resource Tracking Implementation [Implementation:ResourceTracking:1.0]
 
-## Turn Counting
+## Purpose
+
+This document provides implementation details for the Resource Management Pattern defined in [Pattern:ResourceManagement:1.0].
+
+## Related Documents
+
+- [Pattern:ResourceManagement:1.0](../../../system/architecture/patterns/resource-management.md)
+- [Handler Types](../spec/types.md)
+- [Handler Behaviors](../spec/behaviors.md)
+
+## Turn Counter Implementation
 
 ```typescript
 class TurnCounter {
-  private used: number = 0;
-  private limit: number;
-  private lastTurnAt?: Date;
+  private metrics: ResourceMetrics['turns'];
   
   constructor(limit: number) {
-    this.limit = limit;
+    this.metrics = {
+      used: 0,
+      limit,
+      lastTurnAt: new Date()
+    };
   }
   
   increment(): void {
-    if (this.used >= this.limit) {
-      throw new ResourceExhaustionError('turns', {
-        used: this.used,
-        limit: this.limit
-      });
+    if (this.metrics.used >= this.metrics.limit) {
+      throw new ResourceExhaustionError('turns', this.metrics);
     }
-    
-    this.used++;
-    this.lastTurnAt = new Date();
+    this.metrics.used++;
+    this.metrics.lastTurnAt = new Date();
   }
   
-  getMetrics(): TurnMetrics {
-    return {
-      used: this.used,
-      limit: this.limit,
-      lastTurnAt: this.lastTurnAt
-    };
+  getMetrics(): ResourceMetrics['turns'] {
+    return { ...this.metrics };
   }
 }
 ```
 
-## Context Window Management
+## Context Window Management [Implementation:ContextWindow:1.0]
 
 ```typescript
 class ContextManager {
-  private used: number = 0;
-  private limit: number;
+  private metrics: ResourceMetrics['context'];
   private provider: ProviderAdapter;
   
   constructor(maxFraction: number, provider: ProviderAdapter, model: string) {
     const modelLimit = provider.getModelContextLimit(model);
-    this.limit = Math.floor(modelLimit * maxFraction);
+    this.metrics = {
+      used: 0,
+      limit: Math.floor(modelLimit * maxFraction),
+      peakUsage: 0
+    };
     this.provider = provider;
   }
   
   addContent(content: string): void {
-    const tokens = this.provider.estimateTokens(content);
+    const tokens = this.estimateTokens(content);
     
-    if (this.used + tokens > this.limit) {
-      throw new ResourceExhaustionError('context', {
-        used: this.used,
-        limit: this.limit
-      });
+    if (this.metrics.used + tokens > this.metrics.limit) {
+      throw new ResourceExhaustionError('context', this.metrics);
     }
     
-    this.used += tokens;
+    this.metrics.used += tokens;
+    this.metrics.peakUsage = Math.max(this.metrics.peakUsage, this.metrics.used);
     
-    if (this.used >= this.limit * 0.8) {
-      // Emit warning at 80% usage
+    if (this.metrics.used >= this.metrics.limit * 0.8) {
+      this.emitWarning('RESOURCE_WARNING', 'context', this.metrics);
     }
   }
   
-  getMetrics(): ContextMetrics {
-    return {
-      used: this.used,
-      limit: this.limit
+  private estimateTokens(text: string): number {
+    return this.provider.estimateTokens(text);
+  }
+  
+  getMetrics(): ResourceMetrics['context'] {
+    return { ...this.metrics };
+  }
+}
+```
+
+## Resource Cleanup Implementation [Implementation:ResourceCleanup:1.0]
+
+```typescript
+class HandlerSession {
+  // Other properties and methods...
+  
+  cleanup(): void {
+    // Complete resource accounting
+    const finalMetrics = {
+      turns: this.turnCounter.getMetrics(),
+      context: this.contextManager.getMetrics()
     };
+    
+    // Log final resource usage
+    this.logResourceUsage(finalMetrics);
+    
+    // Clear message history
+    this.messages = [];
+    
+    // Clear any cached data
+    this.cachedPayload = null;
+    
+    // Signal completion
+    this.isActive = false;
   }
 }
 ```
@@ -78,17 +112,106 @@ class ContextManager {
 
 The HandlerSession integrates both tracking mechanisms:
 
-1. **Turn Tracking**
-   - Incremented in addAssistantMessage method
-   - Not affected by user messages or tool responses
-   - Checked before each LLM call
+```typescript
+class HandlerSession {
+  private systemPrompt: string;
+  private messages: Message[] = [];
+  private turnCounter: TurnCounter;
+  private contextManager: ContextManager;
+  private config: HandlerConfig;
+  
+  constructor(config: HandlerConfig) {
+    this.config = config;
+    this.systemPrompt = config.systemPrompt;
+    this.turnCounter = new TurnCounter({
+      limit: config.maxTurns,
+      used: 0,
+      lastTurnAt: new Date()
+    });
+    this.contextManager = new ContextManager({
+      limit: Math.floor(config.maxContextWindowFraction * this.getModelMaxTokens(config.defaultModel)),
+      used: 0,
+      peakUsage: 0
+    });
+  }
+  
+  addUserMessage(content: string): void {
+    this.messages.push({ 
+      role: "user", 
+      content, 
+      timestamp: new Date() 
+    });
+    this.contextManager.addContent(content);
+    // No turn increment for user messages
+  }
+  
+  addAssistantMessage(content: string): void {
+    this.messages.push({ 
+      role: "assistant", 
+      content, 
+      timestamp: new Date() 
+    });
+    this.contextManager.addContent(content);
+    this.turnCounter.increment(); // Increment turn counter for assistant responses
+  }
+  
+  /**
+   * Constructs a payload for the LLM using fully resolved content
+   * @param task The resolved task template with all variables already substituted
+   * @returns A complete HandlerPayload ready for LLM submission
+   */
+  constructPayload(task: TaskTemplate): HandlerPayload {
+    // Note: All template variables should already be resolved by the Evaluator
+    return {
+      systemPrompt: this.systemPrompt,
+      messages: [...this.messages, { 
+        role: "user", 
+        content: task.taskPrompt, // Already fully resolved
+        timestamp: new Date()
+      }],
+      context: this.contextManager.getCurrentContext(),
+      tools: this.getAvailableTools(),
+      metadata: {
+        model: this.config.defaultModel,
+        resourceUsage: this.getResourceMetrics()
+      }
+    };
+  }
+  
+  getResourceMetrics(): ResourceMetrics {
+    return {
+      turns: this.turnCounter.getMetrics(),
+      context: this.contextManager.getMetrics()
+    };
+  }
+  
+  private getModelMaxTokens(model: string): number {
+    // Return model-specific token limits
+    const modelTokenLimits = {
+      "claude-3-opus": 200000,
+      "claude-3-sonnet": 180000,
+      "claude-3-haiku": 150000,
+      "gpt-4": 128000,
+      "gpt-4-turbo": 128000,
+      "gpt-3.5-turbo": 16000
+    };
+    
+    return modelTokenLimits[model] || 100000; // Default fallback
+  }
+  
+  private getAvailableTools(): ToolDefinition[] {
+    // Return registered tools
+    return this.registeredTools;
+  }
+}
+```
 
-2. **Context Tracking**
-   - Updated for all messages regardless of type
-   - Includes system prompt and context
-   - Checked before constructing payload
-
-See [Pattern:ResourceManagement:1.0] for underlying principles.
+The implementation follows these principles from [Pattern:ResourceManagement:1.0]:
+- One Handler per task execution
+- Isolated resource tracking per session
+- Clear limit enforcement
+- Warning thresholds at 80%
+- Clean termination on exhaustion
 # Resource Tracking Implementation [Implementation:ResourceTracking:1.0]
 
 This document provides implementation details for the Resource Management Pattern defined in [Pattern:ResourceManagement:1.0].

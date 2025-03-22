@@ -1,6 +1,14 @@
 # Script Execution Implementation [Implementation:ScriptExecution:1.0]
 
+## Purpose
+
 This document provides implementation details for script execution as defined in the Director-Evaluator pattern [Pattern:DirectorEvaluator:1.1].
+
+## Related Documents
+
+- [Pattern:DirectorEvaluator:1.1](../../../system/architecture/patterns/director-evaluator.md)
+- [Handler Types](../spec/types.md)
+- [Handler Behaviors](../spec/behaviors.md)
 
 ## Script Execution Handler
 
@@ -94,4 +102,46 @@ class TaskSystem {
 }
 ```
 
-For integration with the Director-Evaluator pattern, see [Implementation:StaticDirectorEvaluator:1.0] and [Implementation:DynamicDirectorEvaluator:1.0].
+## Director-Evaluator Integration
+
+When used within a Director-Evaluator loop, script execution follows this flow:
+
+1. The Director produces an initial output
+2. The script receives the Director's output as input
+3. Script execution captures stdout, stderr, and exit code
+4. These outputs are passed to the Evaluator
+5. The Evaluator considers both the original output and script results
+
+```typescript
+// In Director-Evaluator Loop implementation
+async function executeDirectorEvaluatorLoop(task: DirectorEvaluatorLoopTask): Promise<TaskResult> {
+  // Execute director
+  const directorResult = await executeTask(task.director);
+  
+  // Execute script if configured
+  let scriptResult = null;
+  if (task.scriptExecution) {
+    scriptResult = await handler.executeScript(
+      task.scriptExecution.command,
+      directorResult.content,
+      task.scriptExecution.timeout || 300
+    );
+  }
+  
+  // Prepare evaluator inputs
+  const evaluatorInputs = {
+    solution: directorResult.content,
+    scriptOutput: scriptResult ? scriptResult.stdout : null,
+    scriptError: scriptResult ? scriptResult.stderr : null,
+    exitCode: scriptResult ? scriptResult.exitCode : null
+  };
+  
+  // Execute evaluator with inputs
+  const evaluationResult = await executeTask(task.evaluator, evaluatorInputs);
+  
+  // Process results and continue or terminate loop
+  // ...
+}
+```
+
+For complete integration details, see [Implementation:StaticDirectorEvaluator:1.0] and [Implementation:DynamicDirectorEvaluator:1.0] in the Task System documentation.

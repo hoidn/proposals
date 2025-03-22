@@ -191,7 +191,8 @@ LLM interface and resource tracking component.
 - Manages resource usage tracking (turns, tokens)
 - Handles LLM interactions and session management
 - Works with fully resolved content (no template variable substitution)
-- Works with fully resolved content (no template variable substitution)
+
+See [Handler README](../components/handler/README.md) for complete specification.
 
 ### Compiler [Component:Compiler:1.0]
 Task parsing and transformation component.
