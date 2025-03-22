@@ -499,6 +499,42 @@ Each operator type has specific default settings that apply when the `<context_m
 
 When the `<context_management>` element is present, its settings override the operator defaults. Settings are merged during template loading, with explicit settings taking precedence over defaults.
 
+## Context Management Specifications
+*Integrated from `/misc/operators.md`*
+
+### Operator Default Settings
+
+Each operator type has specific default context management settings that apply when no explicit configuration is provided:
+
+| Operator Type | inherit_context | accumulate_data | accumulation_format | fresh_context |
+|---------------|-----------------|-----------------|---------------------|---------------|
+| atomic        | full            | false           | minimal             | enabled       |
+| sequential    | full            | true            | minimal             | enabled       |
+| reduce        | none            | true            | minimal             | enabled       |
+| script        | full            | false           | minimal             | disabled      |
+| director_evaluator_loop | none  | true            | minimal             | enabled       |
+
+### Context Management Dimensions
+
+The system uses a standardized three-dimensional context management model:
+
+1. **inherit_context**: An enumeration with allowed values:
+   - **full** – the full parent context is passed unchanged
+   - **none** – no parent context is inherited
+   - **subset** – only a subset (as determined by task-specific rules) is inherited
+
+2. **accumulate_data**: A boolean controlling whether outputs from prior steps are accumulated:
+   - **true** – previous step outputs are accumulated
+   - **false** – no accumulation of step outputs
+
+3. **accumulation_format**: When accumulating data, specifies the storage format:
+   - **minimal** – only summary information is preserved
+   - **full_output** – complete step outputs are preserved
+
+4. **fresh_context**: Controls whether new context is generated via associative matching:
+   - **enabled** – fresh context is generated
+   - **disabled** – no fresh context is generated
+
 ### Field Definitions
 
 - The optional `ref` attribute is used to reference a pre-registered task in the TaskLibrary.

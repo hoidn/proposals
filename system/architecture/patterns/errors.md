@@ -1,4 +1,4 @@
-# Error Type Hierarchy and Handling Design
+# Error Handling Pattern [Pattern:Error:1.0]
 
 ## Purpose
 Define the core error types that enable control flow and task adaptation in the intelligent task execution system.
@@ -66,5 +66,19 @@ In particular:
    - Simplified control flow
    - Clear system behavior
 
-## Dependencies
-- Task system must detect resource limits
+## Additional Error Handling Details
+*Integrated from `/misc/errorspec.md`*
+
+### Missing Argument Handling
+When a task attempts to resolve an input, the evaluator first performs template substitution on any placeholders in the form `{{variable_name}}` within the task definition—using values from its current lexical environment. Additionally, if an `<input>` element specifies a `from` attribute, the evaluator binds that input using the value associated with that environment variable. If a required binding is missing, the evaluator returns a standard `TASK_FAILURE` error with a message such as "Missing required input: variable_name."
+
+### Context Operation Failures
+In scenarios where a task step calls `MemorySystem.getRelevantContextFor()` (or otherwise attempts context assembly), any failure is reported as a standard `TASK_FAILURE`.
+Partial results are not preserved; on any failure, intermediate data is discarded.
+
+In short, "context operation failures" are reported solely as `TASK_FAILURE`, and no partial sub-task outputs are retained.
+
+### Script Execution Errors
+Script execution errors (e.g. non-zero exit codes) are captured and passed along to the evaluator for downstream decision-making rather than causing an immediate task failure.
+- Evaluator must handle control flow
+- Memory system must maintain context

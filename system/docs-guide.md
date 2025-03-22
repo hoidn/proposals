@@ -4,6 +4,76 @@
 
 This guide provides navigation paths through the system documentation.
 
+## Directory Layout
+*Integrated from `/docstructure.md`*
+
+```
+docs/
+├── system/                         # System-level documentation
+│   ├── README.md                   # System overview & development sequence
+│   ├── docs-guide.md               # Documentation standards, map & navigation
+│   ├── architecture/               # Core architecture
+│   │   ├── overview.md            # High-level design
+│   │   ├── decisions/             # Architecture Decision Records (ADRs)
+│   │   └── patterns/              # Core patterns & principles
+│   ├── protocols/                  # System-wide protocols
+│   │   └── resources.md            # Protocol-level resource definitions
+│   └── contracts/                  # System-wide contracts
+│       ├── interfaces.md          # External interfaces
+│       └── resources.md           # Resource management
+│
+└── components/                     # Component documentation
+    └── [component]/               # Per component (can be nested)
+        ├── README.md              # Component overview
+        ├── api/                   # Public API documentation
+        │   └── interfaces.md      # Public interface definitions
+        ├── spec/                  # Formal specifications
+        │   ├── requirements.md    # Component requirements
+        │   ├── interfaces.md      # Internal interface definitions
+        │   ├── types.md          # Type definitions
+        │   └── behaviors.md       # Expected behaviors
+        └── impl/                  # Implementation details
+            ├── design.md         # Design decisions
+            ├── protocols.md      # Protocol implementations
+            └── examples.md       # Implementation examples
+```
+
+## Document Standards
+
+### Writing Style
+1. Active voice
+2. One sentence per line
+3. Explicit section numbering
+4. Consistent terminology
+
+### Version Management
+1. Version Format: MAJOR.MINOR.PATCH
+2. Update Rules:
+   - MAJOR: Breaking changes
+   - MINOR: New features, backward compatible
+   - PATCH: Bug fixes, backward compatible
+
+### Documentation Principles
+1. Single Responsibility
+   - Each document covers one concern
+   - Clear boundaries between concerns
+   - Explicit dependencies
+
+2. Template Consistency
+   - All new task templates must use the unified template substitution mechanism
+   - Evaluator's lexically scoped variables are referenced using the `{{variable_name}}` syntax
+   - Input bindings can be explicitly declared using the optional `from` attribute on `<input>` elements
+
+3. Contract Completeness
+   - All requirements stated
+   - All guarantees explicit
+   - All resources documented
+
+4. Resource Clarity
+   - Ownership explicit
+   - Lifecycle documented
+   - Cleanup requirements specified
+
 ### System Level
 
 | Document | Purpose | Key Content |
